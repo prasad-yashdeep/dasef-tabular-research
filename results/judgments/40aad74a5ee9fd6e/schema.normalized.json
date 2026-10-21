@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "heavy_halogen_count",
+      "type": "formula",
+      "description": "Sum of heavy halogen-like substructure counts (V3 Cl-like, V4 Br-like, V11 F-like) often resistant to biodegradation.",
+      "value_range": [
+        0.0,
+        40.0
+      ],
+      "feature_family": "structural_aggregate",
+      "expected_model_benefit": "Tree splits on cumulative halogenation can separate persistent compounds.",
+      "leakage_risk": "low",
+      "formula": "V3 + V4 + V11",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aromatic_ring_intensity",
+      "type": "formula",
+      "description": "Composite index of aromatic/ring descriptors combining V16 and V41 counts with V8 percent property.",
+      "value_range": [
+        0.0,
+        120.0
+      ],
+      "feature_family": "structural_aggregate",
+      "expected_model_benefit": "Captures aromatic load which strongly affects biodegradability.",
+      "leakage_risk": "low",
+      "formula": "V16 + V41 + V8 / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nitrogen_oxygen_functional_sum",
+      "type": "formula",
+      "description": "Total count of N/O containing functional group descriptors (V5,V6,V7,V9,V10).",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "structural_aggregate",
+      "expected_model_benefit": "Polar functional group load is a strong determinant of biodegradation pathways.",
+      "leakage_risk": "low",
+      "formula": "V5 + V6 + V7 + V9 + V10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_any_rare_substructure",
+      "type": "formula",
+      "description": "Boolean indicator: presence of any rare substructure flags V19, V24, V29.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Single split captures presence of unusual moieties.",
+      "leakage_risk": "low",
+      "formula": "np.where((V19 + V24 + V29) > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_size_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of V39 (molecular size descriptor): 0 small, 1 medium, 2 large, 3 very large.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Discrete size tier for tree thresholds.",
+      "leakage_risk": "low",
+      "formula": "np.where(V39 < 7.5, 0, np.where(V39 < 8.5, 1, np.where(V39 < 9.5, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lipophilicity_proxy",
+      "type": "formula",
+      "description": "Proxy for lipophilicity combining V1 and V13 (log-like descriptors) minus polar V12.",
+      "value_range": [
+        -10.0,
+        20.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Lipophilic vs hydrophilic balance strongly informs degradation.",
+      "leakage_risk": "low",
+      "formula": "V1 + V13 - V12",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "halogen_to_size_ratio",
+      "type": "formula",
+      "description": "Halogen substituent density per molecular size unit.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Density of halogens relative to size highlights heavily substituted small molecules.",
+      "leakage_risk": "low",
+      "formula": "(V3 + V4 + V11) / (V39 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "topology_complexity_index",
+      "type": "formula",
+      "description": "Topological complexity from V14, V15, V36, V37 descriptors.",
+      "value_range": [
+        0.0,
+        40.0
+      ],
+      "feature_family": "structural_aggregate",
+      "expected_model_benefit": "Combined topology metric for split efficiency.",
+      "leakage_risk": "low",
+      "formula": "V14 + V15 + V36 + V37",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_v30_flag",
+      "type": "formula",
+      "description": "Indicator that V30 exceeds the typical range (>20), capturing extreme values.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Direct boolean split for outlier descriptor V30.",
+      "leakage_risk": "low",
+      "formula": "np.where(V30 > 20.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v17_v18_v22_shape_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction of normalized shape descriptors V17, V18, V22.",
+      "value_range": [
+        0.5,
+        3.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures joint shape-index region that single features miss.",
+      "leakage_risk": "low",
+      "formula": "V17 * V18 * V22",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "functional_diversity_score",
+      "type": "judgment",
+      "description": "Semantic count of distinct non-zero functional/substructure descriptors among V3-V11, V19-V26, V29, V32-V35, V38, V40, V41 indicating molecular diversity.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "judgment_diversity",
+      "expected_model_benefit": "Tree can split on diversity to distinguish simple vs complex molecules.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "persistent_pollutant_likelihood",
+      "type": "judgment",
+      "description": "Heuristic ordinal score (0-4) judging persistence: high heavy-halogen count, high aromatic load, low polar group ratio, and large size jointly indicate likely persistent/non-degradable structure.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "judgment_chemistry",
+      "expected_model_benefit": "Encodes domain prior into a single ordinal that trees can split cleanly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "41894e77635fcafd",
+  "metadata": {}
+}

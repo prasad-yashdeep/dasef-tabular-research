@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "intraday_edge_proximity",
+      "type": "formula",
+      "description": "Distance to the nearest edge of the normalized intraday period scale.",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "cyclic_position",
+      "expected_model_benefit": "Reduces artificial separation between first and last intraday slots and improves local time-of-day matching.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(period, 1.0 - period)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "regional_price_z_gap_abs",
+      "type": "formula",
+      "description": "Absolute gap between clipped standardized NSW and VIC price readings using training-fold mean and scale constants.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized_gap",
+      "expected_model_benefit": "Places rows with similar cross-region price separation nearer together after robust scaling.",
+      "leakage_risk": "low",
+      "formula": "np.abs(np.clip((nswprice - 0.05991314590192342) / 0.04205093162282852, -5.0, 5.0) - np.clip((vicprice - 0.003427576763125975) / 0.003503984026727864, -5.0, 5.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "regional_demand_z_gap_abs",
+      "type": "formula",
+      "description": "Absolute gap between standardized NSW and VIC demand readings using training-fold mean and scale constants.",
+      "value_range": [
+        0.0,
+        8.5
+      ],
+      "feature_family": "scale_normalized_gap",
+      "expected_model_benefit": "Improves neighborhood geometry by grouping rows with comparable regional load imbalance.",
+      "leakage_risk": "low",
+      "formula": "np.abs(((nswdemand - 0.43356869918558305) / 0.1613112471176536) - ((vicdemand - 0.42622324779067755) / 0.12145289775297802))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_z_l2_clipped",
+      "type": "formula",
+      "description": "Clipped standardized Euclidean magnitude of the two regional price readings.",
+      "value_range": [
+        0.0,
+        7.2
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Creates a robust price-intensity coordinate that limits extreme spike dominance while preserving similarity among price regimes.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip((nswprice - 0.05991314590192342) / 0.04205093162282852, -5.0, 5.0) ** 2 + np.clip((vicprice - 0.003427576763125975) / 0.003503984026727864, -5.0, 5.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_z_l2_clipped",
+      "type": "formula",
+      "description": "Clipped standardized Euclidean magnitude of the two regional demand readings.",
+      "value_range": [
+        0.0,
+        7.2
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Adds a compact load-intensity distance dimension for more consistent neighbor selection across demand levels.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip((nswdemand - 0.43356869918558305) / 0.1613112471176536, -5.0, 5.0) ** 2 + np.clip((vicdemand - 0.42622324779067755) / 0.12145289775297802, -5.0, 5.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_z_abs",
+      "type": "formula",
+      "description": "Absolute standardized transfer magnitude relative to the training-fold transfer center.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Highlights rows with unusually low or high transfer so distance-based neighborhoods respect flow extremity.",
+      "leakage_risk": "low",
+      "formula": "np.abs((transfer - 0.49903293883209154) / 0.15245443571449366)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_transfer_balance_distance",
+      "type": "formula",
+      "description": "Euclidean distance combining regional demand imbalance and standardized transfer departure from its training-fold center.",
+      "value_range": [
+        0.0,
+        9.5
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Groups rows with similar load-balance and flow-balance structure, improving local metric relevance.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((((nswdemand - 0.43356869918558305) / 0.1613112471176536) - ((vicdemand - 0.42622324779067755) / 0.12145289775297802)) ** 2) + (((transfer - 0.49903293883209154) / 0.15245443571449366) ** 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "unsupervised_centroid_z_l2_clipped",
+      "type": "formula",
+      "description": "Clipped standardized Euclidean distance from the training-fold numeric centroid over all seven inputs.",
+      "value_range": [
+        0.0,
+        13.3
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a generic radial coordinate so rows at similar overall operating distance have closer neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip((date - 0.49920885054583264) / 0.3412517598122689, -5.0, 5.0) ** 2 + np.clip((period - 0.5085994899497487) / 0.29063269150150944, -5.0, 5.0) ** 2 + np.clip((nswprice - 0.05991314590192342) / 0.04205093162282852, -5.0, 5.0) ** 2 + np.clip((nswdemand - 0.43356869918558305) / 0.1613112471176536, -5.0, 5.0) ** 2 + np.clip((vicprice - 0.003427576763125975) / 0.003503984026727864, -5.0, 5.0) ** 2 + np.clip((vicdemand - 0.42622324779067755) / 0.12145289775297802, -5.0, 5.0) ** 2 + np.clip((transfer - 0.49903293883209154) / 0.15245443571449366, -5.0, 5.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "load_price_coupling_similarity",
+      "type": "formula",
+      "description": "Similarity score comparing average clipped standardized price intensity with average clipped standardized demand intensity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Brings rows with aligned price and load behavior closer under distance calculations.",
+      "leakage_risk": "low",
+      "formula": "1.0 / (1.0 + np.abs(((np.clip((nswprice - 0.05991314590192342) / 0.04205093162282852, -5.0, 5.0) + np.clip((vicprice - 0.003427576763125975) / 0.003503984026727864, -5.0, 5.0)) / 2.0) - ((np.clip((nswdemand - 0.43356869918558305) / 0.1613112471176536, -5.0, 5.0) + np.clip((vicdemand - 0.42622324779067755) / 0.12145289775297802, -5.0, 5.0)) / 2.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "peak_load_window_indicator",
+      "type": "formula",
+      "description": "Binary flag for rows in the later-day window with both regional demand readings at or above their training-fold means.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a discrete neighborhood anchor for a common high-load operating regime.",
+      "leakage_risk": "low",
+      "formula": "np.where(((period >= 0.5) & (period <= 0.875) & (nswdemand >= 0.43356869918558305) & (vicdemand >= 0.42622324779067755)), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "operating_stress_semantic_score",
+      "type": "judgment",
+      "description": "Row-level semantic score from 0.0 to 1.0 based on price spikes, high regional demand, transfer extremity, and period context; 0.0 denotes routine conditions and 1.0 denotes severe stress.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a dense semantic coordinate so KNN can place rows with comparable operating stress near each other even when individual fields differ.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "flow_constraint_semantic_score",
+      "type": "judgment",
+      "description": "Row-level semantic score from 0.0 to 1.0 for whether transfer appears constrained given regional demand imbalance and price separation; 0.0 denotes balanced flow and 1.0 denotes strong constraint.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Helps KNN align rows with similar inter-region flow regimes even when raw transfer magnitudes differ.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0d2bd8f114077226",
+  "metadata": {}
+}

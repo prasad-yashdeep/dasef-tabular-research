@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Z-score normalized age to ensure equal weighting in distance calculations.",
+      "value_range": [
+        -1.64,
+        3.87
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents the age feature from dominating Euclidean distance calculations due to its larger raw scale.",
+      "leakage_risk": "low",
+      "formula": "(age - 38.7095) / 13.2894",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_per_week_normalized",
+      "type": "formula",
+      "description": "Z-score normalized hours per week for balanced distance metrics.",
+      "value_range": [
+        -3.35,
+        4.87
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Standardizes the variance of working hours, improving the geometry of the KNN neighborhood.",
+      "leakage_risk": "low",
+      "formula": "(hours_per_week - 40.9395) / 11.9305",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_num_normalized",
+      "type": "formula",
+      "description": "Z-score normalized education years.",
+      "value_range": [
+        -3.56,
+        2.28
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Ensures education level contributes proportionally to similarity scores without overshadowing other features.",
+      "leakage_risk": "low",
+      "formula": "(education_num - 10.1435) / 2.5705",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_net_log",
+      "type": "formula",
+      "description": "Log-transformed net capital gain to compress extreme outliers and improve distance scaling.",
+      "value_range": [
+        0.0,
+        11.52
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces the impact of massive capital gains on distance metrics, preventing isolated points from distorting neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(capital_gain - capital_loss, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_average_worker",
+      "type": "formula",
+      "description": "Euclidean distance to the unsupervised global mean profile of age, hours per week, and education.",
+      "value_range": [
+        0.0,
+        8.5
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a continuous measure of typicality, allowing the model to easily group average individuals versus outliers.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((age - 38.7095) / 13.2894)**2 + ((hours_per_week - 40.9395) / 11.9305)**2 + ((education_num - 10.1435) / 2.5705)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_full_time_prime_age",
+      "type": "formula",
+      "description": "Binary indicator for individuals in their prime working years working full-time or more.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a distinct hypercube region in the feature space, helping KNN quickly identify a major demographic cluster.",
+      "leakage_risk": "low",
+      "formula": "np.where((hours_per_week >= 40) & (age >= 25) & (age <= 55), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_volatility_indicator",
+      "type": "formula",
+      "description": "Binary indicator for any non-zero capital gain or loss.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Separates individuals with active investments from those without, creating a useful categorical split for distance calculations.",
+      "leakage_risk": "low",
+      "formula": "np.where((capital_gain > 0) | (capital_loss > 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_intensity_score",
+      "type": "formula",
+      "description": "A composite score multiplying normalized hours and age, clipped to prevent extreme values.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the interaction between age and working hours, providing a dense, continuous feature for similarity matching.",
+      "leakage_risk": "low",
+      "formula": "np.clip((hours_per_week / 40.0) * (age / 38.7), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "career_stage_similarity",
+      "type": "judgment",
+      "description": "Semantic assessment of how closely the individual's profile matches a typical mid-career professional based on age, education, and occupation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Provides a smooth, semantic similarity gradient that raw Euclidean distance on categorical variables cannot capture.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "socioeconomic_status_proxy",
+      "type": "judgment",
+      "description": "Semantic judgment of socioeconomic status derived from the combination of occupation, education, and workclass.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Projects multiple categorical variables into a single ordinal dimension, significantly improving distance metrics for KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_structure_complexity",
+      "type": "judgment",
+      "description": "Semantic judgment of family structure complexity based on marital_status and relationship codes.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Translates nominal relationship categories into a meaningful ordinal scale, reducing the sparsity of the feature space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_prototype_distance",
+      "type": "judgment",
+      "description": "Semantic judgment of the distance to the most frequent unsupervised demographic profile (native country, race, sex).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Acts as a continuous spatial anchor, allowing the model to measure how demographically typical or atypical a row is.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "efea8b670541cf69",
+  "metadata": {}
+}

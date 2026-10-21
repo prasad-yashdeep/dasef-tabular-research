@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-2.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_solubility_proxy",
+      "type": "formula",
+      "description": "A proxy for aqueous solubility, calculated as the ratio of V1 to the log-transformed V2. This may capture the balance between molecular size and lipophilicity.",
+      "value_range": [
+        0.8,
+        8.3
+      ],
+      "feature_family": "Physicochemical Property",
+      "expected_model_benefit": "Creates a smooth, continuous ratio that can have a more linear relationship with biodegradability than the original features. Log transform stabilizes variance.",
+      "leakage_risk": "low",
+      "formula": "V1 / (np.log1p(V2) + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_complexity_score",
+      "type": "formula",
+      "description": "A composite score representing overall molecular complexity, calculated by summing the counts of various structural fragments (features with large integer ranges).",
+      "value_range": [
+        0.0,
+        135.0
+      ],
+      "feature_family": "Structural Complexity",
+      "expected_model_benefit": "Aggregates multiple count features into a single, more powerful linear predictor. Higher complexity often correlates with lower biodegradability.",
+      "leakage_risk": "low",
+      "formula": "V5 + V6 + V7 + V9 + V11 + V16 + V23 + V41",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_functional_group_count",
+      "type": "formula",
+      "description": "The total count of various rare structural elements, identified by summing features with very low average counts. These may represent reactive or unusual functional groups.",
+      "value_range": [
+        0.0,
+        18.0
+      ],
+      "feature_family": "Structural Feature",
+      "expected_model_benefit": "Combines several sparse binary/low-count features into a denser feature, making it easier for a linear model to find a useful signal.",
+      "leakage_risk": "low",
+      "formula": "V19 + V20 + V21 + V24 + V25 + V26 + V29 + V32 + V40",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "polar_surface_area_proxy",
+      "type": "formula",
+      "description": "A ratio of two features with large ranges (V8 and V30), potentially related to total and polar surface areas. This ratio can indicate the molecule's relative polarity.",
+      "value_range": [
+        0.0,
+        59.0
+      ],
+      "feature_family": "Physicochemical Property",
+      "expected_model_benefit": "Creates a scale-invariant feature that normalizes two important molecular properties, which can improve the performance of margin-based models like SVM.",
+      "leakage_risk": "low",
+      "formula": "V8 / (V30 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_charge_proxy",
+      "type": "formula",
+      "description": "A linear combination of the only two features with negative ranges (V12, V28), possibly representing contributions to molecular charge or electrostatic potential.",
+      "value_range": [
+        -6.4,
+        4.0
+      ],
+      "feature_family": "Electronic Property",
+      "expected_model_benefit": "A simple composite feature that summarizes the overall electronic character, which can be a useful linear predictor for enzymatic reactions.",
+      "leakage_risk": "low",
+      "formula": "V12 + V28",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "shape_descriptor_ratio",
+      "type": "formula",
+      "description": "Ratio of V18 to V22, two features with narrow ranges around 1.0, likely representing molecular shape or eccentricity indices.",
+      "value_range": [
+        0.7,
+        1.6
+      ],
+      "feature_family": "Shape Descriptor",
+      "expected_model_benefit": "Captures subtle differences in molecular topology. Ratios are often more stable predictors and are less sensitive to the scale of the original features.",
+      "leakage_risk": "low",
+      "formula": "V18 / V22",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_low_v13",
+      "type": "formula",
+      "description": "An indicator feature that is 1 if V13 is below a threshold (2.8, based on training set mean minus std dev), and 0 otherwise.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "Indicator Feature",
+      "expected_model_benefit": "Allows the linear model to capture a non-linear threshold effect, effectively giving a different intercept for molecules with low V13 values.",
+      "leakage_risk": "low",
+      "formula": "np.where(V13 < 2.8, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_energy_v31",
+      "type": "formula",
+      "description": "The value of V31, which has a wide range, normalized by V37. This could represent a relative energy or stability measure.",
+      "value_range": [
+        0.09,
+        11.1
+      ],
+      "feature_family": "Physicochemical Property",
+      "expected_model_benefit": "This ratio creates a more stable, scaled feature that is less influenced by outliers in V31, improving robustness for SVM.",
+      "leakage_risk": "low",
+      "formula": "V31 / (V37 + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_atom_count_index",
+      "type": "formula",
+      "description": "A weighted sum of several atom/bond count features. The weights are chosen to create a composite index representing a hypothetical structural property.",
+      "value_range": [
+        0.0,
+        34.0
+      ],
+      "feature_family": "Structural Feature",
+      "expected_model_benefit": "Creates a custom linear projection of several features into a single score, potentially aligning better with the decision boundary.",
+      "leakage_risk": "low",
+      "formula": "V3 + 2*V4 + V10 + 0.5*V33 + 0.5*V34 + V35",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aromaticity_interaction_proxy",
+      "type": "formula",
+      "description": "A geometric mean of V15 and V39, two float features with medium-to-high values, possibly related to aromaticity or ring counts. The square root compresses the scale.",
+      "value_range": [
+        4.5,
+        13.3
+      ],
+      "feature_family": "Physicochemical Property",
+      "expected_model_benefit": "Captures a non-linear interaction between two features. The sqrt transform makes the resulting distribution more symmetric and suitable for a linear model.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(V15 * V39)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "estimated_chemical_stability_score",
+      "type": "judgment",
+      "description": "A composite score from 1 (least stable) to 10 (most stable) assessing the molecule's likely chemical stability. The score is estimated by interpreting low counts of rare groups (e.g., V19, V29), high surface area (V8), and near-neutral charge (V12) as indicators of higher stability.",
+      "value_range": [
+        1.0,
+        10.0
+      ],
+      "feature_family": "Chemical Judgment",
+      "expected_model_benefit": "Encodes a high-level chemical concept into a single, interpretable, and continuous variable that is expected to correlate with resistance to degradation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hydrophobicity_balance_index",
+      "type": "judgment",
+      "description": "A score from -5 (very hydrophilic) to +5 (very hydrophobic) indicating the balance of water-loving vs. fat-loving characteristics. The score is judged by balancing features suggesting hydrophobicity (e.g., high V2, V36) against those suggesting hydrophilicity (e.g., high counts of polar groups like V3, V7, V10).",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "Chemical Judgment",
+      "expected_model_benefit": "Projects multiple features onto a single, chemically meaningful axis. This balance is often critical for biological activity and provides a strong linear feature.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "3427a108d02f27a9",
+  "metadata": {}
+}

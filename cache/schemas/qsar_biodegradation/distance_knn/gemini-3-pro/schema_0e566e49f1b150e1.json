@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "norm_v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of V1 to V2, normalized by a small constant to prevent division by zero, providing a scale-invariant feature for distance calculations.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Improves KNN performance by providing a normalized relative scale between two continuous descriptors, reducing the impact of absolute magnitude.",
+      "leakage_risk": "low",
+      "formula": "V1 / (V2 + 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_global_mean_v8_v15",
+      "type": "formula",
+      "description": "Euclidean distance to the unsupervised global mean of features V8 and V15, acting as a prototype-distance feature.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Helps the distance-based model capture the geometric position of a sample relative to the center of the data distribution.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((V8 - 37.05)**2 + (V15 - 9.93)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v30_v31_interaction_score",
+      "type": "formula",
+      "description": "Log-scaled interaction between V30 and V31 to compress the long tail and provide a stable similarity metric.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Reduces the influence of extreme values in distance calculations by applying a log transformation to the product of two continuous features.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V30 * V31)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "structural_complexity_index",
+      "type": "formula",
+      "description": "Sum of several integer count features (V3, V5, V7, V9, V11) representing overall structural complexity.",
+      "value_range": [
+        0.0,
+        150.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregates sparse count features into a single dense dimension, improving the density of the neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "V3 + V5 + V7 + V9 + V11",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_deviation_from_zero",
+      "type": "formula",
+      "description": "Absolute deviation of V12 from zero, capturing the magnitude of this descriptor regardless of sign.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Provides a symmetric distance metric for V12, which is useful if the magnitude is more important than the direction.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V12)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v36_v39_similarity",
+      "type": "formula",
+      "description": "Absolute difference between V36 and V39, acting as an internal similarity score between two continuous descriptors.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "similarity",
+      "expected_model_benefit": "Allows the KNN model to group samples that have similar relative values for V36 and V39.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V36 - V39)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_density_region_indicator",
+      "type": "formula",
+      "description": "Indicator feature that is 1 if the sample falls within a high-density region defined by the means of V1 and V2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Acts as a soft cluster assignment, helping the KNN model distinguish between typical and atypical samples in the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.where(np.logical_and(np.abs(V1 - 4.78) < 1.0, np.abs(V2 - 3.06) < 1.5), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v15_normalized_deviation",
+      "type": "formula",
+      "description": "Z-score-like normalization of V15 using its training set mean and standard deviation.",
+      "value_range": [
+        -7.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Standardizes the scale of V15, ensuring it contributes proportionally to the Euclidean distance metric.",
+      "leakage_risk": "low",
+      "formula": "(V15 - 9.93) / 0.92",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_size_proxy",
+      "type": "formula",
+      "description": "Linear combination of V8 and V30, serving as a proxy for overall molecular size or weight.",
+      "value_range": [
+        0.0,
+        150.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Creates a dominant axis of variation that can help align the distance metric with a major physical property.",
+      "leakage_risk": "low",
+      "formula": "V8 + V30",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v17_v18_ratio",
+      "type": "formula",
+      "description": "Ratio of V17 to V18, capturing the relative proportion of these two tightly bounded continuous features.",
+      "value_range": [
+        0.5,
+        1.5
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights subtle structural differences that might be obscured by the absolute values of V17 and V18.",
+      "leakage_risk": "low",
+      "formula": "V17 / (V18 + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_cluster_assignment",
+      "type": "judgment",
+      "description": "An unsupervised cluster assignment based on the overall molecular descriptor profile, assigning the molecule to one of 5 distinct structural clusters.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a categorical grouping that can be used to partition the search space or weight distances differently within distinct structural families.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "outlier_severity_score",
+      "type": "judgment",
+      "description": "A semantic score evaluating how anomalous the molecule's descriptor values are compared to the typical training set distribution.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "anomaly_score",
+      "expected_model_benefit": "Allows the KNN model to dynamically adjust neighborhood sizes or distance weights for samples that lie far from the main data manifold.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0e566e49f1b150e1",
+  "metadata": {}
+}

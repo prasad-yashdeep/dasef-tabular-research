@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mv",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "x1_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x1, clipped to reduce extreme leverage while retaining sign and relative magnitude.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Provides a bounded, comparable x1 coordinate so the linear margin can assign stable weight without scale dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x1 - 0.02097702305805397) / 2.8822072460810944, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x2_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x2, clipped to reduce extreme leverage while retaining sign and relative magnitude.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Places the below-zero x2 scale on a standardized axis, improving conditioning for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x2 + 12.503674701553559) / 1.4438775561834951, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x4, clipped to reduce extreme leverage while retaining sign and relative magnitude.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Normalizes the shifted x4 interval into a compact coordinate suited to a stable linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x4 + 4.384295376778414) / 3.036436170416292, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x5_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x5, using a slightly tighter clip because the observed range is naturally compact.",
+      "value_range": [
+        -1.75,
+        1.75
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Gives the margin a smooth signed coordinate for the compact x5 range without letting it vanish beside larger-scale fields.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x5 + 0.0005549864268192973) / 0.5781053945713315, -1.75, 1.75)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x6_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x6 with clipping to control the widest numeric spread in the table.",
+      "value_range": [
+        -2.5,
+        2.5
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Stabilizes the high-variance x6 coordinate so a linear margin can use it without excessive leverage.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x6 + 11.04631738683565) / 10.89341235790778, -2.5, 2.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x9, clipped to a bounded standardized interval.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Makes the broad x9 range comparable to other coordinates for better linear weight conditioning.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x9 - 300.766341210139) / 115.20450122435115, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x10_centered_score",
+      "type": "formula",
+      "description": "Training-fold centered and scaled x10, clipped to a bounded standardized interval.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Puts x10 on the same numeric scale as other continuous inputs, supporting stable margin geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x10 - 1100.576206050695) / 57.911135631126534, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_x10_ratio_score",
+      "type": "formula",
+      "description": "Centered ratio of x9 to x10 using the training-fold typical ratio as the reference point.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Lets one weight capture proportional movement between x9 and x10 beyond their separate standardized coordinates.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x9 / x10) - (300.766341210139 / 1100.576206050695)) / 0.10, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "numeric_elevation_projection",
+      "type": "formula",
+      "description": "Unsupervised weighted sum of centered numeric coordinates, clipped for robustness.",
+      "value_range": [
+        -2.5,
+        2.5
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Supplies a compact composite direction that can help when several numeric coordinates shift together.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.15 * ((x1 - 0.02097702305805397) / 2.8822072460810944)) + (0.15 * ((x2 + 12.503674701553559) / 1.4438775561834951)) + (0.15 * ((x4 + 4.384295376778414) / 3.036436170416292)) + (0.10 * ((x5 + 0.0005549864268192973) / 0.5781053945713315)) + (0.15 * ((x6 + 11.04631738683565) / 10.89341235790778)) + (0.15 * ((x9 - 300.766341210139) / 115.20450122435115)) + (0.15 * ((x10 - 1100.576206050695) / 57.911135631126534)), -2.5, 2.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x7_yes_indicator",
+      "type": "formula",
+      "description": "Binary indicator that x7 has the value yes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_indicator",
+      "expected_model_benefit": "Allows an exact numeric axis for the x7 yes/no field, avoiding reliance on raw text handling.",
+      "leakage_risk": "low",
+      "formula": "np.where(x7 == 'yes', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_color_warmth_score",
+      "type": "judgment",
+      "description": "Semantic score for x3 hue: red maps to 1.0, brown maps to 0.55, green maps to 0.15, and any unexpected value maps to 0.50.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_ordinal",
+      "expected_model_benefit": "Converts hue meaning into an ordered continuous coordinate that a linear margin can use directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x8_size_extent_score",
+      "type": "judgment",
+      "description": "Semantic size score from x8 wording: normal maps to 0.0, large maps to 1.0, and any unexpected value maps to 0.50.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_ordinal",
+      "expected_model_benefit": "Encodes size wording as monotone severity, giving the margin a simple ordinal scale.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e25839b0222a9a82",
+  "metadata": {}
+}

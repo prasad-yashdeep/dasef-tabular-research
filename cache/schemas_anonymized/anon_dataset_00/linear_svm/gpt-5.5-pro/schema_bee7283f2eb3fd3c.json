@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_00",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "x001_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x001 using training-fold mean and standard deviation constants.",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_field",
+      "expected_model_benefit": "Keeps x001 on a controlled scale so a linear margin can use its direction without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x001 - 9.245535714285714) / 8.051590219959847, -2.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x002_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x002 using training-fold mean and standard deviation constants.",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_field",
+      "expected_model_benefit": "Keeps x002 comparable with the other measurements and limits leverage from rare large values.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x002 - 5.741071428571429) / 5.407081229597849, -2.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x003_log_unit_clip",
+      "type": "formula",
+      "description": "Log-scaled unit normalization of x003 using the observed training-fold minimum and maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "bounded_log_scale",
+      "expected_model_benefit": "Compresses the large upper range in x003 and yields a smooth bounded coordinate for stable linear weights.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(x003) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x004_unit_clip",
+      "type": "formula",
+      "description": "Unit-range normalization of x004 based on the observed training-fold minimum and maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "bounded_scale",
+      "expected_model_benefit": "Places x004 on a compact scale so its contribution can be compared directly with other normalized fields.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x004 - 2.0) / 96.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_magnitude_unit_projection",
+      "type": "formula",
+      "description": "Weighted bounded projection of the four measurements, giving x003 slightly more weight because of its larger dynamic range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Provides an approximate additive summary of overall row magnitude that is easy for a linear margin to weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.20 * np.clip(x001 / 72.0, 0.0, 1.0)) + (0.20 * np.clip((x002 - 1.0) / 43.0, 0.0, 1.0)) + (0.35 * np.clip((np.log1p(x003) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0)), 0.0, 1.0)) + (0.25 * np.clip((x004 - 2.0) / 96.0, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "average_center_deviation_severity",
+      "type": "formula",
+      "description": "Average absolute standardized departure from the training-fold center across all four measurements.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "deviation_severity",
+      "expected_model_benefit": "Adds a continuous unusualness severity axis that can be combined smoothly with directional features.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs((x001 - 9.245535714285714) / 8.051590219959847) + np.abs((x002 - 5.741071428571429) / 5.407081229597849) + np.abs((x003 - 1435.267857142857) / 1351.7703073994624) + np.abs((x004 - 34.879464285714285) / 23.75335930525278)) / 4.0, 0.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_side_deviation_severity",
+      "type": "formula",
+      "description": "Average one-sided high deviation from the training-fold center across all four measurements.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "one_sided_severity",
+      "expected_model_benefit": "Captures joint high-side pressure independently of lower-side departures, giving a useful continuous margin coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.maximum((x001 - 9.245535714285714) / 8.051590219959847, 0.0) + np.maximum((x002 - 5.741071428571429) / 5.407081229597849, 0.0) + np.maximum((x003 - 1435.267857142857) / 1351.7703073994624, 0.0) + np.maximum((x004 - 34.879464285714285) / 23.75335930525278, 0.0)) / 4.0, 0.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x001_to_x002_ratio_unit",
+      "type": "formula",
+      "description": "Bounded ratio of x001 to adjusted x002, scaled by the largest ratio implied by the training-fold ranges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Exposes relative intensity between the two smaller-scale fields while staying numerically stable when x002 is small.",
+      "leakage_risk": "low",
+      "formula": "np.clip(x001 / ((x002 + 1.0) * 36.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x003_per_x002_log_unit",
+      "type": "formula",
+      "description": "Log-normalized x003 per adjusted x002 using range constants derived from the training-fold extrema.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "log_ratio",
+      "expected_model_benefit": "Turns multiplicative per-unit variation into a near-linear bounded signal for the margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(x003 / (x002 + 1.0)) - np.log1p(250.0 / 45.0)) / (np.log1p(11000.0 / 2.0) - np.log1p(250.0 / 45.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x003_x004_share_unit",
+      "type": "formula",
+      "description": "Normalized share of x003 within the x003 plus x004 pair, using observed range anchors for a bounded composition score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composition_ratio",
+      "expected_model_benefit": "Provides a stable composition cue that captures dominance of x003 relative to x004.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x003 / (x003 + x004 + 1.0)) - (250.0 / (250.0 + 98.0 + 1.0))) / ((11000.0 / (11000.0 + 2.0 + 1.0)) - (250.0 / (250.0 + 98.0 + 1.0))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "row_shape_coherence_judgment",
+      "type": "judgment",
+      "description": "Numeric 0.0 to 1.0 assessment, made from x001, x002, x003, x004 and training-fold summaries only, of whether the four measurements form a coherent low, medium, or high profile rather than isolated extremes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile",
+      "expected_model_benefit": "Adds a bounded soft profile-shape coordinate that a linear margin can combine with algebraic transforms.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "range_context_plausibility_judgment",
+      "type": "judgment",
+      "description": "Numeric 0.0 to 1.0 assessment of how plausible the row looks within the observed ranges and moments, with 0.0 for very implausible combinations and 1.0 for highly plausible combinations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_context",
+      "expected_model_benefit": "Supplies a high-level context score that may capture subtle consistency not encoded by fixed ratios or projections.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "bee7283f2eb3fd3c",
+  "metadata": {}
+}

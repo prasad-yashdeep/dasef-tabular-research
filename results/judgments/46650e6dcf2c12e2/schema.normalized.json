@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "heavy_atom_burden_log",
+      "type": "formula",
+      "description": "Log-scaled total heavy-atom-like count combining several atom/group counters; smooth severity proxy for molecular size.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "size_complexity",
+      "expected_model_benefit": "Smooth monotone size proxy useful as a linear margin contributor.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3 + V5 + V7 + V9 + V10 + V11 + V16 + V23 + V33 + V34 + V35 + V38 + V41)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "halogen_like_intensity",
+      "type": "formula",
+      "description": "Sum of low-frequency halogen/heteroatom-style counters scaled by log1p; captures presence of rare substituents.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "substituent",
+      "expected_model_benefit": "Sparse-but-informative directional signal; linear-friendly continuous scaling.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V4 + V6 + V19 + V20 + V21 + V24 + V25 + V26 + V29 + V32 + V40)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v8_zscore",
+      "type": "formula",
+      "description": "Standardized V8 using training mean/std; smooth centered feature.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "normalized",
+      "expected_model_benefit": "Centered/scaled inputs improve linear SVM margin geometry.",
+      "leakage_risk": "low",
+      "formula": "(V8 - 37.0627) / 9.2993",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v30_zscore",
+      "type": "formula",
+      "description": "Standardized V30 using training mean/std.",
+      "value_range": [
+        -5.0,
+        6.0
+      ],
+      "feature_family": "normalized",
+      "expected_model_benefit": "Provides comparable-scale predictor for linear projection.",
+      "leakage_risk": "low",
+      "formula": "(V30 - 8.6523) / 11.9689",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v31_log_scaled",
+      "type": "formula",
+      "description": "log1p compression of V31 (long-tailed) for smoother linear response.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "normalized",
+      "expected_model_benefit": "Compresses heavy tail to improve linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V31)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "topological_density_ratio",
+      "type": "formula",
+      "description": "Ratio of V15 to V39 (two related topological indices); captures relative structural compactness.",
+      "value_range": [
+        0.3,
+        2.5
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratios between correlated descriptors provide informative linear directions.",
+      "leakage_risk": "low",
+      "formula": "V15 / (V39 + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v13_to_v1_ratio",
+      "type": "formula",
+      "description": "Ratio of V13 to V1, two correlated structural descriptors.",
+      "value_range": [
+        0.2,
+        2.5
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures relative structural index; bounded smooth ratio.",
+      "leakage_risk": "low",
+      "formula": "V13 / (V1 + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v36_v37_composite",
+      "type": "formula",
+      "description": "Weighted composite of V36 and V37 (related descriptors), centered.",
+      "value_range": [
+        -3.0,
+        8.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Linear combination of correlated features acts as denoised projection.",
+      "leakage_risk": "low",
+      "formula": "(V36 - 3.7932) / 0.6994 + (V37 - 2.5279) / 0.5972",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "shape_index_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of V17 from its training mean - signals shape-index anomalies.",
+      "value_range": [
+        0.0,
+        0.35
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Continuous deviation magnitude separates atypical molecules.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V17 - 1.0102)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "polarity_proxy",
+      "type": "formula",
+      "description": "Combination of V12 (signed) and V28 (signed) standardized; captures polarity-like dipole signal.",
+      "value_range": [
+        -7.0,
+        5.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Smooth signed score directly usable in linear margin.",
+      "leakage_risk": "low",
+      "formula": "(V12 + 0.1932) / 0.7584 + (V28 + 0.0060) / 0.1666",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heteroatom_to_size_ratio",
+      "type": "formula",
+      "description": "Ratio of summed rare substituent counts to overall heavy-atom burden; relative heteroatom density.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes substituent counts by size; smooth and bounded for linear models.",
+      "leakage_risk": "low",
+      "formula": "(V4 + V6 + V19 + V20 + V21 + V24 + V25 + V26 + V29 + V32 + V40) / (V3 + V5 + V7 + V9 + V10 + V11 + V16 + V23 + V33 + V34 + V35 + V38 + V41 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "structural_persistence_score",
+      "type": "judgment",
+      "description": "Semantic judgment combining stable structural indices (V1, V13, V15, V18, V22, V27, V36, V39) into a single normalized 0-1 score reflecting how 'large/complex/persistent' a molecule appears based on topological-index magnitudes; computed as clipped mean of z-scored components mapped to [0,1] via a logistic-like transform.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Provides an interpretable smooth aggregated severity score that aligns with persistence-related chemistry intuition useful for a linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "b3897ca4de402a73",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "buying_level_norm",
+      "type": "formula",
+      "description": "Buying-price ordinal code scaled to the fixed 0-3 span; higher values preserve the supplied code order.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_ordinal",
+      "expected_model_benefit": "Provides a smooth price-code axis with comparable scale for margin weights.",
+      "leakage_risk": "low",
+      "formula": "buying / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "maintenance_level_norm",
+      "type": "formula",
+      "description": "Maintenance-cost ordinal code scaled to the fixed 0-3 span; higher values preserve the supplied code order.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_ordinal",
+      "expected_model_benefit": "Provides a smooth upkeep-code axis with comparable scale for margin weights.",
+      "leakage_risk": "low",
+      "formula": "maint / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "door_count_level_norm",
+      "type": "formula",
+      "description": "Door-count ordinal code scaled to the fixed 0-3 span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_ordinal",
+      "expected_model_benefit": "Gives the margin a compact access-related coordinate on the same scale as other engineered inputs.",
+      "leakage_risk": "low",
+      "formula": "doors / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "passenger_capacity_norm",
+      "type": "formula",
+      "description": "Passenger-capacity ordinal code scaled to the fixed 0-2 span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_ordinal",
+      "expected_model_benefit": "Supplies a stable seating-capacity axis that can receive a direct linear weight.",
+      "leakage_risk": "low",
+      "formula": "persons / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cargo_room_norm",
+      "type": "formula",
+      "description": "Luggage-boot ordinal code scaled to the fixed 0-2 span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_ordinal",
+      "expected_model_benefit": "Adds a bounded cargo-capacity coordinate for comparable weighting.",
+      "leakage_risk": "low",
+      "formula": "lug_boot / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_level_norm",
+      "type": "formula",
+      "description": "Safety ordinal code scaled to the fixed 0-2 span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_ordinal",
+      "expected_model_benefit": "Creates a bounded safety coordinate that is easy for a linear margin to use.",
+      "leakage_risk": "low",
+      "formula": "safety / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "practical_utility_weighted",
+      "type": "formula",
+      "description": "Weighted continuous composite of seating, access, cargo, and safety ordinal levels.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Approximates an interpretable linear projection of everyday usability while preserving a bounded scale.",
+      "leakage_risk": "low",
+      "formula": "0.35 * (persons / 2.0) + 0.25 * (doors / 3.0) + 0.20 * (lug_boot / 2.0) + 0.20 * (safety / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_capacity_synergy",
+      "type": "formula",
+      "description": "Product of normalized safety and seating capacity, high only when both component codes are high.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_surface",
+      "expected_model_benefit": "Adds a simple interaction surface that a purely linear margin cannot form from separate axes alone.",
+      "leakage_risk": "low",
+      "formula": "(safety / 2.0) * (persons / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "core_inadequacy_severity",
+      "type": "formula",
+      "description": "Worst normalized shortfall among seating, cargo, and safety, using the top code as zero shortfall.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "bottleneck_severity",
+      "expected_model_benefit": "Highlights the strongest practical bottleneck as one continuous severity coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(1.0 - (persons / 2.0), 1.0 - (lug_boot / 2.0)), 1.0 - (safety / 2.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "code_adjusted_utility_ratio",
+      "type": "formula",
+      "description": "Weighted utility composite divided by one plus the combined buying and maintenance code level.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio_composite",
+      "expected_model_benefit": "Exposes a smooth tradeoff ratio between practical utility and ownership-code scale.",
+      "leakage_risk": "low",
+      "formula": "((0.40 * (safety / 2.0)) + (0.30 * (persons / 2.0)) + (0.20 * (lug_boot / 2.0)) + (0.10 * (doors / 3.0))) / (1.0 + ((buying + maint) / 6.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_practicality_score",
+      "type": "judgment",
+      "description": "Assessor-provided 0-1 score for everyday practicality from door, seating, cargo, and safety ordinal levels; 0.0 means very limited, 1.0 means very practical.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_practicality",
+      "expected_model_benefit": "Captures domain nuance in a bounded coordinate that can complement deterministic composites.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_overall_balance_score",
+      "type": "judgment",
+      "description": "Assessor-provided 0-1 score for overall balance among buying, maintenance, seating, cargo, and safety ordinal levels; 0.0 means poorly balanced, 1.0 means strongly balanced.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_tradeoff",
+      "expected_model_benefit": "Adds a non-formulaic smooth projection of tradeoff quality for the margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "5d86964978951e47",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_zscore",
+      "type": "formula",
+      "description": "Standardized V1 using training mean and std for scale-normalized distance computation.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Equalizes feature contribution to Euclidean distance in KNN neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 0.8269494139420112) / 0.8751619615160408",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_zscore",
+      "type": "formula",
+      "description": "Standardized V2 using training mean and std.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents V2 from being dominated or dominating in distance calculations.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 1.2491036397285626) / 0.863725287551349",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_zscore",
+      "type": "formula",
+      "description": "Standardized V3 using training mean and std.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Improves neighborhood geometry by normalizing V3 scale.",
+      "leakage_risk": "low",
+      "formula": "(V3 - 0.7392850092535472) / 0.9149811796508119",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_zscore",
+      "type": "formula",
+      "description": "Standardized V4 using training mean and std.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Improves neighborhood geometry by normalizing V4 scale.",
+      "leakage_risk": "low",
+      "formula": "(V4 - 0.41070820481184456) / 0.805700948167739",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v5_zscore",
+      "type": "formula",
+      "description": "Standardized V5 using training mean and std.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Improves neighborhood geometry by normalizing V5 scale.",
+      "leakage_risk": "low",
+      "formula": "(V5 - 0.08228932757557063) / 0.5860058896612599",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_from_global_mean",
+      "type": "formula",
+      "description": "Euclidean distance from the unsupervised global centroid in standardized space.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a generic prototype distance indicating how typical/atypical a row is.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 0.8269494139420112) / 0.8751619615160408)**2 + ((V2 - 1.2491036397285626) / 0.863725287551349)**2 + ((V3 - 0.7392850092535472) / 0.9149811796508119)**2 + ((V4 - 0.41070820481184456) / 0.805700948167739)**2 + ((V5 - 0.08228932757557063) / 0.5860058896612599)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "manhattan_from_global_mean",
+      "type": "formula",
+      "description": "L1 distance from the unsupervised global centroid in standardized space.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Complementary metric to Euclidean for robust neighborhood characterization.",
+      "leakage_risk": "low",
+      "formula": "np.abs((V1 - 0.8269494139420112) / 0.8751619615160408) + np.abs((V2 - 1.2491036397285626) / 0.863725287551349) + np.abs((V3 - 0.7392850092535472) / 0.9149811796508119) + np.abs((V4 - 0.41070820481184456) / 0.805700948167739) + np.abs((V5 - 0.08228932757557063) / 0.5860058896612599)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "chebyshev_from_global_mean",
+      "type": "formula",
+      "description": "Maximum absolute standardized deviation across features (L-infinity distance).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures whether any single dimension is extreme, aiding outlier-aware neighborhood weighting.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.abs((V1 - 0.8269494139420112) / 0.8751619615160408), np.abs((V2 - 1.2491036397285626) / 0.863725287551349)), np.maximum(np.abs((V3 - 0.7392850092535472) / 0.9149811796508119), np.abs((V4 - 0.41070820481184456) / 0.805700948167739))), np.abs((V5 - 0.08228932757557063) / 0.5860058896612599))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_freq_energy_ratio",
+      "type": "formula",
+      "description": "Ratio of low-frequency coefficient magnitudes (V1+V2) to total magnitude across all coefficients; spectral shape descriptor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Captures spectral tilt which separates phoneme classes in cepstral feature space.",
+      "leakage_risk": "low",
+      "formula": "(np.abs(V1) + np.abs(V2)) / (np.abs(V1) + np.abs(V2) + np.abs(V3) + np.abs(V4) + np.abs(V5) + 1e-9)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_slope",
+      "type": "formula",
+      "description": "Difference between lower and higher coefficient averages, approximating spectral slope.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Provides a directional spectral feature that improves neighborhood discrimination.",
+      "leakage_risk": "low",
+      "formula": "(V1 + V2) / 2.0 - (V4 + V5) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_magnitude_indicator",
+      "type": "formula",
+      "description": "Indicator that the row lies far from the global centroid in standardized space (cluster boundary flag).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Helps KNN distinguish dense central regions from sparse boundary regions.",
+      "leakage_risk": "low",
+      "formula": "np.where(np.sqrt(((V1 - 0.8269494139420112) / 0.8751619615160408)**2 + ((V2 - 1.2491036397285626) / 0.863725287551349)**2 + ((V3 - 0.7392850092535472) / 0.9149811796508119)**2 + ((V4 - 0.41070820481184456) / 0.805700948167739)**2 + ((V5 - 0.08228932757557063) / 0.5860058896612599)**2) > 2.5, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "phoneme_spectral_regime",
+      "type": "judgment",
+      "description": "Semantic assessment of spectral regime: 0 if energy concentrated in low coefficients (V1,V2 dominant), 1 if balanced/mid-range, 2 if high-coefficient dominant (V4,V5 magnitudes exceed V1,V2). Reflects vowel-vs-consonant-like spectral character without using outcomes.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "semantic_regime",
+      "expected_model_benefit": "Adds a coarse categorical neighborhood indicator that improves local KNN voting in distinct spectral regions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c9cc7c1bf80381ff",
+  "metadata": {}
+}

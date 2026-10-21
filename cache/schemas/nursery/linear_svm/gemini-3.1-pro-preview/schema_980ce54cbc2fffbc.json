@@ -1,0 +1,190 @@
+{
+  "dataset_name": "nursery",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "health_risk_score",
+      "type": "formula",
+      "description": "Ordinal mapping of health status from recommended (0) to not recommended (2).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Provides a continuous severity measure for health risk, allowing the linear SVM to learn a monotonic relationship and optimize margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(health == 'not_recom', 2.0, np.where(health == 'priority', 1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_problem_score",
+      "type": "formula",
+      "description": "Ordinal mapping of social conditions from non-problematic (0) to problematic (2).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Creates a smooth linear projection of social difficulties, improving margin generalization compared to one-hot encoding.",
+      "leakage_risk": "low",
+      "formula": "np.where(social == 'problematic', 2.0, np.where(social == 'slightly_prob', 1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_finance_burden",
+      "type": "formula",
+      "description": "Composite score adding housing criticality and financial inconvenience.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Combines two related socioeconomic factors into a single continuous feature, reducing dimensionality and aiding linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.where(housing == 'critical', 2.0, np.where(housing == 'less_conv', 1.0, 0.0)) + np.where(finance == 'inconv', 1.5, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "children_count_num",
+      "type": "formula",
+      "description": "Numeric conversion of the children category, mapping 'more' to 4.",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "numeric_conversion",
+      "expected_model_benefit": "Transforms a categorical variable into a continuous numeric feature, enabling the model to capture the linear effect of family size.",
+      "leakage_risk": "low",
+      "formula": "np.where(children == '1', 1.0, np.where(children == '2', 2.0, np.where(children == '3', 3.0, 4.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nursing_criticality",
+      "type": "formula",
+      "description": "Ordinal scale of nursing needs from proper (0) to very critical (4).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Provides a graded severity measure of nursing requirements, which is highly suitable for linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": "np.where(has_nurs == 'very_crit', 4.0, np.where(has_nurs == 'critical', 3.0, np.where(has_nurs == 'improper', 2.0, np.where(has_nurs == 'less_proper', 1.0, 0.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_structure_complexity",
+      "type": "judgment",
+      "description": "Semantic assessment of family complexity based on parents' status, number of children, and family form.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures non-linear interactions between family structure variables, projecting them into a single continuous dimension for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "socioeconomic_disadvantage_index",
+      "type": "judgment",
+      "description": "Holistic evaluation of socioeconomic disadvantage combining housing, finance, and social factors.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a weighted composite of socioeconomic status, offering a smoother decision boundary for the linear model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_vulnerability_score",
+      "type": "formula",
+      "description": "Sum of health risk, social problem, and nursing criticality scores.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Acts as a strong linear projection of overall vulnerability, directly supporting the SVM's ability to separate high-risk cases.",
+      "leakage_risk": "low",
+      "formula": "np.where(health == 'not_recom', 2.0, np.where(health == 'priority', 1.0, 0.0)) + np.where(social == 'problematic', 2.0, np.where(social == 'slightly_prob', 1.0, 0.0)) + np.where(has_nurs == 'very_crit', 2.0, np.where(has_nurs == 'critical', 1.5, np.where(has_nurs == 'improper', 1.0, 0.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_foster_or_incomplete",
+      "type": "formula",
+      "description": "Binary indicator for non-standard family forms (foster or incomplete).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_flag",
+      "expected_model_benefit": "Isolates specific structural family risks into a clear binary feature, providing a distinct hyperplane split.",
+      "leakage_risk": "low",
+      "formula": "np.where((form == 'foster') | (form == 'incomplete'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "parents_pretentiousness",
+      "type": "formula",
+      "description": "Ordinal mapping of parents' pretentiousness from usual (0) to great_pret (2).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Converts categorical parental attitudes into an ordinal scale, allowing the model to assign a proportional weight.",
+      "leakage_risk": "low",
+      "formula": "np.where(parents == 'great_pret', 2.0, np.where(parents == 'pretentious', 1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_needs_indicator",
+      "type": "formula",
+      "description": "Binary flag indicating if any of the critical needs (health, nursing, housing) are at their highest risk level.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_flag",
+      "expected_model_benefit": "Creates a sharp, non-linear threshold feature that the linear SVM can use to immediately flag extreme cases.",
+      "leakage_risk": "low",
+      "formula": "np.where((health == 'not_recom') | (has_nurs == 'very_crit') | (housing == 'critical'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_to_needs_ratio",
+      "type": "judgment",
+      "description": "Semantic estimation of the ratio between available resources (finance, housing) and family needs (children, health).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a ratio-based feature, which is often difficult for linear models to learn directly from raw inputs, improving the feature space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "980ce54cbc2fffbc",
+  "metadata": {}
+}

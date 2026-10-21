@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "nsw_price_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of NSW price to NSW demand, capturing supply-demand pressure in a scale-normalized way.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a meaningful axis for neighborhood grouping based on market pressure conditions.",
+      "leakage_risk": "low",
+      "formula": "nswprice / (nswdemand + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vic_price_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of VIC price to VIC demand, analogous market pressure feature for Victoria.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides parallel market-pressure dimension for KNN distance balancing.",
+      "leakage_risk": "low",
+      "formula": "vicprice / (vicdemand + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interstate_price_gap",
+      "type": "formula",
+      "description": "Absolute difference between NSW and VIC normalized prices, indicating cross-region price divergence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Sharpens neighborhood geometry by separating rows with similar within-region but different cross-region prices.",
+      "leakage_risk": "low",
+      "formula": "np.abs(nswprice - vicprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interstate_demand_gap",
+      "type": "formula",
+      "description": "Signed difference of NSW minus VIC demand reflecting load imbalance between states.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Captures directional demand imbalance relevant to transfer dynamics.",
+      "leakage_risk": "low",
+      "formula": "nswdemand - vicdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_centered",
+      "type": "formula",
+      "description": "Transfer flow centered on its midpoint to highlight net flow direction.",
+      "value_range": [
+        -0.5,
+        0.5
+      ],
+      "feature_family": "centering",
+      "expected_model_benefit": "Makes transfer flow symmetric for distance calculations.",
+      "leakage_risk": "low",
+      "formula": "transfer - 0.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "period_cyclic_distance",
+      "type": "formula",
+      "description": "Cyclic distance of period from midday (0.5), reflecting how far the time-of-day is from peak demand window.",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "cyclic",
+      "expected_model_benefit": "Provides a symmetric time-of-day descriptor improving neighborhood matching for similar load periods.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(np.abs(period - 0.5), 1.0 - np.abs(period - 0.5))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "peak_period_indicator",
+      "type": "formula",
+      "description": "Indicator for periods within typical peak demand windows (mid-morning and evening).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Cluster indicator improving KNN separation between peak and off-peak rows.",
+      "leakage_risk": "low",
+      "formula": "np.where((period >= 0.33) & (period <= 0.46) | (period >= 0.66) & (period <= 0.83), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_demand_indicator",
+      "type": "formula",
+      "description": "Joint indicator flagging high demand across both NSW and VIC simultaneously.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Encodes a co-stress regime that creates discrete cluster geometry for KNN.",
+      "leakage_risk": "low",
+      "formula": "np.where((nswdemand > 0.55) & (vicdemand > 0.55), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_log_scale",
+      "type": "formula",
+      "description": "Log-scaled NSW price to compress extreme price spikes for distance calculations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Reduces dominance of price outliers in Euclidean distance.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(nswprice * 10.0) / np.log1p(10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_typical_row",
+      "type": "formula",
+      "description": "Euclidean distance from row to the unsupervised global mean prototype across key normalized features.",
+      "value_range": [
+        0.0,
+        2.5
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides an unsupervised outlier-distance signal that aids KNN weighting and tie-breaking.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((nswprice - 0.0599)**2 + (nswdemand - 0.4336)**2 + (vicdemand - 0.4262)**2 + (transfer - 0.499)**2 + (period - 0.5086)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_coherence",
+      "type": "judgment",
+      "description": "Semantic assessment of whether NSW and VIC price-demand patterns move coherently versus divergently, computed as a normalized similarity score combining sign-agreement of deviations from each variable's mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity",
+      "expected_model_benefit": "Encodes a market-regime coherence signal that improves clustering of structurally similar market states.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_stress_level",
+      "type": "judgment",
+      "description": "Semantic ordinal indicator (low=0.0, moderate=0.5, high=1.0) of overall electricity market stress combining elevated prices, high demand, and unusual transfer flows, derived from row values relative to training-set typical ranges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_regime",
+      "expected_model_benefit": "Provides a coarse regime cluster indicator that helps KNN group rows by market condition severity.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2030b5fc97d2c3ff",
+  "metadata": {}
+}

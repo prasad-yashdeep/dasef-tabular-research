@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_zscore",
+      "type": "formula",
+      "description": "Standardized V1 using training mean and std for smooth linear projection.",
+      "value_range": [
+        -3.0,
+        3.5
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides a centered, scaled amplitude coefficient suitable for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 0.8269494139420112) / 0.8751619615160408",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_zscore",
+      "type": "formula",
+      "description": "Standardized V2 using training mean and std.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized coefficient input for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 1.2491036397285626) / 0.863725287551349",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_zscore",
+      "type": "formula",
+      "description": "Standardized V3 using training mean and std.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Centered scaled feature for stable linear margin computation.",
+      "leakage_risk": "low",
+      "formula": "(V3 - 0.7392850092535472) / 0.9149811796508119",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_zscore",
+      "type": "formula",
+      "description": "Standardized V4 using training mean and std.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Linear-friendly normalized component.",
+      "leakage_risk": "low",
+      "formula": "(V4 - 0.41070820481184456) / 0.805700948167739",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v5_zscore",
+      "type": "formula",
+      "description": "Standardized V5 using training mean and std.",
+      "value_range": [
+        -3.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Normalized high-order coefficient with comparable scale.",
+      "leakage_risk": "low",
+      "formula": "(V5 - 0.08228932757557063) / 0.5860058896612599",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_high_energy_ratio",
+      "type": "formula",
+      "description": "Ratio-like contrast between low-order and high-order coefficients via log1p-normalized magnitudes.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "ratio_contrast",
+      "expected_model_benefit": "Captures spectral tilt as a smooth linear projection axis.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(np.abs(V1)) + np.log1p(np.abs(V2))) - (np.log1p(np.abs(V4)) + np.log1p(np.abs(V5)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "coef_decay_slope",
+      "type": "formula",
+      "description": "Approximate linear slope across coefficient index using simple finite-difference average.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "trend",
+      "expected_model_benefit": "Encodes a directional trend that linear SVMs can weight directly.",
+      "leakage_risk": "low",
+      "formula": "((V2 - V1) + (V3 - V2) + (V4 - V3) + (V5 - V4)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "coef_curvature",
+      "type": "formula",
+      "description": "Second-difference style curvature measure across coefficients.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "trend",
+      "expected_model_benefit": "Adds a curvature axis orthogonal to slope, helpful for linear margin.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 2.0 * V3 + V5) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "coef_l2_magnitude",
+      "type": "formula",
+      "description": "Overall magnitude of the coefficient vector (sqrt of squared sum).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Provides a continuous severity/energy measure.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(V1*V1 + V2*V2 + V3*V3 + V4*V4 + V5*V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v3_interaction",
+      "type": "formula",
+      "description": "Centered interaction between V1 and V3 capturing joint deviation.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Gives the linear SVM an explicit interaction axis it cannot derive itself.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 0.8269494139420112) * (V3 - 0.7392850092535472)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_spectral_composite",
+      "type": "formula",
+      "description": "Index-weighted composite emphasizing higher-order coefficients to summarize spectral position.",
+      "value_range": [
+        -2.0,
+        3.5
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "A smooth weighted projection that aligns with possible linear separator direction.",
+      "leakage_risk": "low",
+      "formula": "(1.0*V1 + 2.0*V2 + 3.0*V3 + 4.0*V4 + 5.0*V5) / 15.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nasal_vs_oral_resonance",
+      "type": "judgment",
+      "description": "Semantic estimate of nasal-like vs oral-like resonance pattern: high positive when low-order coefficients dominate over high-order ones (suggesting nasal-like spectral concentration), negative when high-order coefficients dominate (oral-like). Computed as scaled difference of normalized low vs high coefficient magnitudes, clipped to [-1, 1].",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic_acoustic",
+      "expected_model_benefit": "Encodes domain-informed phonetic resonance contrast as a smooth bounded score suitable for linear margins.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "93055c96e7a09567",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of V1 to V2, capturing the relative magnitude of these two continuous descriptors.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Tree models can split on this ratio directly, which might represent a specific molecular property balance.",
+      "leakage_risk": "low",
+      "formula": "V1 / (V2 + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v8_v30_interaction",
+      "type": "formula",
+      "description": "Product of V8 and V30, representing a nonlinear interaction between two features with larger numerical ranges.",
+      "value_range": [
+        0.0,
+        4200.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Provides a pre-computed interaction term that a tree model would otherwise need multiple splits to approximate.",
+      "leakage_risk": "low",
+      "formula": "V8 * V30",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_positive_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for whether V12 is greater than zero.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Creates a hard threshold that tree models can use as a direct binary split.",
+      "leakage_risk": "low",
+      "formula": "np.where(V12 > 0.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v15_v39_diff",
+      "type": "formula",
+      "description": "Difference between V15 and V39, capturing the divergence between these two similarly-scaled continuous features.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Allows the tree to split on the relative difference rather than absolute values of either feature.",
+      "leakage_risk": "low",
+      "formula": "V15 - V39",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v16_v41_sum",
+      "type": "formula",
+      "description": "Sum of V16 and V41, aggregating two count-like features with relatively large maximum values.",
+      "value_range": [
+        0.0,
+        55.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Reduces dimensionality by combining related count features into a single aggregate sum.",
+      "leakage_risk": "low",
+      "formula": "V16 + V41",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v5_v7_total",
+      "type": "formula",
+      "description": "Sum of V3, V5, and V7, representing an aggregated count of specific molecular substructures or properties.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a combined metric that might be more robust than individual sparse counts.",
+      "leakage_risk": "low",
+      "formula": "V3 + V5 + V7",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v28_magnitude",
+      "type": "formula",
+      "description": "Absolute value of V28, focusing on the magnitude of the descriptor regardless of its sign.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Helps the model identify significant deviations from zero without needing symmetric splits.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V28)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v31_log_transform",
+      "type": "formula",
+      "description": "Logarithmic transformation of V31 to compress its right-skewed distribution.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces the impact of extreme values, making it easier for the tree to find meaningful splits in the lower range.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V31)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_feature_presence",
+      "type": "formula",
+      "description": "Boolean indicator if any of the rare features V19, V24, or V25 are greater than zero.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Groups sparse, rare features into a single, more frequent indicator for easier splitting.",
+      "leakage_risk": "low",
+      "formula": "np.where((V19 > 0) | (V24 > 0) | (V25 > 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_v8_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for whether V8 exceeds its training set mean of 36.5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold",
+      "expected_model_benefit": "Provides a pre-computed threshold split based on the central tendency of the feature.",
+      "leakage_risk": "low",
+      "formula": "np.where(V8 > 36.5, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_complexity_assessment",
+      "type": "judgment",
+      "description": "A semantic assessment of the overall molecular complexity based on the combination of various count features (e.g., V16, V41, V30).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures holistic structural complexity that might not be easily represented by simple arithmetic combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "structural_anomaly_score",
+      "type": "judgment",
+      "description": "Evaluates if the combination of continuous descriptors (e.g., V12, V28) suggests an unusual or outlier molecular structure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Helps the tree model isolate and handle potential outliers or rare structural conformations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ac19348af02411d7",
+  "metadata": {}
+}

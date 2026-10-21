@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_credit_amount",
+      "type": "formula",
+      "description": "Natural-log transform of credit_amount using log1p to compress the right tail while preserving ordering.",
+      "value_range": [
+        5.52,
+        9.68
+      ],
+      "feature_family": "amount_transform",
+      "expected_model_benefit": "Lets tree splits isolate very small, medium, and very large requests with fewer cut points on a skewed scale.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_credit_amount",
+      "type": "formula",
+      "description": "Credit amount per month of contractual duration; a simple repayment-size proxy.",
+      "value_range": [
+        4.16,
+        3986.25
+      ],
+      "feature_family": "amount_duration_ratio",
+      "expected_model_benefit": "Exposes nonlinear stress from combining size and term, enabling direct threshold splits.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / duration",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_bucket_ordinal",
+      "type": "formula",
+      "description": "Ordinal duration band: 0 for duration < 12, 1 for 12-23, 2 for 24-35, 3 for 36 or more months.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "term_bucket",
+      "expected_model_benefit": "Provides coarse month bands that trees can split on without searching many nearby duration cut points.",
+      "leakage_risk": "low",
+      "formula": "np.where(duration < 12, 0, np.where(duration < 24, 1, np.where(duration < 36, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_amount_bucket_ordinal",
+      "type": "formula",
+      "description": "Ordinal credit_amount band: 0 for <1000, 1 for 1000-2999, 2 for 3000-6999, 3 for 7000 or more.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "amount_bucket",
+      "expected_model_benefit": "Creates interpretable request-size groups that are easy for trees to branch on.",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_amount < 1000, 0, np.where(credit_amount < 3000, 1, np.where(credit_amount < 7000, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "long_large_credit_flag",
+      "type": "formula",
+      "description": "Indicator for requests that are both long duration and large credit_amount.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "amount_term_interaction",
+      "expected_model_benefit": "Highlights a high-exposure corner formed by size and repayment horizon.",
+      "leakage_risk": "low",
+      "formula": "np.where((duration >= 24) & (credit_amount >= 5000), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "max_installment_low_savings_flag",
+      "type": "formula",
+      "description": "Indicator for maximum installment_commitment combined with the lowest savings_status category.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capacity_liquidity_interaction",
+      "expected_model_benefit": "Gives trees a direct split for simultaneous high payment share and thin reserves.",
+      "leakage_risk": "low",
+      "formula": "np.where((installment_commitment >= 4) & (savings_status == '<100'), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overdrawn_checking_medium_credit_flag",
+      "type": "formula",
+      "description": "Indicator for below-zero checking_status combined with at least a medium-sized credit_amount.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "account_amount_interaction",
+      "expected_model_benefit": "Captures a discrete liquidity-and-size combination that may not be found by single-column splits alone.",
+      "leakage_risk": "low",
+      "formula": "np.where((checking_status == '<0') & (credit_amount >= 3000), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "unstable_employment_high_installment_flag",
+      "type": "formula",
+      "description": "Indicator for short or absent employment combined with elevated installment_commitment.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "employment_capacity_interaction",
+      "expected_model_benefit": "Marks rows where income continuity and payment share jointly create a distinct profile.",
+      "leakage_risk": "low",
+      "formula": "np.where(((employment == 'unemployed') | (employment == '<1')) & (installment_commitment >= 3), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "account_liquidity_score",
+      "type": "judgment",
+      "description": "Semantic 0-5 ordinal assessment from checking_status and savings_status: 0 for below-zero checking with minimal savings, 1-2 for low or unknown reserves, 3-4 for moderate balances, 5 for strong readily available funds or no checking-account constraint.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "liquidity_semantic",
+      "expected_model_benefit": "Combines two balance-related nominal fields into an ordered signal that tree splits can use directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_strength_score",
+      "type": "judgment",
+      "description": "Semantic 0-4 ordinal assessment of credit_history: 0 for delayed previously, 1 for no credits/all paid, 2 for all paid, 3 for existing paid, 4 for critical/other existing credit, reflecting strength of prior repayment record from the category text.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "credit_record_semantic",
+      "expected_model_benefit": "Provides a monotone prior-record split instead of requiring many sparse category branches.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "asset_backing_score",
+      "type": "judgment",
+      "description": "Semantic 0-5 ordinal assessment from property_magnitude and housing: 0 for no known property with rent or for free housing, 1-2 for car or rent combinations, 3-4 for life insurance or own housing, 5 for real estate plus own housing.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "asset_semantic",
+      "expected_model_benefit": "Condenses asset and residence semantics into compact ordinal groups with intuitive cutoffs.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_capacity_score",
+      "type": "judgment",
+      "description": "Semantic 0-5 ordinal assessment from employment and job: 0 for unemployed or unemp/unskilled non res, 1-2 for <1 year or unskilled resident, 3-4 for 1-7 years or skilled, 5 for >=7 years with skilled or high qualif/self emp/mgmt work.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "employment_semantic",
+      "expected_model_benefit": "Creates an ordered proxy for income continuity and skill level that can be split at intuitive cutoffs.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "60bd40fd0c3b6eea",
+  "metadata": {}
+}

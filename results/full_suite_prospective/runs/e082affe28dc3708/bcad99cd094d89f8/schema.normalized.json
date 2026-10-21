@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "mahalanobis_approx_distance",
+      "type": "formula",
+      "description": "Approximate normalized distance from the training set centroid using per-feature z-score contributions summed in quadrature, providing a scale-invariant measure of how far a point is from the center of the feature space.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Helps KNN identify outlier points that may be far from all neighbors, improving neighborhood geometry by providing a global distance reference.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((preg - 3.6405) / 3.1511) ** 2 + ((plas - 120.026) / 31.199) ** 2 + ((pres - 67.908) / 18.309) ** 2 + ((skin - 19.536) / 16.222) ** 2 + ((insu - 71.294) / 104.059) ** 2 + ((mass - 31.173) / 7.366) ** 2 + ((pedi - 0.4394) / 0.2738) ** 2 + ((age - 32.693) / 11.320) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_zscore",
+      "type": "formula",
+      "description": "Z-score normalized plasma glucose concentration, centering and scaling to unit variance for improved distance computation in KNN.",
+      "value_range": [
+        -3.85,
+        2.5
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Ensures glucose contributes proportionally to Euclidean distance calculations, preventing scale dominance in KNN.",
+      "leakage_risk": "low",
+      "formula": "(plas - 120.026) / 31.199",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_zscore",
+      "type": "formula",
+      "description": "Z-score normalized BMI (mass), centering and scaling to unit variance for improved distance computation in KNN.",
+      "value_range": [
+        -4.23,
+        2.51
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Ensures BMI contributes proportionally to Euclidean distance calculations, preventing scale dominance in KNN.",
+      "leakage_risk": "low",
+      "formula": "(mass - 31.173) / 7.366",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_glucose_interaction_norm",
+      "type": "formula",
+      "description": "Normalized interaction between age and glucose z-scores, capturing joint variation in these two clinically related features for improved neighborhood separation.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Captures joint feature variation that may cluster similar patients together in KNN space, improving neighborhood purity.",
+      "leakage_risk": "low",
+      "formula": "((age - 32.693) / 11.320) * ((plas - 120.026) / 31.199)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_log_zscore",
+      "type": "formula",
+      "description": "Log-transformed and z-score normalized insulin level, reducing right skew before scaling to improve distance metric quality for KNN.",
+      "value_range": [
+        -2.5,
+        3.5
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Reduces the influence of extreme insulin values on distance calculations, leading to more meaningful nearest neighbor identification.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(insu) - np.log1p(71.294)) / (np.log1p(71.294 + 104.059) - np.log1p(71.294 - np.minimum(71.294, 104.059)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_risk_score",
+      "type": "formula",
+      "description": "Composite metabolic risk score combining normalized glucose, BMI, and insulin signals into a single scalar distance-relevant feature.",
+      "value_range": [
+        -5.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Aggregates correlated metabolic features into a single dimension that may better separate metabolically similar patients in KNN space.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.026) / 31.199) + ((mass - 31.173) / 7.366) + (np.log1p(insu) - 4.277) / 1.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_preg_ratio_norm",
+      "type": "formula",
+      "description": "Normalized ratio of pregnancies to age, capturing reproductive history relative to age as a scale-invariant feature.",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Provides a normalized ratio feature that captures demographic patterns useful for KNN neighborhood formation.",
+      "leakage_risk": "low",
+      "formula": "(preg / np.maximum(age, 21.0) - 3.6405 / 32.693) / 0.1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "skin_bmi_similarity",
+      "type": "formula",
+      "description": "Cosine-like similarity between normalized skin thickness and BMI, measuring alignment of two body composition indicators.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures correlated body composition signals in a bounded similarity score that improves KNN distance geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((skin - 19.536) / np.maximum(16.222, 0.001)) * ((mass - 31.173) / np.maximum(7.366, 0.001)) / np.maximum(np.sqrt(((skin - 19.536) / 16.222) ** 2 + 1.0) * np.sqrt(((mass - 31.173) / 7.366) ** 2 + 1.0), 0.001), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_age_norm_distance",
+      "type": "formula",
+      "description": "Euclidean distance in the normalized pedigree-age subspace from the training centroid, capturing genetic and demographic proximity.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a 2D subspace distance that captures genetic and age-related clustering patterns for KNN.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((pedi - 0.4394) / 0.2738) ** 2 + ((age - 32.693) / 11.320) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of blood pressure from the training mean, normalized by standard deviation, indicating how atypical the blood pressure reading is.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Highlights patients with unusual blood pressure readings that may form distinct clusters in KNN space.",
+      "leakage_risk": "low",
+      "formula": "np.abs((pres - 67.908) / 18.309)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_metabolic_profile_similarity",
+      "type": "judgment",
+      "description": "Semantic assessment of how closely a patient's combined metabolic indicators (glucose, insulin, BMI) resemble a typical metabolic profile, scored from 0 (highly atypical) to 1 (very typical). Based on proximity of all three metabolic features to their respective training means within one standard deviation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Provides a holistic metabolic similarity score that helps KNN identify metabolically similar patients regardless of individual feature variation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_cluster_indicator",
+      "type": "judgment",
+      "description": "Soft cluster membership score indicating whether a patient falls into a younger low-parity demographic profile (score near 1) versus an older higher-parity profile (score near 0), based on age and pregnancy count relative to training distribution quartiles.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a soft cluster assignment that helps KNN weight neighbors from the same demographic subgroup more heavily, improving local neighborhood coherence.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0610ce00140b737f",
+  "metadata": {}
+}

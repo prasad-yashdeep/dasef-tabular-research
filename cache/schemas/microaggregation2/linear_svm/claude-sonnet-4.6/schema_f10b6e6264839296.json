@@ -1,0 +1,190 @@
+{
+  "dataset_name": "microaggregation2",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "ordinal_group1_mean",
+      "type": "formula",
+      "description": "Mean of the first group of ordinal features (a1-a5), capturing the central tendency of the first ordinal dimension block normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a smooth continuous summary of the first ordinal block useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "((a1 + a2 + a3 + a4 + a5) / 5.0 - 1.0) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_group2_mean",
+      "type": "formula",
+      "description": "Mean of the second group of ordinal features (a6-a10), capturing the central tendency of the second ordinal dimension block normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a smooth continuous summary of the second ordinal block useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "((a6 + a7 + a8 + a9 + a10) / 5.0 - 1.0) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_group1_log_mean",
+      "type": "formula",
+      "description": "Log-transformed mean of continuous features a11-a15, reducing right skew for linear models",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Log normalization of skewed continuous features improves linear separability",
+      "leakage_risk": "low",
+      "formula": "np.log1p((a11 + a12 + a13 + a14 + a15) / 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_group2_log_mean",
+      "type": "formula",
+      "description": "Log-transformed mean of continuous features a16-a20, reducing right skew for linear models",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Log normalization of skewed continuous features improves linear separability",
+      "leakage_risk": "low",
+      "formula": "np.log1p((a16 + a17 + a18 + a19 + a20) / 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_spread",
+      "type": "formula",
+      "description": "Range of ordinal values across all 10 ordinal features (a1-a10), measuring dispersion normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Captures heterogeneity across ordinal dimensions which may correlate with grouping structure",
+      "leakage_risk": "low",
+      "formula": "(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(a1, a2), a3), a4), a5), a6), a7), a8), a9), a10) - np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(a1, a2), a3), a4), a5), a6), a7), a8), a9), a10)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_ratio_g1_g2",
+      "type": "formula",
+      "description": "Ratio of log-mean of continuous group 1 (a11-a15) to log-mean of continuous group 2 (a16-a20), capturing relative magnitude between groups",
+      "value_range": [
+        0.1,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio features capture multiplicative relationships useful for linear SVM decision boundaries",
+      "leakage_risk": "low",
+      "formula": "np.log1p((a11 + a12 + a13 + a14 + a15) / 5.0) / (np.log1p((a16 + a17 + a18 + a19 + a20) / 5.0) + 0.01)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_monotonicity_score",
+      "type": "formula",
+      "description": "Score measuring how monotonically increasing the ordinal sequence a1-a5 is, based on consecutive differences",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "pattern",
+      "expected_model_benefit": "Captures structural ordering patterns in ordinal features that may distinguish groups",
+      "leakage_risk": "low",
+      "formula": "((np.where(a2 > a1, 1, -1) + np.where(a3 > a2, 1, -1) + np.where(a4 > a3, 1, -1) + np.where(a5 > a4, 1, -1)) / 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_log_spread",
+      "type": "formula",
+      "description": "Log-transformed range between max and min of all continuous features (a11-a20), measuring spread in log space",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Spread in continuous features may indicate different data generation processes across groups",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(a11, a12), a13), a14), a15), a16), a17), a18), a19), a20) - np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(np.minimum(a11, a12), a13), a14), a15), a16), a17), a18), a19), a20))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_cross_group_diff",
+      "type": "formula",
+      "description": "Normalized difference between mean of ordinal group 1 (a1-a5) and mean of ordinal group 2 (a6-a10)",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "contrast",
+      "expected_model_benefit": "Cross-group contrast features provide linear projections that separate groups with different ordinal profiles",
+      "leakage_risk": "low",
+      "formula": "((a1 + a2 + a3 + a4 + a5) - (a6 + a7 + a8 + a9 + a10)) / 20.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_ordinal_composite",
+      "type": "formula",
+      "description": "Weighted composite of all ordinal features with linearly increasing weights, emphasizing higher-indexed features",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Weighted composites provide approximate linear projections that can capture dominant ordinal trends",
+      "leakage_risk": "low",
+      "formula": "((1*a1 + 2*a2 + 3*a3 + 4*a4 + 5*a5 + 1*a6 + 2*a7 + 3*a8 + 4*a9 + 5*a10) / (55.0 * 5.0) - 1.0/5.0) / (1.0 - 1.0/5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_tail_severity",
+      "type": "judgment",
+      "description": "Semantic assessment of how extreme the continuous feature values are relative to typical range, scored 0 (all near minimum) to 1 (all near maximum of 39)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Severity scores provide smooth normalized inputs that help linear SVM identify extreme-value groups",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_uniformity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of how uniform (similar) the ordinal values are across all 10 ordinal features, scored 0 (highly varied) to 1 (all identical)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "pattern",
+      "expected_model_benefit": "Uniformity captures whether a row has consistent ordinal responses, which may distinguish structured groups",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f10b6e6264839296",
+  "metadata": {}
+}

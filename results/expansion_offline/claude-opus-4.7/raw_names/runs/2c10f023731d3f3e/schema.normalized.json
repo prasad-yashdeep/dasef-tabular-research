@@ -1,0 +1,190 @@
+{
+  "dataset_name": "house_8l",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_p3_scaled",
+      "type": "formula",
+      "description": "Log-transformed P3 to compress its heavy-tailed distribution into a near-linear scale suitable for SVM margins.",
+      "value_range": [
+        0.0,
+        14.0
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Linearizes a highly skewed magnitude variable so a linear separator can exploit it.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(P3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p3_zscore_clipped",
+      "type": "formula",
+      "description": "Standardized P3 using training mean/std, clipped to [-5,5] to limit outlier influence on linear margin.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Provides a bounded continuous projection of P3 stable for linear weights.",
+      "leakage_risk": "low",
+      "formula": "np.clip((P3 - 2737.4156547183616) / 13818.740327507494, -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p11p3_centered",
+      "type": "formula",
+      "description": "P11p3 centered by training mean to provide zero-mean continuous signal.",
+      "value_range": [
+        -0.4,
+        0.4
+      ],
+      "feature_family": "centering",
+      "expected_model_benefit": "Zero-mean smooth feature aids linear SVM intercept calibration.",
+      "leakage_risk": "low",
+      "formula": "P11p3 - 0.4847314117044624",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p16p2_centered",
+      "type": "formula",
+      "description": "P16p2 centered by its training mean.",
+      "value_range": [
+        -0.5,
+        0.3
+      ],
+      "feature_family": "centering",
+      "expected_model_benefit": "Smooth centered proportion variable useful for linear projection.",
+      "leakage_risk": "low",
+      "formula": "P16p2 - 0.716844362253109",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h15p1_centered",
+      "type": "formula",
+      "description": "H15p1 centered by training mean to expose deviation from typical magnitude.",
+      "value_range": [
+        -6.0,
+        3.5
+      ],
+      "feature_family": "centering",
+      "expected_model_benefit": "Centered continuous variable improves linear margin geometry.",
+      "leakage_risk": "low",
+      "formula": "H15p1 - 5.978039015508412",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p6p4_log_severity",
+      "type": "formula",
+      "description": "Log-compressed P6p4 to expose small-value variation as a smooth severity score.",
+      "value_range": [
+        0.0,
+        0.7
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Compresses skew so linear weight captures gradual changes.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(P6p4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p19p2_log_severity",
+      "type": "formula",
+      "description": "Log-compressed P19p2 to smooth its right-skewed distribution.",
+      "value_range": [
+        0.0,
+        0.7
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Provides a smoother continuous proxy for P19p2 useful for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(P19p2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h5p2_to_h40p4_ratio",
+      "type": "formula",
+      "description": "Ratio of H5p2 over H40p4 (with small denominator floor) capturing relative housing proportion structure.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio summarizes joint behavior of two proportions into a single linear-friendly feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(H5p2 / (H40p4 + 0.01), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p16p2_minus_p11p3",
+      "type": "formula",
+      "description": "Difference between two proportion-like columns, capturing relative gap.",
+      "value_range": [
+        -0.7,
+        0.9
+      ],
+      "feature_family": "interaction_difference",
+      "expected_model_benefit": "Linear differences across normalized proportions reveal contrasts a linear SVM can weigh.",
+      "leakage_risk": "low",
+      "formula": "P16p2 - P11p3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_proportion_composite",
+      "type": "formula",
+      "description": "Weighted composite of bounded proportion features acting as a smooth severity index.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Compact linear projection over correlated bounded features improves margin signal.",
+      "leakage_risk": "low",
+      "formula": "P11p3 + P16p2 + H5p2 + H40p4 + P19p2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p3_h15p1_interaction",
+      "type": "formula",
+      "description": "Product of log P3 and centered H15p1 to expose joint magnitude–household interaction.",
+      "value_range": [
+        -80.0,
+        50.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures interaction in a form a linear SVM can use as an explicit dimension.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(P3) * (H15p1 - 5.978039015508412)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_stability_judgment",
+      "type": "judgment",
+      "description": "Semantic judgment score of household stability combining H15p1 magnitude and H40p4 proportion: higher when H15p1 is near typical range and H40p4 is moderate-to-high, lower for extreme deviations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a smooth bounded semantic indicator of stable household profile not captured by single columns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d597abd738e63dbc",
+  "metadata": {}
+}

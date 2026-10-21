@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mushroom",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_odor_pleasant_or_none",
+      "type": "formula",
+      "description": "Binary indicator for mushrooms with no odor, almond odor, or anise odor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "olfactory",
+      "expected_model_benefit": "Provides a strong linear separation margin as these specific odors are highly discriminative in traditional foraging.",
+      "leakage_risk": "low",
+      "formula": "np.where((odor == 'n') | (odor == 'a') | (odor == 'l'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_gill_size_narrow",
+      "type": "formula",
+      "description": "Binary indicator for mushrooms with narrow gills.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "morphological",
+      "expected_model_benefit": "Allows the linear SVM to assign a specific weight to the narrow gill characteristic, which is a key morphological trait.",
+      "leakage_risk": "low",
+      "formula": "np.where(gill_size == 'n', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_bruises",
+      "type": "formula",
+      "description": "Binary indicator for whether the mushroom bruises.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "biochemical",
+      "expected_model_benefit": "Bruising is a significant biochemical reaction; this feature provides a direct linear indicator for the model.",
+      "leakage_risk": "low",
+      "formula": "np.where(bruises == 't', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_spore_print_color_dark",
+      "type": "formula",
+      "description": "Binary indicator for dark spore print colors (black, brown, chocolate).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "morphological",
+      "expected_model_benefit": "Groups similar dark spore prints together, reducing dimensionality and providing a robust feature for the linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.where((spore_print_color == 'k') | (spore_print_color == 'n') | (spore_print_color == 'h'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stalk_surface_smoothness_score",
+      "type": "formula",
+      "description": "A composite score from 0.0 to 1.0 indicating the smoothness of the stalk above and below the ring.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a continuous-like severity measure of stalk smoothness, which is more effective for linear SVMs than separate categorical indicators.",
+      "leakage_risk": "low",
+      "formula": "np.where(stalk_surface_above_ring == 's', 0.5, 0.0) + np.where(stalk_surface_below_ring == 's', 0.5, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_ring_type_pendant",
+      "type": "formula",
+      "description": "Binary indicator for mushrooms with a pendant ring type.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "morphological",
+      "expected_model_benefit": "Isolates the most common ring type, allowing the model to learn a specific linear weight for this structural feature.",
+      "leakage_risk": "low",
+      "formula": "np.where(ring_type == 'p', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "gill_color_brightness_score",
+      "type": "formula",
+      "description": "A mapped score from 0.0 to 1.0 representing the relative brightness of the gill color, from dark (black/brown) to bright (white/yellow/pink).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Transforms a high-cardinality categorical feature into a smooth, ordinal-like projection suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.where((gill_color == 'w') | (gill_color == 'y') | (gill_color == 'p') | (gill_color == 'b'), 1.0, np.where((gill_color == 'k') | (gill_color == 'n') | (gill_color == 'h'), 0.0, 0.5))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "population_density_score",
+      "type": "formula",
+      "description": "An ordinal score from 0.0 to 1.0 representing the density of the mushroom population, from abundant/scattered to clustered/several.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "environmental",
+      "expected_model_benefit": "Encodes population density as a continuous severity measure, providing a monotonic feature for the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(population == 'a', 0.0, np.where((population == 's') | (population == 'n'), 0.33, np.where((population == 'v') | (population == 'y'), 0.66, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "habitat_woods_or_grasses",
+      "type": "formula",
+      "description": "Binary indicator for mushrooms found in woods, grasses, or paths.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "environmental",
+      "expected_model_benefit": "Groups common habitats together, creating a stable linear feature that captures typical environmental conditions.",
+      "leakage_risk": "low",
+      "formula": "np.where((habitat == 'd') | (habitat == 'g') | (habitat == 'w'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stalk_color_uniformity",
+      "type": "formula",
+      "description": "Binary indicator for whether the stalk color is the same above and below the ring.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures a morphological symmetry trait, providing a derived interaction feature that a linear model cannot learn directly from raw categories.",
+      "leakage_risk": "low",
+      "formula": "np.where(stalk_color_above_ring == stalk_color_below_ring, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_foraging_risk_score",
+      "type": "judgment",
+      "description": "A semantic judgment of the mushroom's overall risk profile for foragers based on its visual and olfactory characteristics, such as odor, gill color, and stalk surface.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides a holistic, continuous risk assessment that aggregates multiple categorical traits into a single, powerful linear predictor.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_culinary_safety_confidence",
+      "type": "judgment",
+      "description": "A semantic judgment of the confidence in the mushroom's safety for culinary use based on traditional foraging heuristics, evaluating features like bruises, ring type, and spore print color.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Offers a complementary, continuous confidence score that helps the linear SVM establish a robust decision boundary based on expert-like heuristics.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8afd72c8f0710d74",
+  "metadata": {}
+}

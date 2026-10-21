@@ -1,0 +1,190 @@
+{
+  "dataset_name": "led24",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_active_segments",
+      "type": "formula",
+      "description": "The total number of active relevant segments in the LED display.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "structural_aggregation",
+      "expected_model_benefit": "Provides a linear magnitude of active segments, allowing the SVM to easily separate sparse shapes from dense shapes.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_1 == '1', 1.0, 0.0) + np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_3 == '1', 1.0, 0.0) + np.where(attribute_4 == '1', 1.0, 0.0) + np.where(attribute_5 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0) + np.where(attribute_7 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "horizontal_segments_active",
+      "type": "formula",
+      "description": "The sum of active horizontal segments (top, middle, bottom).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "directional_projection",
+      "expected_model_benefit": "Creates a linear projection of horizontal structural components, aiding the margin separation of shapes with flat tops or bottoms.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_1 == '1', 1.0, 0.0) + np.where(attribute_4 == '1', 1.0, 0.0) + np.where(attribute_7 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_segments_active",
+      "type": "formula",
+      "description": "The sum of active vertical segments (top-left, top-right, bottom-left, bottom-right).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "directional_projection",
+      "expected_model_benefit": "Aggregates vertical structural components, helping the model distinguish tall, narrow shapes from wider ones.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_3 == '1', 1.0, 0.0) + np.where(attribute_5 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "right_vertical_active",
+      "type": "formula",
+      "description": "The sum of active vertical segments on the right side.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "spatial_isolation",
+      "expected_model_benefit": "Isolates the right-side vertical segments, which is highly discriminative for certain right-aligned shapes.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_3 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "left_vertical_active",
+      "type": "formula",
+      "description": "The sum of active vertical segments on the left side.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "spatial_isolation",
+      "expected_model_benefit": "Isolates the left-side vertical segments, providing a direct linear feature for left-heavy shapes.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_5 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "top_half_active",
+      "type": "formula",
+      "description": "The sum of active segments in the upper half of the display.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "spatial_isolation",
+      "expected_model_benefit": "Summarizes the activity in the upper half of the display, useful for separating top-heavy shapes.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_1 == '1', 1.0, 0.0) + np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_3 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bottom_half_active",
+      "type": "formula",
+      "description": "The sum of active segments in the lower half of the display.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "spatial_isolation",
+      "expected_model_benefit": "Summarizes the activity in the lower half of the display, useful for separating bottom-heavy shapes.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_5 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0) + np.where(attribute_7 == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "symmetry_horizontal_axis",
+      "type": "formula",
+      "description": "The absolute difference in the number of active segments between the top and bottom halves.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "symmetry_measure",
+      "expected_model_benefit": "Measures the imbalance between top and bottom halves, providing a continuous severity measure of vertical asymmetry.",
+      "leakage_risk": "low",
+      "formula": "np.abs((np.where(attribute_1 == '1', 1.0, 0.0) + np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_3 == '1', 1.0, 0.0)) - (np.where(attribute_5 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0) + np.where(attribute_7 == '1', 1.0, 0.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "symmetry_vertical_axis",
+      "type": "formula",
+      "description": "The absolute difference in the number of active segments between the left and right sides.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "symmetry_measure",
+      "expected_model_benefit": "Measures the imbalance between left and right sides, providing a continuous severity measure of horizontal asymmetry.",
+      "leakage_risk": "low",
+      "formula": "np.abs((np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_5 == '1', 1.0, 0.0)) - (np.where(attribute_3 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cross_intersection_active",
+      "type": "formula",
+      "description": "An interaction term capturing the presence of the middle horizontal segment alongside vertical segments.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "interaction_term",
+      "expected_model_benefit": "Captures the interaction between the middle horizontal segment and all vertical segments, highlighting complex intersecting shapes.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_4 == '1', 1.0, 0.0) * (np.where(attribute_2 == '1', 1.0, 0.0) + np.where(attribute_3 == '1', 1.0, 0.0) + np.where(attribute_5 == '1', 1.0, 0.0) + np.where(attribute_6 == '1', 1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "visual_density_score",
+      "type": "judgment",
+      "description": "Semantic judgment of the visual density or compactness of the active segments, assessing how tightly clustered the lit segments are.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a smooth normalized score representing the overall compactness, helping the SVM separate sparse from dense configurations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "shape_complexity_index",
+      "type": "judgment",
+      "description": "Semantic judgment of whether the active segments form a complex, intersecting shape rather than a simple line or curve.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Offers a semantic assessment of shape intricacy, adding a non-linear structural dimension that becomes linearly separable in the SVM space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f75ef0e1f5f28b9b",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_tracker_radar_20260316",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "reach_prevalence_sites_log_score",
+      "type": "formula",
+      "description": "Smooth reach measure combining prevalence and number of observed sites, using training-fold scaling to reduce skew.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "reach",
+      "expected_model_benefit": "Supplies a monotone reach axis with reduced outlier leverage for the linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * (np.log1p(prevalence / 0.0008095094277760595) / np.log1p(0.475 / 0.0008095094277760595)) + 0.45 * (np.log1p(sites) / np.log1p(69229.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "domain_infrastructure_complexity_score",
+      "type": "formula",
+      "description": "DNS and host-shape complexity from CNAME use, subdomain breadth, and resource type diversity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "infrastructure",
+      "expected_model_benefit": "Captures infrastructure complexity that may interact with cross-site behavior while staying dense and bounded.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.40 * has_cnames + 0.35 * (np.log1p(subdomain_count) / np.log1p(220.0)) + 0.25 * (np.log1p(resource_type_count) / np.log1p(10.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_script_fetch_mix_score",
+      "type": "formula",
+      "description": "Load and script/fetch intensity score combining resource volume with script and fetch shares.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "resource_mix",
+      "expected_model_benefit": "Turns heavy-tailed resource counts into a compact continuous workload feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * (np.log1p(resource_count) / np.log1p(20674.0)) + 0.25 * np.clip(script_count / (resource_count + 1.0), 0.0, 1.0) + 0.20 * np.clip(fetch_count / (resource_count + 1.0), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_persistence_volume_score",
+      "type": "formula",
+      "description": "Persistence and cookie footprint combining cookie prevalence, first-party cookie count, lifetime, and sent-cookie volume.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cookie_state",
+      "expected_model_benefit": "Gives the model a smooth persistence axis rather than sparse cookie indicators.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.35 * (np.log1p(total_cookie_prevalence / 0.000537248908134861) / np.log1p(0.44955445999999993 / 0.000537248908134861)) + 0.25 * (np.log1p(total_first_party_cookies) / np.log1p(3544.0)) + 0.25 * (np.log1p(max_cookie_ttl_days) / np.log1p(2912396.6133101853)) + 0.15 * (np.log1p(total_cookies_sent) / np.log1p(2267.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_api_activity_score",
+      "type": "formula",
+      "description": "Runtime cookie-access activity from Document cookie and CookieStore presence plus log-scaled call counts.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cookie_api_activity",
+      "expected_model_benefit": "Separates storage interaction intensity from mere cookie availability through count-aware scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.30 * ((api_Document_cookie_getter + api_Document_cookie_setter) / 2.0) + 0.25 * ((api_CookieStore_prototype_getAll + api_CookieStore_prototype_set) / 2.0) + 0.25 * (np.log1p(api_count_Document_cookie_getter + api_count_Document_cookie_setter) / np.log1p(9639.0 + 8939.0)) + 0.20 * (np.log1p(api_count_CookieStore_prototype_getAll + api_count_CookieStore_prototype_set) / np.log1p(236.0 + 239.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_intensity_log_score",
+      "type": "formula",
+      "description": "API usage intensity combining distinct API count, total call volume, and weighted fingerprinting activity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "api_activity",
+      "expected_model_benefit": "Approximates an overall JavaScript instrumentation projection for linear scoring.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.30 * (np.log1p(distinct_api_count) / np.log1p(68.0)) + 0.35 * (np.log1p(total_api_calls) / np.log1p(202410.0)) + 0.35 * (np.log1p(weighted_fp_score) / np.log1p(19568.09)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fingerprinting_severity_score",
+      "type": "formula",
+      "description": "Severity from declared fingerprinting scores and API weight statistics.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "fingerprinting",
+      "expected_model_benefit": "Adds a compact severity measure for rows with concentrated fingerprinting weights.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.35 * (fingerprinting_score / 3.0) + 0.25 * (max_resource_fingerprinting / 3.0) + 0.25 * (np.log1p(mean_api_weight) / np.log1p(413.2385294117648)) + 0.15 * (np.log1p(max_api_weight) / np.log1p(4255.55)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_category_breadth_score",
+      "type": "formula",
+      "description": "Breadth across browser surface families such as canvas, audio, navigator, screen, device, storage, timing, media, and WebRTC.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "browser_surface",
+      "expected_model_benefit": "Summarizes multi-surface coverage in one dense feature, useful when individual APIs are sparse.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((canvas_api_count / 9.0) + (audio_api_count / 2.0) + (navigator_api_count / 32.0) + (screen_api_count / 11.0) + (device_api_count / 6.0) + (storage_api_count / 6.0) + (timing_api_count / 4.0) + (media_api_count / 4.0) + (webrtc_api_count / 2.0)) / 9.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_entropy_probe_presence_score",
+      "type": "formula",
+      "description": "Fraction of high-entropy browser probes present for canvas, audio, WebGL, navigator, UA data, media devices, WebRTC, performance memory, pixel ratio, and screen size.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "browser_surface",
+      "expected_model_benefit": "Preserves interpretable high-entropy probe evidence without requiring many sparse binary coefficients.",
+      "leakage_risk": "low",
+      "formula": "np.clip((api_HTMLCanvasElement_prototype_toDataURL + api_CanvasRenderingContext2D_prototype_getImageData + api_CanvasRenderingContext2D_prototype_measureText + api_AudioBuffer_prototype_getChannelData + api_OfflineAudioContext_prototype_constructor + api_WebGLRenderingContext_prototype_getParameter + api_WebGLRenderingContext_prototype_getExtension + api_WebGLRenderingContext_prototype_readPixels + api_Navigator_prototype_deviceMemory + api_Navigator_prototype_hardwareConcurrency + api_NavigatorUAData_prototype_getHighEntropyValues + api_MediaDevices_prototype_enumerateDevices + api_RTCPeerConnection_prototype_constructor + api_Performance_prototype_memory + api_window_devicePixelRatio + api_Screen_prototype_width + api_Screen_prototype_height) / 17.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "governance_gap_weighted_score",
+      "type": "formula",
+      "description": "Combines sparse ownership/privacy metadata with fingerprinting, API, and cookie indicators; higher when technical signal is high and governance metadata is limited.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "governance",
+      "expected_model_benefit": "Allows the margin to use limited governance metadata as a modifier of technical intensity.",
+      "leakage_risk": "low",
+      "formula": "np.clip((1.0 - ((has_owner + has_privacy_policy) / 2.0)) * (0.35 * (fingerprinting_score / 3.0) + 0.25 * (np.log1p(weighted_fp_score) / np.log1p(19568.09)) + 0.20 * (np.log1p(total_api_calls) / np.log1p(202410.0)) + 0.20 * (np.log1p(total_cookie_prevalence / 0.000537248908134861) / np.log1p(0.44955445999999993 / 0.000537248908134861))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_stateful_observation_score",
+      "type": "judgment",
+      "description": "0.0-1.0 assessor score for how strongly the row suggests persistent state observation across browsing contexts, considering cookies, storage APIs, CNAMEs, prevalence, API breadth, and fingerprinting severity relative to training-fold metadata. Higher means stronger semantic evidence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Adds human domain synthesis of weak cues that may be hard to express as a simple algebraic rule.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_ordinary_service_fit_score",
+      "type": "judgment",
+      "description": "0.0-1.0 assessor score for how well the row fits ordinary content delivery, utility measurement, or site functionality: high when owner or policy metadata is present and browser-state/API signals are limited relative to resource volume; low when technical signals concentrate on browser identity or persistence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides a semantic counterweight for high-volume service patterns with weak stateful behavior.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6a359523fbadaee5",
+  "metadata": {}
+}

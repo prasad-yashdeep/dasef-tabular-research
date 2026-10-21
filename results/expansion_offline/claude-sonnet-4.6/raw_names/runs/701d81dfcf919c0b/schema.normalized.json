@@ -1,0 +1,190 @@
+{
+  "dataset_name": "2dplanes",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "linear_combination_primary",
+      "type": "formula",
+      "description": "Weighted linear combination of x1 through x5, approximating a hyperplane projection in the first five dimensions. Weights decrease geometrically to emphasize earlier features.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Provides a smooth linear projection that SVM can use directly as a margin-relevant feature, capturing dominant variance directions.",
+      "leakage_risk": "low",
+      "formula": "0.5 * x1 + 0.25 * x2 + 0.125 * x3 + 0.0625 * x4 + 0.03125 * x5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "linear_combination_secondary",
+      "type": "formula",
+      "description": "Weighted linear combination of x6 through x10, approximating a hyperplane projection in the last five dimensions.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Captures variance in the secondary feature block, complementing the primary projection for SVM margin separation.",
+      "leakage_risk": "low",
+      "formula": "0.5 * x6 + 0.25 * x7 + 0.125 * x8 + 0.0625 * x9 + 0.03125 * x10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "l2_norm_all",
+      "type": "formula",
+      "description": "L2 norm of all 10 features, measuring the Euclidean distance from the origin in the full feature space.",
+      "value_range": [
+        0.0,
+        3.17
+      ],
+      "feature_family": "distance_metric",
+      "expected_model_benefit": "Provides a radial distance measure that helps SVM identify decision boundaries based on distance from origin.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(x1**2 + x2**2 + x3**2 + x4**2 + x5**2 + x6**2 + x7**2 + x8**2 + x9**2 + x10**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sum_odd_features",
+      "type": "formula",
+      "description": "Sum of odd-indexed features (x1, x3, x5, x7, x9), capturing the combined signal from alternating feature dimensions.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Aggregates odd-indexed features into a single score, potentially aligning with separating hyperplanes in the 2dplanes dataset.",
+      "leakage_risk": "low",
+      "formula": "x1 + x3 + x5 + x7 + x9",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sum_even_features",
+      "type": "formula",
+      "description": "Sum of even-indexed features (x2, x4, x6, x8, x10), capturing the combined signal from alternating feature dimensions.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Aggregates even-indexed features into a single score, complementing the odd-feature sum for linear separation.",
+      "leakage_risk": "low",
+      "formula": "x2 + x4 + x6 + x8 + x10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "odd_even_difference",
+      "type": "formula",
+      "description": "Difference between sum of odd-indexed and even-indexed features, capturing the contrast between two feature groups.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "contrast_feature",
+      "expected_model_benefit": "Highlights directional contrast between feature groups, which can be a strong linear discriminant for SVM.",
+      "leakage_risk": "low",
+      "formula": "(x1 + x3 + x5 + x7 + x9) - (x2 + x4 + x6 + x8 + x10)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x2_interaction",
+      "type": "formula",
+      "description": "Product of x1 and x2, capturing the interaction between the two most prominent features. Normalized by dividing by 2 to keep range bounded.",
+      "value_range": [
+        -0.5,
+        0.5
+      ],
+      "feature_family": "interaction_feature",
+      "expected_model_benefit": "Captures bilinear interaction between x1 and x2, providing a non-linear signal that can improve linear SVM separation.",
+      "leakage_risk": "low",
+      "formula": "(x1 * x2) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mean_absolute_deviation",
+      "type": "formula",
+      "description": "Mean absolute value of all 10 features, measuring average feature magnitude across all dimensions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "statistical_summary",
+      "expected_model_benefit": "Provides a normalized measure of overall feature activity, useful for SVM to distinguish high-magnitude from low-magnitude regions.",
+      "leakage_risk": "low",
+      "formula": "(np.abs(x1) + np.abs(x2) + np.abs(x3) + np.abs(x4) + np.abs(x5) + np.abs(x6) + np.abs(x7) + np.abs(x8) + np.abs(x9) + np.abs(x10)) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_sign_weighted_sum",
+      "type": "formula",
+      "description": "Sum of all features weighted by the sign of x1, creating a directional projection aligned with x1's orientation.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "directional_projection",
+      "expected_model_benefit": "Creates a sign-conditioned projection that can capture asymmetric decision boundaries aligned with x1's direction.",
+      "leakage_risk": "low",
+      "formula": "np.where(x1 >= 0, x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10, -(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "feature_range_spread",
+      "type": "formula",
+      "description": "Difference between maximum and minimum feature values across all 10 dimensions, measuring the spread of feature values within a row.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "statistical_summary",
+      "expected_model_benefit": "Captures intra-row feature spread, which can indicate whether a point lies in a homogeneous or heterogeneous region of feature space.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.maximum(x1, x2), np.maximum(x3, x4)), np.maximum(np.maximum(x5, x6), np.maximum(x7, x8))), np.maximum(x9, x10)) - np.minimum(np.minimum(np.minimum(np.minimum(x1, x2), np.minimum(x3, x4)), np.minimum(np.minimum(x5, x6), np.minimum(x7, x8))), np.minimum(x9, x10))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "quadrant_indicator_score",
+      "type": "judgment",
+      "description": "Semantic score estimating which quadrant of the feature space a point occupies based on the signs and magnitudes of x1 and x2. Score ranges from -1 (both strongly negative) to 1 (both strongly positive), with intermediate values for mixed signs.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic_region",
+      "expected_model_benefit": "Provides a smooth quadrant-based score that helps SVM identify decision boundaries in the x1-x2 plane, which is often the primary separating plane in 2dplanes datasets.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "feature_coherence_score",
+      "type": "judgment",
+      "description": "Semantic assessment of how coherent or aligned the feature values are across all 10 dimensions. High score (near 1) indicates features are mostly same-signed and large in magnitude; low score (near -1) indicates features are mostly opposite-signed or near zero, suggesting incoherence.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic_coherence",
+      "expected_model_benefit": "Captures the overall directional coherence of the feature vector, which can serve as a smooth discriminant for SVM when decision boundaries correlate with feature alignment patterns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f3c325115bf60255",
+  "metadata": {}
+}

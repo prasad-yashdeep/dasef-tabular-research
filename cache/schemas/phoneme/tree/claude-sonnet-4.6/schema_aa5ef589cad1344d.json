@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "spectral_energy_sum",
+      "type": "formula",
+      "description": "Sum of all five spectral coefficients representing total spectral energy across frequency bands",
+      "value_range": [
+        -6.586,
+        15.241
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Captures overall spectral magnitude which may differ systematically between phoneme groups",
+      "leakage_risk": "low",
+      "formula": "V1 + V2 + V3 + V4 + V5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_peak_value",
+      "type": "formula",
+      "description": "Maximum spectral coefficient value across all five bands indicating dominant frequency component",
+      "value_range": [
+        -1.145,
+        3.773
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Peak spectral energy is a strong discriminator for phoneme classification trees to split on",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.maximum(V1, V2), V3), V4), V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_range",
+      "type": "formula",
+      "description": "Difference between maximum and minimum spectral coefficients measuring spectral spread",
+      "value_range": [
+        0.0,
+        6.515
+      ],
+      "feature_family": "spread",
+      "expected_model_benefit": "Spectral spread distinguishes phonemes with concentrated vs distributed frequency energy",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.maximum(V1, V2), V3), V4), V5) - np.minimum(np.minimum(np.minimum(np.minimum(V1, V2), V3), V4), V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_freq_to_high_freq_ratio",
+      "type": "formula",
+      "description": "Ratio of low frequency bands (V1+V2) to high frequency bands (V4+V5) capturing spectral tilt",
+      "value_range": [
+        -15.0,
+        50.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Spectral tilt ratio provides nonlinear interaction between frequency bands useful for tree splits",
+      "leakage_risk": "low",
+      "formula": "(V1 + V2) / (np.abs(V4 + V5) + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mid_band_dominance",
+      "type": "formula",
+      "description": "Whether V3 (mid-frequency band) exceeds the mean of V1 and V5 (edge bands), indicating mid-frequency dominance",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Boolean split on mid-frequency dominance creates direct threshold for tree models",
+      "leakage_risk": "low",
+      "formula": "np.where(V3 > (V1 + V5) / 2.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_gradient_v1_v5",
+      "type": "formula",
+      "description": "Linear slope from V1 to V5 measuring spectral trend direction across frequency bands",
+      "value_range": [
+        -1.229,
+        1.019
+      ],
+      "feature_family": "gradient",
+      "expected_model_benefit": "Spectral slope direction and magnitude helps trees identify rising vs falling spectral patterns",
+      "leakage_risk": "low",
+      "formula": "(V5 - V1) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_v3_interaction",
+      "type": "formula",
+      "description": "Product of V2 and V3 capturing nonlinear interaction between adjacent mid-frequency bands",
+      "value_range": [
+        -3.5,
+        10.9
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Multiplicative interaction creates curved decision boundaries that tree ensembles can approximate with splits",
+      "leakage_risk": "low",
+      "formula": "V2 * V3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_energy_band_count",
+      "type": "formula",
+      "description": "Count of spectral bands exceeding value 1.0 indicating number of high-energy frequency components",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Ordinal count of high-energy bands provides natural tree splits at integer thresholds",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 > 1.0, 1, 0) + np.where(V2 > 1.0, 1, 0) + np.where(V3 > 1.0, 1, 0) + np.where(V4 > 1.0, 1, 0) + np.where(V5 > 1.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_variance_proxy",
+      "type": "formula",
+      "description": "Variance proxy computed as mean squared deviation of each band from their collective mean",
+      "value_range": [
+        0.0,
+        8.5
+      ],
+      "feature_family": "spread",
+      "expected_model_benefit": "Spectral variance captures uniformity vs peakedness of frequency distribution for tree splitting",
+      "leakage_risk": "low",
+      "formula": "((V1 - (V1+V2+V3+V4+V5)/5.0)**2 + (V2 - (V1+V2+V3+V4+V5)/5.0)**2 + (V3 - (V1+V2+V3+V4+V5)/5.0)**2 + (V4 - (V1+V2+V3+V4+V5)/5.0)**2 + (V5 - (V1+V2+V3+V4+V5)/5.0)**2) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_negative_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for negative V1 values which may signal atypical low-frequency spectral behavior",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Direct boolean split on V1 sign provides a simple but potentially powerful tree node",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 < 0.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_energy_bucket",
+      "type": "judgment",
+      "description": "Ordinal bucket (0-3) representing overall spectral energy level: 0=very low (sum<0), 1=low (0 to 2), 2=medium (2 to 5), 3=high (sum>=5)",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Discretized energy level creates clean categorical splits for tree models without numeric noise",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_shape_type",
+      "type": "judgment",
+      "description": "Categorical shape encoding: 0=monotone decreasing (V1>V2>V3>V4>V5), 1=monotone increasing (V1<V2<V3<V4<V5), 2=peaked in middle (V3 is max), 3=other irregular shape",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "categorical_grouping",
+      "expected_model_benefit": "Spectral shape type groups phonemes by frequency profile pattern enabling categorical splits in trees",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "aa5ef589cad1344d",
+  "metadata": {}
+}

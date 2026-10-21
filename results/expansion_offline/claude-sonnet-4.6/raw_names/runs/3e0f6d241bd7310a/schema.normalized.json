@@ -1,0 +1,190 @@
+{
+  "dataset_name": "coil2000_insurance_policies",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "home_ownership_score",
+      "type": "formula",
+      "description": "Normalized ratio of home owners to total housing tenure (owners vs renters), capturing propensity for property ownership which correlates with mobile home interest",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "housing",
+      "expected_model_benefit": "Linear separator for property ownership orientation, directly relevant to mobile home policy likelihood",
+      "leakage_risk": "low",
+      "formula": "homeOwners / (homeOwners + rentedHouse + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_policy_count",
+      "type": "formula",
+      "description": "Sum of all insurance policy counts across all policy types, representing overall insurance engagement breadth",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "insurance_engagement",
+      "expected_model_benefit": "Continuous measure of insurance portfolio size useful as linear feature for engagement level",
+      "leakage_risk": "low",
+      "formula": "numberOfPrivateThirdPartyInsurance + numberOfThirdPartyInsuranceFirms + numberOfThirdPartyInsuranceAgriculture + numberOfCarPolicies + numberOfDeliveryVanPolicies + numberOfMotorcycleScooterPolicies + numberOfLorryPolicies + numberOfTrailerPolicies + numberOfTractorPolicies + numberOfAgriculturalMachinesPolicies + numberOfMopedPolicies + numberOfLifeInsurances + numberOfPrivateAccidentInsurancePolicies + numberOfFamilyAccidentsInsurancePolicies + numberOfDisabilityInsurancePolicies + numberOfFirePolicies + numberOfBoatPolicies + numberOfBicyclePolicies + numberOfPropertyInsurancePolicies + numberOfSocialSecurityInsurancePolicies",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "agricultural_policy_index",
+      "type": "formula",
+      "description": "Composite score of agricultural and rural insurance policies (tractor, agriculture machines, third party agriculture), indicating rural/farming lifestyle",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Rural lifestyle indicator that may correlate with mobile home ownership patterns",
+      "leakage_risk": "low",
+      "formula": "numberOfTractorPolicies + numberOfAgriculturalMachinesPolicies + numberOfThirdPartyInsuranceAgriculture + farmer",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_weighted_score",
+      "type": "formula",
+      "description": "Weighted income score using income bracket proportions with higher weights for lower income brackets, normalized to 0-1 range",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic",
+      "expected_model_benefit": "Smooth continuous income proxy useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "(incomeLessThan30k * 1.0 + income30To45k * 2.0 + income45To75k * 3.0 + income75To122k * 4.0 + incomeAbove123k * 5.0) / (9.0 * 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_size_age_interaction",
+      "type": "formula",
+      "description": "Interaction between average household size and age midpoint (mapped from categorical age), capturing family life stage",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Captures family life stage combinations relevant to housing decisions, useful as linear feature",
+      "leakage_risk": "low",
+      "formula": "np.clip((avgSizeHousehold * householdWithChildren) / (5.0 * 9.0 + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fire_policy_engagement",
+      "type": "formula",
+      "description": "Log-transformed fire policy contribution score, capturing property insurance engagement with diminishing returns",
+      "value_range": [
+        0.0,
+        2.1
+      ],
+      "feature_family": "insurance_engagement",
+      "expected_model_benefit": "Property insurance engagement signal with smooth log scaling suitable for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.log1p(contributionFirePolicies)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lower_class_family_score",
+      "type": "judgment",
+      "description": "Semantic score (0-1) reflecting likelihood of lower-income large family profile based on customerSubtype and customerMainType combinations. Higher scores for lower class large families, low income catholics, and average families with lower education.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic_segment",
+      "expected_model_benefit": "Captures demographic segment most likely to consider mobile homes as affordable housing option",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rural_lifestyle_indicator",
+      "type": "judgment",
+      "description": "Semantic score (0-1) for rural/agricultural lifestyle based on customerMainType (Farmers highest), customerSubtype, and presence of agricultural features. Farmers=1.0, rural subtypes=0.7, suburban=0.3, urban=0.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Rural lifestyle strongly associated with mobile home ownership; provides semantic signal beyond formula features",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_lower_ratio",
+      "type": "formula",
+      "description": "Proportion of lower education level relative to total education distribution, indicating lower educational attainment in the area",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic",
+      "expected_model_benefit": "Education level proxy as smooth ratio feature for linear SVM margin",
+      "leakage_risk": "low",
+      "formula": "lowerLevelEducation / (highLevelEducation + mediumLevelEducation + lowerLevelEducation + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "car_ownership_intensity",
+      "type": "formula",
+      "description": "Weighted car ownership score combining one-car and two-car proportions, normalized to capture vehicle ownership level",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Vehicle ownership pattern as continuous feature; mobile home owners often have specific car ownership patterns",
+      "leakage_risk": "low",
+      "formula": "np.clip((oneCar + twoCars * 2.0) / (9.0 * 3.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_class_lower_score",
+      "type": "formula",
+      "description": "Weighted composite of lower social classes (C and D) relative to higher classes (A and B1), capturing socioeconomic positioning",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic",
+      "expected_model_benefit": "Smooth socioeconomic gradient feature for linear SVM; lower social class may correlate with mobile home preference",
+      "leakage_risk": "low",
+      "formula": "(socialClassC + socialClassD) / (socialClassA + socialClassB1 + socialClassB2 + socialClassC + socialClassD + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "multi_policy_breadth_score",
+      "type": "formula",
+      "description": "Count of distinct policy types held (binary indicator per type summed), measuring insurance portfolio diversification",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "insurance_engagement",
+      "expected_model_benefit": "Normalized breadth of insurance engagement as continuous linear feature; diverse policy holders may have different risk profiles",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.where(numberOfCarPolicies > 0, 1, 0) + np.where(numberOfFirePolicies > 0, 1, 0) + np.where(numberOfLifeInsurances > 0, 1, 0) + np.where(numberOfPrivateThirdPartyInsurance > 0, 1, 0) + np.where(numberOfTractorPolicies > 0, 1, 0) + np.where(numberOfMotorcycleScooterPolicies > 0, 1, 0) + np.where(numberOfBoatPolicies > 0, 1, 0)) / 7.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e14e54310de12d3c",
+  "metadata": {}
+}

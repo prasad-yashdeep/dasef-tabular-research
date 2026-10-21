@@ -1,0 +1,190 @@
+{
+  "dataset_name": "spambase",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_capital_total",
+      "type": "formula",
+      "description": "Log-scaled total capital run length to compress heavy-tailed scale for distance computation.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Reduces extreme magnitude dominance in Euclidean distance from capital length features.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_total)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_longest",
+      "type": "formula",
+      "description": "Log-scaled longest capital run length for robust distance scaling.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Stabilizes neighborhood geometry by compressing extreme capital-run outliers.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_longest)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_average",
+      "type": "formula",
+      "description": "Log-scaled average capital run length for KNN distance robustness.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Compresses outlier-dominated capital averages so distances reflect relative magnitudes.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_average)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_word_freq_sum",
+      "type": "formula",
+      "description": "Sum of all word frequency features summarizing overall keyword density.",
+      "value_range": [
+        0.0,
+        500.0
+      ],
+      "feature_family": "aggregate_density",
+      "expected_model_benefit": "Provides a global density coordinate that helps cluster similar messages by overall word activity.",
+      "leakage_risk": "low",
+      "formula": "word_freq_0+word_freq_1+word_freq_2+word_freq_3+word_freq_4+word_freq_5+word_freq_6+word_freq_7+word_freq_8+word_freq_9+word_freq_10+word_freq_11+word_freq_12+word_freq_13+word_freq_14+word_freq_15+word_freq_16+word_freq_17+word_freq_18+word_freq_19+word_freq_20+word_freq_21+word_freq_22+word_freq_23+word_freq_24+word_freq_25+word_freq_26+word_freq_27+word_freq_28+word_freq_29+word_freq_30+word_freq_31+word_freq_32+word_freq_33+word_freq_34+word_freq_35+word_freq_36+word_freq_37+word_freq_38+word_freq_39+word_freq_40+word_freq_41+word_freq_42+word_freq_43+word_freq_44+word_freq_45+word_freq_46+word_freq_47",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_char_freq_sum",
+      "type": "formula",
+      "description": "Sum of all character-frequency features summarizing punctuation/special-character density.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "aggregate_density",
+      "expected_model_benefit": "Adds compact special-character signal that improves neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "char_freq_0+char_freq_1+char_freq_2+char_freq_3+char_freq_4+char_freq_5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nonzero_word_count",
+      "type": "formula",
+      "description": "Count of word-frequency features that are present (nonzero) in the row.",
+      "value_range": [
+        0.0,
+        48.0
+      ],
+      "feature_family": "sparsity",
+      "expected_model_benefit": "Vocabulary breadth indicator that separates sparse and dense documents in KNN space.",
+      "leakage_risk": "low",
+      "formula": "(word_freq_0>0)*1+(word_freq_1>0)*1+(word_freq_2>0)*1+(word_freq_3>0)*1+(word_freq_4>0)*1+(word_freq_5>0)*1+(word_freq_6>0)*1+(word_freq_7>0)*1+(word_freq_8>0)*1+(word_freq_9>0)*1+(word_freq_10>0)*1+(word_freq_11>0)*1+(word_freq_12>0)*1+(word_freq_13>0)*1+(word_freq_14>0)*1+(word_freq_15>0)*1+(word_freq_16>0)*1+(word_freq_17>0)*1+(word_freq_18>0)*1+(word_freq_19>0)*1+(word_freq_20>0)*1+(word_freq_21>0)*1+(word_freq_22>0)*1+(word_freq_23>0)*1+(word_freq_24>0)*1+(word_freq_25>0)*1+(word_freq_26>0)*1+(word_freq_27>0)*1+(word_freq_28>0)*1+(word_freq_29>0)*1+(word_freq_30>0)*1+(word_freq_31>0)*1+(word_freq_32>0)*1+(word_freq_33>0)*1+(word_freq_34>0)*1+(word_freq_35>0)*1+(word_freq_36>0)*1+(word_freq_37>0)*1+(word_freq_38>0)*1+(word_freq_39>0)*1+(word_freq_40>0)*1+(word_freq_41>0)*1+(word_freq_42>0)*1+(word_freq_43>0)*1+(word_freq_44>0)*1+(word_freq_45>0)*1+(word_freq_46>0)*1+(word_freq_47>0)*1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "char_to_word_ratio",
+      "type": "formula",
+      "description": "Ratio of special-character density to word density indicating punctuation-heavy content.",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Scale-free style descriptor that improves distance separation between content types.",
+      "leakage_risk": "low",
+      "formula": "(char_freq_0+char_freq_1+char_freq_2+char_freq_3+char_freq_4+char_freq_5)/(1.0+word_freq_0+word_freq_1+word_freq_2+word_freq_3+word_freq_4+word_freq_5+word_freq_6+word_freq_7+word_freq_8+word_freq_9+word_freq_10+word_freq_11+word_freq_12+word_freq_13+word_freq_14+word_freq_15+word_freq_16+word_freq_17+word_freq_18+word_freq_19+word_freq_20+word_freq_21+word_freq_22+word_freq_23+word_freq_24+word_freq_25+word_freq_26+word_freq_27+word_freq_28+word_freq_29+word_freq_30+word_freq_31+word_freq_32+word_freq_33+word_freq_34+word_freq_35+word_freq_36+word_freq_37+word_freq_38+word_freq_39+word_freq_40+word_freq_41+word_freq_42+word_freq_43+word_freq_44+word_freq_45+word_freq_46+word_freq_47)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_burstiness",
+      "type": "formula",
+      "description": "Ratio of longest capital run to average capital run; measures capitalization burstiness.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures bursty caps usage common in promotional content for cleaner neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "capital_run_length_longest/(1.0+capital_run_length_average)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_freq_word_indicator",
+      "type": "formula",
+      "description": "Indicator that at least one prominent word feature exceeds a high threshold (z>3 of its training mean+std).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Binary cluster flag highlighting messages with extreme key-word usage for KNN partitioning.",
+      "leakage_risk": "low",
+      "formula": "np.where((word_freq_18>7.0)|(word_freq_20>5.0)|(word_freq_11>3.0)|(word_freq_4>2.5),1,0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dist_to_origin_prototype",
+      "type": "formula",
+      "description": "Euclidean-like log-scaled distance from a generic all-zero (empty-message) reference using compressed magnitudes.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Unsupervised prototype distance gives a strong radial coordinate for neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.log1p(word_freq_18)**2+np.log1p(word_freq_20)**2+np.log1p(word_freq_11)**2+np.log1p(word_freq_4)**2+np.log1p(char_freq_3)**2+np.log1p(capital_run_length_total)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "shouting_score",
+      "type": "judgment",
+      "description": "Semantic assessment of how much a message exhibits 'shouting' style based on combined capitalization scale and burstiness; high values indicate strong shouting/promotional tone.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a stylistic axis that aligns messages of similar tone in distance space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "promotional_keyword_intensity",
+      "type": "judgment",
+      "description": "Semantic intensity of promotional/marketing keyword density inferred from the overall word-frequency profile; higher values reflect more aggressive promotional vocabulary.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a content-style coordinate that improves neighbor coherence beyond raw counts.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "40d2e260fd32de41",
+  "metadata": {}
+}

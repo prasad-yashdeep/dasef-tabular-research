@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "scaled_center_l2_distance",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from the row to the fixed training-fold numeric center across buying, maint, doors, persons, lug_boot, and safety.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Provides a balanced global radial coordinate so distance KNN does not overemphasize higher-range fields.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((buying - 1.4382239382239381) / 1.148713537637001) ** 2 + ((maint - 1.4034749034749034) / 1.1051596655849332) ** 2 + ((doors - 1.5) / 1.1058810844629603) ** 2 + ((persons - 1.0366795366795367) / 0.8105280808769877) ** 2 + ((lug_boot - 0.9942084942084942) / 0.8137128612863563) ** 2 + ((safety - 0.9922779922779923) / 0.8101302530873647) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_subspace_l2_distance",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from the buying and maint pair to its fixed training-fold center.",
+      "value_range": [
+        0.0,
+        2.1
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Separates ownership-cost code neighborhoods while keeping both cost fields on comparable scale.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((buying - 1.4382239382239381) / 1.148713537637001) ** 2 + ((maint - 1.4034749034749034) / 1.1051596655849332) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_subspace_l2_distance",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from doors, persons, lug_boot, and safety to their fixed training-fold center.",
+      "value_range": [
+        0.0,
+        2.7
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Adds a compact usability and safety radius that improves local geometry among practical-utility fields.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((doors - 1.5) / 1.1058810844629603) ** 2 + ((persons - 1.0366795366795367) / 0.8105280808769877) ** 2 + ((lug_boot - 0.9942084942084942) / 0.8137128612863563) ** 2 + ((safety - 0.9922779922779923) / 0.8101302530873647) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_index_cost_upper_index_utility_corner_distance",
+      "type": "formula",
+      "description": "Range-normalized distance to the generic corner with lower buying and maint codes and upper doors, persons, lug_boot, and safety codes.",
+      "value_range": [
+        0.0,
+        2.45
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Adds a prototype coordinate around an interpretable cost-utility corner, improving neighbor ordering for rows near that pattern.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((buying / 3.0) ** 2 + (maint / 3.0) ** 2 + ((3.0 - doors) / 3.0) ** 2 + ((2.0 - persons) / 2.0) ** 2 + ((2.0 - lug_boot) / 2.0) ** 2 + ((2.0 - safety) / 2.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_index_cost_lower_index_utility_corner_distance",
+      "type": "formula",
+      "description": "Range-normalized distance to the opposite generic corner with upper buying and maint codes and lower doors, persons, lug_boot, and safety codes.",
+      "value_range": [
+        0.0,
+        2.45
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a complementary prototype coordinate so KNN can distinguish opposite ordinal-code regions smoothly.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((3.0 - buying) / 3.0) ** 2 + ((3.0 - maint) / 3.0) ** 2 + (doors / 3.0) ** 2 + (persons / 2.0) ** 2 + (lug_boot / 2.0) ** 2 + (safety / 2.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_utility_contrast",
+      "type": "formula",
+      "description": "Signed difference between the average normalized buying and maint code level and the average normalized utility-code level.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "contrast_axis",
+      "expected_model_benefit": "Condenses broad trade-off movement into one axis, improving distance ordering for rows with similar balance patterns.",
+      "leakage_risk": "low",
+      "formula": "((buying / 3.0 + maint / 3.0) / 2.0) - ((doors / 3.0 + persons / 2.0 + lug_boot / 2.0 + safety / 2.0) / 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_pair_similarity",
+      "type": "formula",
+      "description": "Similarity score for alignment between buying and maint code levels, with 1 meaning identical codes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Keeps rows with coordinated purchase and upkeep codes closer in similarity space.",
+      "leakage_risk": "low",
+      "formula": "1.0 - (np.abs(buying - maint) / 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_coherence_similarity",
+      "type": "formula",
+      "description": "Similarity score measuring coherence among normalized doors, persons, lug_boot, and safety code levels.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Rewards rows whose capacity, storage, and safety code levels move together, reducing jagged ordinal effects.",
+      "leakage_risk": "low",
+      "formula": "1.0 - ((np.abs((doors / 3.0) - (persons / 2.0)) + np.abs((persons / 2.0) - (lug_boot / 2.0)) + np.abs((lug_boot / 2.0) - (safety / 2.0))) / 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_safety_constraint_indicator",
+      "type": "formula",
+      "description": "Binary marker for rows with the minimum passenger-capacity code or the minimum safety code.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Introduces a crisp boundary for rows with minimum capacity or safety cues, which can benefit neighborhood separation in ordinal-coded data.",
+      "leakage_risk": "low",
+      "formula": "np.where((persons == 0) | (safety == 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_index_cost_upper_index_utility_cluster_indicator",
+      "type": "formula",
+      "description": "Binary marker for the compact corner with buying and maint codes at most 1, doors at least 2, and persons, lug_boot, and safety at their upper code.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a high-similarity island for rows sharing a coherent ordinal-code configuration.",
+      "leakage_risk": "low",
+      "formula": "np.where((buying <= 1) & (maint <= 1) & (doors >= 2) & (persons == 2) & (lug_boot == 2) & (safety == 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_practical_use_score",
+      "type": "judgment",
+      "description": "A 0-to-1 row-level semantic judgment, using only doors, persons, lug_boot, and safety, of practical-use strength inferred from their ordinal code positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment_score",
+      "expected_model_benefit": "Adds a smooth domain-aware coordinate that can pull semantically similar rows together for distance KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_cost_utility_fit_score",
+      "type": "judgment",
+      "description": "A 0-to-1 row-level semantic judgment, using buying, maint, doors, persons, lug_boot, and safety, of whether cost-related codes appear well matched to utility and safety codes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment_score",
+      "expected_model_benefit": "Helps neighborhoods reflect perceived value balance beyond raw ordinal gaps.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8c69baddb884ecbd",
+  "metadata": {}
+}

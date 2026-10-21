@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_tracker_radar_20260316",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_weighted_fp_score",
+      "type": "formula",
+      "description": "Log-transformed weighted fingerprinting score to smooth extreme values and provide a continuous severity measure suitable for linear margins.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "fingerprinting",
+      "expected_model_benefit": "Reduces the impact of extreme outliers in fingerprinting scores, allowing the linear model to learn a more robust weight.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(weighted_fp_score)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_prevalence_ratio",
+      "type": "formula",
+      "description": "Ratio of cookie prevalence to overall prevalence, indicating the proportion of an entity's presence that involves stateful tracking.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "tracking_intensity",
+      "expected_model_benefit": "Provides a normalized measure of reliance on cookies relative to overall reach, which is highly discriminative for linear boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.clip(total_cookie_prevalence / np.maximum(prevalence, 1e-05), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "script_to_resource_ratio",
+      "type": "formula",
+      "description": "The proportion of resources that are scripts, highlighting domains that primarily serve executable code rather than passive media.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "resource_composition",
+      "expected_model_benefit": "Normalizes script counts against total resources, creating a bounded ratio that linearly separates code-heavy domains from content-heavy ones.",
+      "leakage_risk": "low",
+      "formula": "script_count / np.maximum(resource_count, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_max_cookie_ttl_days",
+      "type": "formula",
+      "description": "Log-transformed maximum cookie time-to-live in days, capturing the intended duration of stateful tracking.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "statefulness",
+      "expected_model_benefit": "Compresses the massive range of cookie expirations into a smooth, continuous feature that correlates with long-term tracking intent.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(max_cookie_ttl_days)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_diversity_score",
+      "type": "formula",
+      "description": "Normalized count of distinct APIs used, representing the breadth of browser capabilities accessed.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "api_usage",
+      "expected_model_benefit": "Scales the distinct API count to a standard [0,1] range, preventing it from dominating other features in the SVM margin calculation.",
+      "leakage_risk": "low",
+      "formula": "distinct_api_count / 68.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fingerprinting_severity",
+      "type": "formula",
+      "description": "Normalized maximum of domain-level and resource-level fingerprinting scores.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "fingerprinting",
+      "expected_model_benefit": "Combines two categorical/ordinal fingerprinting indicators into a single continuous severity metric.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(fingerprinting_score, max_resource_fingerprinting) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "privacy_transparency_deficit",
+      "type": "formula",
+      "description": "Binary indicator of whether the domain lacks either an identified owner or a privacy policy.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transparency",
+      "expected_model_benefit": "Provides a clear, linearly separable flag for domains that operate opaquely, which strongly correlates with certain tracking behaviors.",
+      "leakage_risk": "low",
+      "formula": "np.where(np.logical_or(has_owner == 0, has_privacy_policy == 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "invasive_api_composite",
+      "type": "formula",
+      "description": "Bounded composite score of highly invasive API categories (canvas, audio, webrtc).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "api_usage",
+      "expected_model_benefit": "Aggregates sparse counts of specific fingerprinting vectors into a dense, bounded feature that directly contributes to the SVM decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.clip((canvas_api_count + audio_api_count + webrtc_api_count) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_total_api_calls",
+      "type": "formula",
+      "description": "Log-transformed total volume of API calls made by the domain's scripts.",
+      "value_range": [
+        0.0,
+        13.0
+      ],
+      "feature_family": "api_usage",
+      "expected_model_benefit": "Smooths the highly skewed distribution of API call volumes, allowing the model to learn from magnitude without being overly sensitive to extreme outliers.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(total_api_calls)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cname_cloaking_risk",
+      "type": "formula",
+      "description": "Interaction feature combining the presence of CNAME records with a normalized count of subdomains.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "infrastructure",
+      "expected_model_benefit": "Captures the specific pattern of CNAME cloaking by activating only when CNAMEs are present and scaling with subdomain proliferation.",
+      "leakage_risk": "low",
+      "formula": "has_cnames * np.clip(subdomain_count / 10.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "storage_and_cookie_intensity",
+      "type": "formula",
+      "description": "Bounded composite score combining storage API usage, first-party cookies, and cookies sent.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "statefulness",
+      "expected_model_benefit": "Creates a unified metric for stateful tracking mechanisms, providing a strong linear signal for domains that heavily utilize client-side storage.",
+      "leakage_risk": "low",
+      "formula": "np.clip((storage_api_count + total_first_party_cookies + total_cookies_sent) / 50.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_tracker_profile",
+      "type": "judgment",
+      "description": "A holistic assessment of the domain's tracking profile, evaluating the combination of high API diversity, long cookie TTLs, lack of privacy policy, and high fingerprinting scores to determine overall tracking likelihood.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Captures complex, non-linear interactions between transparency, statefulness, and fingerprinting that are difficult to express in a single formula, providing a high-level summary for the linear model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c915d9f01ee318d5",
+  "metadata": {}
+}

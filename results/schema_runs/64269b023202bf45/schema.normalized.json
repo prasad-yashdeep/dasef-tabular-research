@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "tree",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "credit_amount_per_month",
+      "type": "formula",
+      "description": "Average credit amount per month of duration.",
+      "value_range": [
+        3.4,
+        4606.0
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Provides a normalized measure of monthly financial burden, which helps tree models split on actual cash flow impact rather than just total amount.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / duration",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Ordinal categorization of age into four distinct life stages.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "demographic_grouping",
+      "expected_model_benefit": "Groups age into ordinal buckets, allowing tree models to easily isolate specific life stages without needing multiple splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 25, 0, np.where(age < 40, 1, np.where(age < 60, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_high_credit_amount",
+      "type": "formula",
+      "description": "Boolean indicator for credit amounts exceeding 5000.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold_indicator",
+      "expected_model_benefit": "Flags large loans, providing a direct boolean split for high-value credit applications.",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_amount > 5000, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_duration_interaction",
+      "type": "formula",
+      "description": "Product of installment commitment and loan duration.",
+      "value_range": [
+        4.0,
+        288.0
+      ],
+      "feature_family": "interaction_term",
+      "expected_model_benefit": "Captures the interaction between installment rate and loan duration, representing the total time-weighted commitment.",
+      "leakage_risk": "low",
+      "formula": "installment_commitment * duration",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_no_checking",
+      "type": "formula",
+      "description": "Boolean indicator for applicants without a checking account.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_indicator",
+      "expected_model_benefit": "Isolates applicants without a checking account, a key categorical grouping for financial profiling.",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == 'no checking', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_young_and_renting",
+      "type": "formula",
+      "description": "Boolean indicator for applicants under 30 who rent their housing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_term",
+      "expected_model_benefit": "Identifies young applicants who rent, a non-linear interaction of age and housing status that tree models can use directly.",
+      "leakage_risk": "low",
+      "formula": "np.where((age < 30) & (housing == 'rent'), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of overall financial health based on savings status, checking status, and credit history.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, monotonic representation of financial stability, reducing the need for the tree to learn complex multi-way splits across several categorical variables.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_purpose_risk_profile",
+      "type": "judgment",
+      "description": "Evaluates the inherent riskiness of the loan purpose combined with the requested amount and duration.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Translates high-cardinality categorical purpose into an ordinal risk scale, simplifying splits for the tree model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_commitments",
+      "type": "formula",
+      "description": "Sum of existing credits and number of dependents.",
+      "value_range": [
+        2.0,
+        6.0
+      ],
+      "feature_family": "additive_aggregation",
+      "expected_model_benefit": "Combines existing credits and dependents into a single integer representing total structural commitments.",
+      "leakage_risk": "low",
+      "formula": "existing_credits + num_dependents",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_per_age",
+      "type": "formula",
+      "description": "Ratio of credit amount to applicant age.",
+      "value_range": [
+        3.3,
+        970.0
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Calculates the ratio of credit amount to age, highlighting unusually large loans for younger individuals.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_stability_indicator",
+      "type": "judgment",
+      "description": "Semantic evaluation of social and residential stability based on employment, housing, personal status, and residence duration.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Aggregates multiple demographic and lifestyle factors into a single ordinal feature, providing a strong, unified signal for tree splits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_guarantor_or_coapplicant",
+      "type": "formula",
+      "description": "Boolean indicator for the presence of a guarantor or co-applicant.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_indicator",
+      "expected_model_benefit": "Flags the presence of a guarantor or co-applicant, providing a direct boolean indicator of external financial backing.",
+      "leakage_risk": "low",
+      "formula": "np.where(other_parties != 'none', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "77f791508d8e17e5",
+  "metadata": {}
+}

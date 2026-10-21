@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "cost_composite",
+      "type": "formula",
+      "description": "Normalized average of buying price and maintenance cost indices (higher = more expensive overall).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Provides a smooth linear cost severity axis useful for margin separation between affordable and expensive cars.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_composite",
+      "type": "formula",
+      "description": "Normalized average of person capacity and luggage boot size (higher = more spacious).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Smooth continuous spaciousness measure helpful for linear projection toward usable cars.",
+      "leakage_risk": "low",
+      "formula": "(persons + lug_boot) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_normalized",
+      "type": "formula",
+      "description": "Safety rating scaled to [0,1] for direct linear weighting.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_score",
+      "expected_model_benefit": "Safety is a dominant acceptability factor; normalized scale aids SVM margin scaling.",
+      "leakage_risk": "low",
+      "formula": "safety / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_safety_penalty",
+      "type": "formula",
+      "description": "Continuous penalty for low safety (1 when safety=0, 0 when safety=2).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Linear penalty term directly aligned with unacceptable cars in linear SVM decision boundary.",
+      "leakage_risk": "low",
+      "formula": "1.0 - safety / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_capacity_penalty",
+      "type": "formula",
+      "description": "Penalty for cars carrying few persons (1 if persons=0, 0 if persons=2).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Two-person cars are typically unacceptable; this provides a direct linear severity signal.",
+      "leakage_risk": "low",
+      "formula": "1.0 - persons / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "critical_deficiency_flag",
+      "type": "formula",
+      "description": "Smooth indicator combining low safety OR low persons capacity (max of two penalties).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Captures critical disqualifiers that strongly push linear SVM toward rejection region.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(1.0 - safety / 2.0, 1.0 - persons / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "value_for_money",
+      "type": "formula",
+      "description": "Quality-to-cost ratio: capacity and safety divided by cost composite (smoothed).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio of desirable to undesirable attributes, providing a linear-discriminative composite.",
+      "leakage_risk": "low",
+      "formula": "(persons + lug_boot + safety) / (buying + maint + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_quality_score",
+      "type": "formula",
+      "description": "Weighted linear composite favoring safety and capacity, penalizing cost.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Approximates the linear acceptability score directly, aligning with SVM hyperplane geometry.",
+      "leakage_risk": "low",
+      "formula": "(safety / 2.0 + persons / 2.0 + lug_boot / 4.0) - (buying / 4.0 + maint / 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_safety_interaction",
+      "type": "formula",
+      "description": "Interaction term: high cost combined with low safety produces large value.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures non-additive disqualification: expensive AND unsafe cars are strongly unacceptable.",
+      "leakage_risk": "low",
+      "formula": "(buying / 3.0) * (1.0 - safety / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "doors_normalized",
+      "type": "formula",
+      "description": "Doors count scaled to [0,1] for linear weighting.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_score",
+      "expected_model_benefit": "Mildly informative continuous attribute; useful as a weak linear contributor.",
+      "leakage_risk": "low",
+      "formula": "doors / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_capacity_imbalance",
+      "type": "formula",
+      "description": "Absolute imbalance between cost level and capacity level (mismatch indicator).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures cars that are overpriced relative to their utility; smooth continuous deviation feature.",
+      "leakage_risk": "low",
+      "formula": "np.abs((buying + maint) / 6.0 - (persons + lug_boot) / 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "practical_usability_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall practical usability based on whether the car has sufficient safety, capacity, and reasonable cost; encoded as a continuous suitability score where higher means more practically usable for general consumers.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a domain-informed smoothed suitability signal that complements raw attributes for linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "4632985c1406238d",
+  "metadata": {}
+}

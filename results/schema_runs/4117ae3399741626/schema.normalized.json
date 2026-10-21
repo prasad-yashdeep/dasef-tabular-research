@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_zscore",
+      "type": "formula",
+      "description": "Z-score normalized recency of last donation (V1) using training mean and std, enabling scale-normalized distance computation",
+      "value_range": [
+        -1.18,
+        7.97
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes V1 to unit scale so KNN distances are not dominated by raw magnitude differences",
+      "leakage_risk": "low",
+      "formula": "(V1 - 9.506684491978609) / 8.08998246476059",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_zscore",
+      "type": "formula",
+      "description": "Z-score normalized frequency of donations (V2) using training mean and std",
+      "value_range": [
+        -0.77,
+        7.62
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes V2 to unit scale for balanced KNN distance contributions",
+      "leakage_risk": "low",
+      "formula": "(V2 - 5.514705882352941) / 5.835402537482516",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_zscore",
+      "type": "formula",
+      "description": "Z-score normalized total blood donated in cc (V3) using training mean and std",
+      "value_range": [
+        -0.77,
+        7.62
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes V3 which has large absolute values, preventing it from dominating KNN distances",
+      "leakage_risk": "low",
+      "formula": "(V3 - 1378.6764705882354) / 1458.8506343706288",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_zscore",
+      "type": "formula",
+      "description": "Z-score normalized time since first donation in months (V4) using training mean and std",
+      "value_range": [
+        -1.33,
+        2.62
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes V4 for balanced KNN distance contributions across all features",
+      "leakage_risk": "low",
+      "formula": "(V4 - 34.282085561497325) / 24.360414323750014",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate",
+      "type": "formula",
+      "description": "Ratio of frequency to time window (V2/V4), representing average donation rate per month since first donation",
+      "value_range": [
+        0.01,
+        1.5
+      ],
+      "feature_family": "ratio_feature",
+      "expected_model_benefit": "Captures donation behavior intensity as a single normalized ratio, improving neighborhood geometry for active vs inactive donors",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_to_tenure_ratio",
+      "type": "formula",
+      "description": "Ratio of recency (V1) to total tenure (V4), indicating how recently relative to total history the last donation occurred",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "ratio_feature",
+      "expected_model_benefit": "Captures relative recency pattern useful for distinguishing donor engagement levels in KNN neighborhoods",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log1p_total_donated",
+      "type": "formula",
+      "description": "Log-transformed total blood donated (V3) to compress right-skewed distribution",
+      "value_range": [
+        5.52,
+        9.43
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Reduces skewness in V3 distribution, improving KNN distance symmetry for high-volume donors",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "euclidean_dist_to_centroid",
+      "type": "formula",
+      "description": "Euclidean distance from each row to the training set centroid in z-score space across all four features",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Measures how typical or atypical each sample is relative to the overall population centroid, helping KNN identify outlier neighborhoods",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 9.506684491978609) / 8.08998246476059) ** 2 + ((V2 - 5.514705882352941) / 5.835402537482516) ** 2 + ((V3 - 1378.6764705882354) / 1458.8506343706288) ** 2 + ((V4 - 34.282085561497325) / 24.360414323750014) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_interaction",
+      "type": "formula",
+      "description": "Product of z-scored V1 and V2, capturing joint recency-frequency interaction in normalized space",
+      "value_range": [
+        -5.0,
+        60.0
+      ],
+      "feature_family": "interaction_feature",
+      "expected_model_benefit": "Encodes combined recency-frequency signal as a single feature, improving KNN separation between frequent recent donors and infrequent or lapsed donors",
+      "leakage_risk": "low",
+      "formula": "((V1 - 9.506684491978609) / 8.08998246476059) * ((V2 - 5.514705882352941) / 5.835402537482516)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cc_per_donation",
+      "type": "formula",
+      "description": "Average blood volume per donation event (V3/V2), representing typical donation amount per visit",
+      "value_range": [
+        200.0,
+        300.0
+      ],
+      "feature_family": "ratio_feature",
+      "expected_model_benefit": "Captures per-donation volume consistency which may cluster donors with similar behavior patterns in KNN space",
+      "leakage_risk": "low",
+      "formula": "V3 / np.maximum(V2, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_frequency_donor_indicator",
+      "type": "formula",
+      "description": "Binary indicator for donors with above-median frequency (V2 > 5), separating high-engagement from low-engagement donors",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a discrete cluster boundary that helps KNN identify high-frequency donor neighborhoods more precisely",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 > 5, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_engagement_score",
+      "type": "judgment",
+      "description": "Semantic composite score assessing overall donor engagement level based on recency, frequency, and tenure patterns. Higher scores indicate more engaged donors with recent, frequent donations relative to their tenure. Assessed on a 0-10 scale considering how V1 (lower is better), V2 (higher is better), and V4 (longer tenure with maintained frequency is better) combine to reflect sustained donation behavior.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Provides a holistic engagement signal that captures multi-dimensional donor behavior patterns, helping KNN group donors with similar overall engagement profiles regardless of individual feature values",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "62fd0f45d65121d6",
+  "metadata": {}
+}

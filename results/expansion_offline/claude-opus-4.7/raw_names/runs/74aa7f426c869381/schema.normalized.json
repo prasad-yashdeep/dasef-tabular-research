@@ -1,0 +1,190 @@
+{
+  "dataset_name": "2dplanes",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "sum_all_features",
+      "type": "formula",
+      "description": "Linear sum across all 10 input features; provides a simple linear projection useful as an SVM margin baseline.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Directly aligns with linear hyperplane structure in input space.",
+      "leakage_risk": "low",
+      "formula": "x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_weighted_sum_rest",
+      "type": "formula",
+      "description": "x1 multiplied by the sum of the other features, encoding interaction between the highest-variance feature and the rest.",
+      "value_range": [
+        -9.0,
+        9.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures multiplicative structure that linear SVM cannot capture from raw features alone.",
+      "leakage_risk": "low",
+      "formula": "x1 * (x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_sign_times_magnitude_sum",
+      "type": "formula",
+      "description": "Sign of x1 multiplied by sum of absolute values of the other features; smooth severity-like score.",
+      "value_range": [
+        -9.0,
+        9.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Provides a directional severity composite for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "np.where(x1 >= 0, 1.0, -1.0) * (np.abs(x2) + np.abs(x3) + np.abs(x4) + np.abs(x5) + np.abs(x6) + np.abs(x7) + np.abs(x8) + np.abs(x9) + np.abs(x10))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "abs_x1",
+      "type": "formula",
+      "description": "Magnitude of x1; continuous severity measure for the most variable input.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Allows linear SVM to learn nonlinear relationship between x1 magnitude and outcome.",
+      "leakage_risk": "low",
+      "formula": "np.abs(x1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mean_abs_features",
+      "type": "formula",
+      "description": "Average magnitude across all input features; smooth normalized aggregate.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "aggregate_magnitude",
+      "expected_model_benefit": "Continuous summary that complements signed linear combinations.",
+      "leakage_risk": "low",
+      "formula": "(np.abs(x1) + np.abs(x2) + np.abs(x3) + np.abs(x4) + np.abs(x5) + np.abs(x6) + np.abs(x7) + np.abs(x8) + np.abs(x9) + np.abs(x10)) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positive_feature_count_norm",
+      "type": "formula",
+      "description": "Fraction of features with positive value across the 10 inputs.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the directional balance of features as a normalized linear-friendly score.",
+      "leakage_risk": "low",
+      "formula": "(np.where(x1 > 0, 1.0, 0.0) + np.where(x2 > 0, 1.0, 0.0) + np.where(x3 > 0, 1.0, 0.0) + np.where(x4 > 0, 1.0, 0.0) + np.where(x5 > 0, 1.0, 0.0) + np.where(x6 > 0, 1.0, 0.0) + np.where(x7 > 0, 1.0, 0.0) + np.where(x8 > 0, 1.0, 0.0) + np.where(x9 > 0, 1.0, 0.0) + np.where(x10 > 0, 1.0, 0.0)) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x2_product",
+      "type": "formula",
+      "description": "Pairwise interaction between x1 and x2.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Adds explicit nonlinear interaction lift to a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "x1 * x2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x3_product",
+      "type": "formula",
+      "description": "Pairwise interaction between x1 and x3.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Adds another explicit nonlinear interaction term for SVM separation.",
+      "leakage_risk": "low",
+      "formula": "x1 * x3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sqrt_sumsq_features",
+      "type": "formula",
+      "description": "Euclidean norm of the 10-dimensional row vector; smooth global magnitude.",
+      "value_range": [
+        0.0,
+        3.163
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Continuous norm useful as a margin-scaling auxiliary feature.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(x1*x1 + x2*x2 + x3*x3 + x4*x4 + x5*x5 + x6*x6 + x7*x7 + x8*x8 + x9*x9 + x10*x10)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_sq_minus_rest_sq_mean",
+      "type": "formula",
+      "description": "Squared x1 minus average of squared other features; contrast in variance contribution.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "contrast",
+      "expected_model_benefit": "Highlights when x1 dominates row variance, useful for linear separation boundaries.",
+      "leakage_risk": "low",
+      "formula": "x1*x1 - (x2*x2 + x3*x3 + x4*x4 + x5*x5 + x6*x6 + x7*x7 + x8*x8 + x9*x9 + x10*x10) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "signed_x1_x2_x3_composite",
+      "type": "formula",
+      "description": "Smooth weighted composite emphasizing the top three columns with decreasing weights.",
+      "value_range": [
+        -1.833,
+        1.833
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Provides a hand-weighted linear projection focused on lower-index features.",
+      "leakage_risk": "low",
+      "formula": "1.0*x1 + 0.5*x2 + 0.333*x3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "feature_dispersion_judgment",
+      "type": "judgment",
+      "description": "Semantic judgment of how dispersed the row values are: ratio of max absolute feature value to mean absolute feature value, capped, indicating whether the row is dominated by a single feature versus broadly distributed.",
+      "value_range": [
+        1.0,
+        10.0
+      ],
+      "feature_family": "semantic_dispersion",
+      "expected_model_benefit": "Helps linear SVM separate concentrated-signal rows from diffuse-signal rows.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "1aeee9785fee29e7",
+  "metadata": {}
+}

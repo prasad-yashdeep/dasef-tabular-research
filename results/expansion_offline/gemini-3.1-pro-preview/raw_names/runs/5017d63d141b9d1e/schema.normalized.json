@@ -1,0 +1,190 @@
+{
+  "dataset_name": "microaggregation2",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "ordinal_group1_avg",
+      "type": "formula",
+      "description": "Average of the first sequence of ordinal variables (a1 to a5).",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a smooth, continuous composite score that helps the linear SVM establish a stable margin based on the overall level of the first ordinal group.",
+      "leakage_risk": "low",
+      "formula": "(a1 + a2 + a3 + a4 + a5) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_group2_avg",
+      "type": "formula",
+      "description": "Average of the second sequence of ordinal variables (a6 to a10).",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a smooth, continuous composite score for the second ordinal group, useful for linear combinations and margin boundaries.",
+      "leakage_risk": "low",
+      "formula": "(a6 + a7 + a8 + a9 + a10) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_group_diff",
+      "type": "formula",
+      "description": "Difference between the averages of the two ordinal groups.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Captures the relative shift between the two ordinal sequences, allowing the SVM to weight the divergence directly.",
+      "leakage_risk": "low",
+      "formula": "((a1 + a2 + a3 + a4 + a5) / 5.0) - ((a6 + a7 + a8 + a9 + a10) / 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_group1_log_sum",
+      "type": "formula",
+      "description": "Log-transformed sum of the first sequence of continuous variables (a11 to a15).",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Normalizes the skewed continuous sum into a smoother, more linear space, preventing large outliers from dominating the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(a11 + a12 + a13 + a14 + a15)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_group2_log_sum",
+      "type": "formula",
+      "description": "Log-transformed sum of the second sequence of continuous variables (a16 to a20).",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Normalizes the magnitude of the second continuous group, providing a well-scaled feature for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(a16 + a17 + a18 + a19 + a20)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_group_ratio",
+      "type": "formula",
+      "description": "Ratio of the sums of the two continuous variable groups, with a small constant to prevent division by zero.",
+      "value_range": [
+        0.0,
+        200.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Exposes the proportional relationship between the two continuous sequences, which is often a strong linear separator when absolute magnitudes vary.",
+      "leakage_risk": "low",
+      "formula": "(a11 + a12 + a13 + a14 + a15 + 0.1) / (a16 + a17 + a18 + a19 + a20 + 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_tail_diff",
+      "type": "formula",
+      "description": "Difference between the final values of the two continuous sequences (a15 and a20).",
+      "value_range": [
+        -40.0,
+        40.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Highlights the divergence at the end of the continuous sequences, providing a direct linear feature for the SVM to split on.",
+      "leakage_risk": "low",
+      "formula": "a15 - a20",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_tail_diff",
+      "type": "formula",
+      "description": "Difference between the final values of the two ordinal sequences (a5 and a10).",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Captures the endpoint divergence of the ordinal sequences, useful for fine-tuning the linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "a5 - a10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_spread_group1",
+      "type": "formula",
+      "description": "The spread or range of the first continuous sequence, calculated as the difference between its last and first elements.",
+      "value_range": [
+        -40.0,
+        40.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Measures the internal growth or decay within the first continuous sequence, offering a slope-like feature for the linear model.",
+      "leakage_risk": "low",
+      "formula": "a15 - a11",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_spread_group2",
+      "type": "formula",
+      "description": "The spread or range of the second continuous sequence, calculated as the difference between its last and first elements.",
+      "value_range": [
+        -40.0,
+        40.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Measures the internal growth or decay within the second continuous sequence, complementing the first spread feature.",
+      "leakage_risk": "low",
+      "formula": "a20 - a16",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_progression_consistency",
+      "type": "judgment",
+      "description": "Semantic judgment of how consistently the ordinal values increase from a1 to a5 and a6 to a10, scored as a continuous severity measure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "pattern_recognition",
+      "expected_model_benefit": "Provides a non-linear pattern assessment transformed into a continuous score, allowing the linear SVM to utilize complex sequence behaviors.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_magnitude_category",
+      "type": "judgment",
+      "description": "Semantic judgment categorizing the overall magnitude and volatility of the continuous variables into a continuous severity score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "severity_scoring",
+      "expected_model_benefit": "Translates complex multi-variable interactions into a single, smooth severity dimension that is highly compatible with linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "690cf885d12acb62",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "contact_intensity",
+      "type": "formula",
+      "description": "Measures the intensity of the current campaign relative to previous interactions.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "interaction_ratios",
+      "expected_model_benefit": "Provides a continuous ratio that helps the linear model weigh the effort of the current campaign against historical engagement.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(campaign) / (previous + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_contact_indicator",
+      "type": "formula",
+      "description": "Indicates whether the client was contacted in a recent campaign prior to the current one.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_indicators",
+      "expected_model_benefit": "Creates a clear linear separation between clients with recent historical interactions and those without.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays < 999, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_per_campaign",
+      "type": "formula",
+      "description": "Calculates the logarithmic duration of the last contact divided by the number of contacts performed during this campaign.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "interaction_ratios",
+      "expected_model_benefit": "Normalizes the interaction time by the number of attempts, offering a smooth continuous measure of interaction depth.",
+      "leakage_risk": "medium",
+      "formula": "np.log1p(duration) / campaign",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Standardizes the client's age using the training set mean and standard deviation.",
+      "value_range": [
+        -3.0,
+        6.0
+      ],
+      "feature_family": "demographic_scaling",
+      "expected_model_benefit": "Improves SVM margin optimization by scaling the demographic feature to a standard normal range.",
+      "leakage_risk": "low",
+      "formula": "(age - 40.0) / 10.4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_rate_burden",
+      "type": "formula",
+      "description": "Combines the Euribor 3-month rate with the client's loan status to estimate financial burden.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "financial_composites",
+      "expected_model_benefit": "Provides a weighted composite feature that captures the interaction between macroeconomic rates and individual debt.",
+      "leakage_risk": "low",
+      "formula": "euribor3m * (loan + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "previous_engagement_score",
+      "type": "formula",
+      "description": "Scores the historical engagement by weighting the number of previous contacts by the recency of the last contact.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "historical_composites",
+      "expected_model_benefit": "Offers a continuous severity measure of past engagement, allowing the linear model to capture historical relationship strength.",
+      "leakage_risk": "low",
+      "formula": "previous * np.where(pdays < 999, (999.0 - pdays) / 999.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_frequency",
+      "type": "formula",
+      "description": "Estimates the frequency of campaign contacts relative to the month of the year.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "temporal_ratios",
+      "expected_model_benefit": "Provides a continuous ratio that helps the model understand campaign density over time.",
+      "leakage_risk": "low",
+      "formula": "campaign / (month + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_loan_interaction",
+      "type": "formula",
+      "description": "Creates a linear combination of housing and personal loan status.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "financial_composites",
+      "expected_model_benefit": "Allows the linear SVM to capture the additive effect of multiple loan types on the client's financial profile.",
+      "leakage_risk": "low",
+      "formula": "housing + loan * 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_age_ratio",
+      "type": "formula",
+      "description": "Calculates the ratio of education level to age.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic_ratios",
+      "expected_model_benefit": "Provides a smooth normalized score representing educational attainment relative to life stage.",
+      "leakage_risk": "low",
+      "formula": "education / age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "client_stability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the client's overall stability based on age, job, marital status, education, default, housing, and loan.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessments",
+      "expected_model_benefit": "Captures non-linear socio-economic stability patterns into a single continuous score suitable for linear weighting.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macroeconomic_favorability",
+      "type": "judgment",
+      "description": "Semantic evaluation of how favorable the current macroeconomic indicators are for financial commitments.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessments",
+      "expected_model_benefit": "Translates complex macroeconomic conditions into a smooth, interpretable score that aligns with linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_quality",
+      "type": "judgment",
+      "description": "Semantic judgment of the quality of the client's engagement based on duration, campaign, pdays, previous, and poutcome.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessments",
+      "expected_model_benefit": "Synthesizes interaction metrics into a holistic quality measure, providing a strong linear predictor of engagement success.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "62c230e3102d60fc",
+  "metadata": {}
+}

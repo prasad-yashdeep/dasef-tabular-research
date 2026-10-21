@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "price_spread",
+      "type": "formula",
+      "description": "Difference between NSW and VIC electricity prices, capturing inter-regional price divergence",
+      "value_range": [
+        -0.219,
+        0.971
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Direct price differential is a strong signal for electricity flow direction and market conditions",
+      "leakage_risk": "low",
+      "formula": "nswprice - vicprice",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_spread",
+      "type": "formula",
+      "description": "Difference between NSW and VIC electricity demand, capturing inter-regional demand imbalance",
+      "value_range": [
+        -0.999,
+        0.883
+      ],
+      "feature_family": "demand_dynamics",
+      "expected_model_benefit": "Demand imbalance between regions drives transfer decisions and price movements",
+      "leakage_risk": "low",
+      "formula": "nswdemand - vicdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_ratio_nsw_vic",
+      "type": "formula",
+      "description": "Ratio of NSW price to VIC price plus small epsilon to avoid division by zero, indicating relative price levels",
+      "value_range": [
+        0.0,
+        971.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Relative price ratio captures multiplicative relationships that additive features miss; tree splits on ratio thresholds",
+      "leakage_risk": "low",
+      "formula": "nswprice / (vicprice + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of transfer capacity to total combined demand, indicating how much transfer covers demand",
+      "value_range": [
+        0.0,
+        16.0
+      ],
+      "feature_family": "supply_demand_balance",
+      "expected_model_benefit": "Transfer relative to demand captures whether grid can balance regional shortfalls",
+      "leakage_risk": "low",
+      "formula": "transfer / (nswdemand + vicdemand + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_price_period",
+      "type": "formula",
+      "description": "Boolean indicator for high NSW price combined with peak period (period > 0.5), flagging peak price events",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Boolean interaction captures nonlinear joint condition that trees can split on directly",
+      "leakage_risk": "low",
+      "formula": "np.where((nswprice > 0.1) & (period > 0.5), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_pressure_index",
+      "type": "formula",
+      "description": "Combined demand pressure from both regions weighted by their respective prices",
+      "value_range": [
+        0.0,
+        0.95
+      ],
+      "feature_family": "supply_demand_balance",
+      "expected_model_benefit": "Price-weighted demand captures economic pressure on the grid, a key driver of price movements",
+      "leakage_risk": "low",
+      "formula": "nswdemand * nswprice + vicdemand * vicprice",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "period_bucket",
+      "type": "formula",
+      "description": "Ordinal time-of-day bucket: 0=early(0-0.25), 1=morning(0.25-0.5), 2=afternoon(0.5-0.75), 3=evening(0.75-1.0)",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Ordinal time buckets allow trees to split on time-of-day patterns without treating period as continuous",
+      "leakage_risk": "low",
+      "formula": "np.where(period < 0.25, 0, np.where(period < 0.5, 1, np.where(period < 0.75, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "date_recency_bucket",
+      "type": "formula",
+      "description": "Ordinal date bucket splitting dataset into early(0), mid-early(1), mid-late(2), recent(3) periods",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Date buckets capture structural shifts in electricity market over time without overfitting to exact dates",
+      "leakage_risk": "low",
+      "formula": "np.where(date < 0.25, 0, np.where(date < 0.5, 1, np.where(date < 0.75, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_nsw_price",
+      "type": "formula",
+      "description": "Log-transformed NSW price to compress right-skewed price distribution",
+      "value_range": [
+        0.0,
+        4.62
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Log transformation reduces impact of extreme price spikes and creates more uniform split points for trees",
+      "leakage_risk": "low",
+      "formula": "np.log1p(nswprice * 100)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_efficiency",
+      "type": "formula",
+      "description": "Transfer relative to maximum possible demand, indicating grid utilization efficiency",
+      "value_range": [
+        0.0,
+        32.0
+      ],
+      "feature_family": "supply_demand_balance",
+      "expected_model_benefit": "Transfer efficiency relative to peak regional demand captures grid stress and flow direction signals",
+      "leakage_risk": "low",
+      "formula": "transfer / (np.maximum(nswdemand, vicdemand) + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_volatility_indicator",
+      "type": "judgment",
+      "description": "Semantic assessment of price volatility level based on NSW price magnitude: 0=very low(<0.02), 1=low(0.02-0.05), 2=moderate(0.05-0.1), 3=high(0.1-0.2), 4=extreme(>0.2)",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Ordinal volatility bucket provides interpretable price regime indicator that trees can split on cleanly",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "regional_imbalance_score",
+      "type": "judgment",
+      "description": "Semantic score of regional supply-demand imbalance combining price and demand differentials: 0=balanced, 1=mild imbalance, 2=moderate imbalance, 3=severe imbalance favoring NSW, 4=severe imbalance favoring VIC",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "supply_demand_balance",
+      "expected_model_benefit": "Captures complex multi-variable regional imbalance state that drives electricity transfer direction and price changes",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "488f8b0804834966",
+  "metadata": {}
+}

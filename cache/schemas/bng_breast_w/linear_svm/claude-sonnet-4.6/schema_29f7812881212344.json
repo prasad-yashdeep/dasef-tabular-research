@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bng_breast_w",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "mean_cellular_severity",
+      "type": "formula",
+      "description": "Average of all 9 cytological features normalized by their combined range, providing a smooth composite severity score across all measurements",
+      "value_range": [
+        1.0,
+        13.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Single linear projection capturing overall cellular abnormality useful for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "(Clump_Thickness + Cell_Size_Uniformity + Cell_Shape_Uniformity + Marginal_Adhesion + Single_Epi_Cell_Size + Bare_Nuclei + Bland_Chromatin + Normal_Nucleoli + Mitoses) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "uniformity_composite",
+      "type": "formula",
+      "description": "Weighted combination of cell size and shape uniformity features, emphasizing their joint contribution to cellular regularity assessment",
+      "value_range": [
+        0.887,
+        12.0
+      ],
+      "feature_family": "uniformity",
+      "expected_model_benefit": "Captures correlated uniformity signals in a single smooth feature for linear decision boundary",
+      "leakage_risk": "low",
+      "formula": "(Cell_Size_Uniformity * 0.5 + Cell_Shape_Uniformity * 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nuclear_abnormality_score",
+      "type": "formula",
+      "description": "Composite of nuclear features: Bare Nuclei, Bland Chromatin, and Normal Nucleoli, representing nuclear structural abnormality",
+      "value_range": [
+        0.5,
+        12.0
+      ],
+      "feature_family": "nuclear_features",
+      "expected_model_benefit": "Aggregates nuclear indicators into a smooth continuous score for linear SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "(np.maximum(Bare_Nuclei, 0.0) * 0.4 + Bland_Chromatin * 0.35 + Normal_Nucleoli * 0.25)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_clump_thickness",
+      "type": "formula",
+      "description": "Log-transformed clump thickness to compress right-skewed distribution and linearize relationship with outcome",
+      "value_range": [
+        0.0,
+        2.7
+      ],
+      "feature_family": "morphology",
+      "expected_model_benefit": "Reduces skewness in clump thickness, improving linear separability for SVM",
+      "leakage_risk": "low",
+      "formula": "np.log1p(Clump_Thickness)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_shape_discordance",
+      "type": "formula",
+      "description": "Absolute difference between cell size uniformity and cell shape uniformity, measuring discordance between size and shape regularity",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "uniformity",
+      "expected_model_benefit": "Captures asymmetric cellular changes that may indicate abnormality beyond average uniformity",
+      "leakage_risk": "low",
+      "formula": "np.abs(Cell_Size_Uniformity - Cell_Shape_Uniformity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_bare_nuclei",
+      "type": "formula",
+      "description": "Bare nuclei value clipped to valid range and normalized by training set maximum, providing a bounded continuous score",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "nuclear_features",
+      "expected_model_benefit": "Normalized feature on [0,1] scale improves SVM margin computation and handles outliers",
+      "leakage_risk": "low",
+      "formula": "np.clip(Bare_Nuclei, 0.0, 13.16) / 13.16",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mitosis_elevated_flag",
+      "type": "formula",
+      "description": "Soft indicator of elevated mitotic activity using smooth sigmoid-like approximation above training mean of 1.576",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "mitosis",
+      "expected_model_benefit": "Provides a smooth continuous signal for elevated mitosis which is a strong malignancy indicator",
+      "leakage_risk": "low",
+      "formula": "np.clip((Mitoses - 1.576) / (11.689 - 1.576), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adhesion_epi_ratio",
+      "type": "formula",
+      "description": "Ratio of marginal adhesion to single epithelial cell size, capturing relative adhesion abnormality normalized by cell size",
+      "value_range": [
+        0.07,
+        12.0
+      ],
+      "feature_family": "morphology",
+      "expected_model_benefit": "Ratio features can capture non-linear interactions in a form usable by linear SVM",
+      "leakage_risk": "low",
+      "formula": "Marginal_Adhesion / np.maximum(Single_Epi_Cell_Size, 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_severity_feature_count",
+      "type": "formula",
+      "description": "Count of features exceeding their respective training means, indicating how many cellular characteristics are simultaneously elevated",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Discrete count of co-occurring abnormalities provides a linear separability signal for SVM",
+      "leakage_risk": "low",
+      "formula": "np.where(Clump_Thickness > 4.364, 1.0, 0.0) + np.where(Cell_Size_Uniformity > 3.120, 1.0, 0.0) + np.where(Cell_Shape_Uniformity > 3.193, 1.0, 0.0) + np.where(Marginal_Adhesion > 2.841, 1.0, 0.0) + np.where(Single_Epi_Cell_Size > 3.197, 1.0, 0.0) + np.where(Bare_Nuclei > 3.483, 1.0, 0.0) + np.where(Bland_Chromatin > 3.399, 1.0, 0.0) + np.where(Normal_Nucleoli > 2.881, 1.0, 0.0) + np.where(Mitoses > 1.576, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "clump_uniformity_interaction",
+      "type": "formula",
+      "description": "Product of log-transformed clump thickness and uniformity composite, capturing multiplicative interaction between structural features",
+      "value_range": [
+        0.0,
+        35.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Approximates a polynomial interaction term in linear form, expanding SVM feature space",
+      "leakage_risk": "low",
+      "formula": "np.log1p(Clump_Thickness) * (Cell_Size_Uniformity + Cell_Shape_Uniformity) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_cellular_regularity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall cellular regularity based on the combined pattern of uniformity, adhesion, and nuclear features. Score from 0 (highly irregular, multiple abnormal features) to 10 (highly regular, all features near normal baseline). Considers whether size/shape uniformity, marginal adhesion, and nuclear characteristics collectively suggest normal tissue architecture.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Holistic regularity judgment captures complex multi-feature patterns that individual features may miss, providing a smooth continuous score for SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nuclear_structural_integrity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of nuclear structural integrity based on bare nuclei presence, chromatin texture, and nucleoli appearance. Score from 0 (severely compromised nuclear structure with multiple abnormal nuclear features) to 10 (intact nuclear structure with all nuclear features near normal). Evaluates whether nuclear features collectively indicate normal or abnormal nuclear architecture.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Domain-informed nuclear integrity score provides a clinically meaningful continuous feature for linear SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "29f7812881212344",
+  "metadata": {}
+}

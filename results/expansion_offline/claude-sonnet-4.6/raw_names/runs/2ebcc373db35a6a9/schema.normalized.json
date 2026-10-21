@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phishingwebsites",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "url_suspicion_score",
+      "type": "formula",
+      "description": "Weighted sum of URL-based indicators: IP address usage, URL length anomaly, shortening service, at-symbol, double-slash redirect, and prefix-suffix dash. Higher values indicate more suspicious URL structure.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "url_structure",
+      "expected_model_benefit": "Provides a smooth linear projection of URL-level phishing signals directly usable by SVM margin optimization.",
+      "leakage_risk": "low",
+      "formula": "(-1 * having_IP_Address.astype(float)) + (-1 * URL_Length.astype(float)) + (-1 * Shortining_Service.astype(float)) + (-1 * having_At_Symbol.astype(float)) + (-1 * double_slash_redirecting.astype(float)) + (-1 * Prefix_Suffix.astype(float))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ssl_domain_trust_score",
+      "type": "formula",
+      "description": "Composite trust score combining SSL state, domain registration length, age of domain, and DNS record presence. Higher values indicate more trustworthy domain infrastructure.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "domain_trust",
+      "expected_model_benefit": "Captures domain legitimacy signals in a single continuous score suitable for linear SVM decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "SSLfinal_State.astype(float) + Domain_registeration_length.astype(float) + age_of_domain.astype(float) + DNSRecord.astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_behavior_score",
+      "type": "formula",
+      "description": "Weighted composite of content-level behavioral indicators: request URL ratio, anchor URL behavior, links in tags, SFH form handler, and submitting to email. Reflects how page content behaves.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "content_behavior",
+      "expected_model_benefit": "Aggregates page content signals into a smooth continuous feature for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "Request_URL.astype(float) + URL_of_Anchor.astype(float) + Links_in_tags.astype(float) + SFH.astype(float) + Submitting_to_email.astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "web_reputation_score",
+      "type": "formula",
+      "description": "Composite of web reputation signals: web traffic rank, page rank, Google index status, links pointing to page, and statistical report. Higher values indicate better established web presence.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "web_reputation",
+      "expected_model_benefit": "Provides a normalized reputation signal that linearly separates legitimate from phishing sites based on external validation.",
+      "leakage_risk": "low",
+      "formula": "web_traffic.astype(float) + Page_Rank.astype(float) + Google_Index.astype(float) + Links_pointing_to_page.astype(float) + Statistical_report.astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "browser_exploit_score",
+      "type": "formula",
+      "description": "Sum of browser-level exploit indicators: mouseover manipulation, right-click disabling, popup windows, iframe usage, and redirect count. Higher values indicate more browser manipulation attempts.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "browser_exploits",
+      "expected_model_benefit": "Captures client-side attack vectors in a single continuous score for linear SVM feature space.",
+      "leakage_risk": "low",
+      "formula": "(-1 * on_mouseover.astype(float)) + (-1 * RightClick.astype(float)) + (-1 * popUpWidnow.astype(float)) + (-1 * Iframe.astype(float)) + (-1 * Redirect.astype(float))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_phishing_risk_index",
+      "type": "formula",
+      "description": "Global phishing risk index combining all 30 features with equal weighting. Negative values in original encoding indicate phishing signals, so this sum captures overall risk direction.",
+      "value_range": [
+        -30.0,
+        30.0
+      ],
+      "feature_family": "global_composite",
+      "expected_model_benefit": "Single most informative linear projection of all features; directly approximates the optimal linear SVM hyperplane direction.",
+      "leakage_risk": "low",
+      "formula": "having_IP_Address.astype(float) + URL_Length.astype(float) + Shortining_Service.astype(float) + having_At_Symbol.astype(float) + double_slash_redirecting.astype(float) + Prefix_Suffix.astype(float) + having_Sub_Domain.astype(float) + SSLfinal_State.astype(float) + Domain_registeration_length.astype(float) + Favicon.astype(float) + port.astype(float) + HTTPS_token.astype(float) + Request_URL.astype(float) + URL_of_Anchor.astype(float) + Links_in_tags.astype(float) + SFH.astype(float) + Submitting_to_email.astype(float) + Abnormal_URL.astype(float) + Redirect.astype(float) + on_mouseover.astype(float) + RightClick.astype(float) + popUpWidnow.astype(float) + Iframe.astype(float) + age_of_domain.astype(float) + DNSRecord.astype(float) + web_traffic.astype(float) + Page_Rank.astype(float) + Google_Index.astype(float) + Links_pointing_to_page.astype(float) + Statistical_report.astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "url_anomaly_density",
+      "type": "formula",
+      "description": "Ratio of negative URL indicators to total URL features checked. Measures the proportion of URL features flagged as suspicious, normalized to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "url_structure",
+      "expected_model_benefit": "Normalized ratio feature ideal for SVM; captures density of URL-level anomalies independent of feature count.",
+      "leakage_risk": "low",
+      "formula": "(np.where(having_IP_Address.astype(float) == -1, 1, 0) + np.where(URL_Length.astype(float) == -1, 1, 0) + np.where(Shortining_Service.astype(float) == -1, 1, 0) + np.where(having_At_Symbol.astype(float) == -1, 1, 0) + np.where(double_slash_redirecting.astype(float) == -1, 1, 0) + np.where(Prefix_Suffix.astype(float) == -1, 1, 0)) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "domain_legitimacy_ratio",
+      "type": "formula",
+      "description": "Ratio of positive domain trust indicators to total domain features. Measures proportion of domain features indicating legitimacy.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "domain_trust",
+      "expected_model_benefit": "Smooth normalized ratio capturing domain legitimacy proportion; well-suited for linear SVM margin computation.",
+      "leakage_risk": "low",
+      "formula": "(np.where(SSLfinal_State.astype(float) == 1, 1, 0) + np.where(Domain_registeration_length.astype(float) == 1, 1, 0) + np.where(age_of_domain.astype(float) == 1, 1, 0) + np.where(DNSRecord.astype(float) == 1, 1, 0)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "subdomain_ssl_interaction",
+      "type": "formula",
+      "description": "Interaction term between subdomain complexity and SSL state. Captures the combined effect of subdomain depth and certificate validity as a product signal.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "domain_trust",
+      "expected_model_benefit": "Nonlinear interaction encoded as a product feature, enabling linear SVM to capture joint subdomain-SSL phishing patterns.",
+      "leakage_risk": "low",
+      "formula": "having_Sub_Domain.astype(float) * SSLfinal_State.astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_external_resource_risk",
+      "type": "formula",
+      "description": "Interaction between request URL external loading and anchor URL behavior. Captures combined risk when both external resources and anchor links show suspicious patterns.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "content_behavior",
+      "expected_model_benefit": "Product interaction feature that highlights co-occurring content risks, providing additional linear separability for SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(Request_URL.astype(float) * URL_of_Anchor.astype(float), -1, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_url_credibility",
+      "type": "judgment",
+      "description": "Semantic assessment of URL credibility based on combination of IP address usage, shortening service, HTTPS token misuse, and at-symbol presence. Score from 0 (highly suspicious) to 1 (highly credible) based on how many of these four key URL credibility signals are clean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "url_structure",
+      "expected_model_benefit": "Provides a semantically grounded credibility score that complements formula features with expert-encoded URL trustworthiness assessment.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "infrastructure_maturity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of website infrastructure maturity combining domain age, DNS record validity, page rank, web traffic, and Google indexing. Ranges from 0 (immature/suspicious infrastructure) to 1 (mature/established infrastructure), reflecting how well-established the site appears across multiple independent signals.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "web_reputation",
+      "expected_model_benefit": "Captures holistic infrastructure maturity as a smooth continuous score, providing SVM with a semantically meaningful axis of separation between established and newly-created sites.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "dd81e15bd0595974",
+  "metadata": {}
+}

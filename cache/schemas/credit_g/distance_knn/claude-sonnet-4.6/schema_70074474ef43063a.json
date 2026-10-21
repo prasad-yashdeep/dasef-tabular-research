@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "credit_amount_zscore",
+      "type": "formula",
+      "description": "Z-score normalized credit amount using training set mean and std, centering the feature for distance calculations",
+      "value_range": [
+        -1.07,
+        5.37
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Normalizes credit amount to unit scale, preventing large-magnitude features from dominating KNN distance calculations",
+      "leakage_risk": "low",
+      "formula": "(credit_amount - 3271.258) / 2821.3251545038192",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_zscore",
+      "type": "formula",
+      "description": "Z-score normalized loan duration using training set mean and std",
+      "value_range": [
+        -1.41,
+        4.23
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Normalizes duration to unit scale for balanced contribution to KNN distance metric",
+      "leakage_risk": "low",
+      "formula": "(duration - 20.903) / 12.052783537424043",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Z-score normalized age using training set mean and std",
+      "value_range": [
+        -1.45,
+        3.47
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Normalizes age to unit scale for balanced KNN neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "(age - 35.546) / 11.36977941738537",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_duration_interaction",
+      "type": "formula",
+      "description": "Product of z-score normalized credit amount and duration, capturing joint risk exposure in a scale-invariant way",
+      "value_range": [
+        -5.97,
+        22.67
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Captures interaction between loan size and term length, improving neighborhood separation for similar risk profiles",
+      "leakage_risk": "low",
+      "formula": "((credit_amount - 3271.258) / 2821.3251545038192) * ((duration - 20.903) / 12.052783537424043)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_credit_burden",
+      "type": "formula",
+      "description": "Estimated monthly credit burden as credit amount divided by duration, log-transformed for scale normalization",
+      "value_range": [
+        3.5,
+        7.5
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Captures effective monthly repayment load as a single interpretable distance feature, improving KNN clustering of similar repayment profiles",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount / duration)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_to_credit_ratio",
+      "type": "formula",
+      "description": "Installment commitment rate relative to normalized credit amount, measuring repayment intensity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Provides a bounded similarity score for repayment burden, improving KNN distance geometry for borrowers with similar financial strain",
+      "leakage_risk": "low",
+      "formula": "np.clip(installment_commitment / (1 + np.log1p(credit_amount / 1000.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "formula",
+      "description": "Composite score combining checking status ordinal encoding and savings status ordinal encoding, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Creates a unified financial stability similarity score that improves KNN neighborhood coherence for borrowers with similar liquidity profiles",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.where(checking_status == 'no checking', 3, np.where(checking_status == '>=200', 2, np.where(checking_status == '0<=X<200', 1, 0))) + np.where(savings_status == '>=1000', 4, np.where(savings_status == '500<=X<1000', 3, np.where(savings_status == '100<=X<500', 2, np.where(savings_status == '<100', 1, 0))))) / 7.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_ordinal",
+      "type": "formula",
+      "description": "Ordinal encoding of employment duration category, normalized to [0,1] scale",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Converts employment stability into a continuous normalized feature for meaningful KNN distance computation",
+      "leakage_risk": "low",
+      "formula": "np.where(employment == '>=7', 1.0, np.where(employment == '4<=X<7', 0.75, np.where(employment == '1<=X<4', 0.5, np.where(employment == '<1', 0.25, 0.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_risk_ordinal",
+      "type": "formula",
+      "description": "Ordinal encoding of credit history from most risky to least risky, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Encodes credit history as a continuous similarity score enabling meaningful distance comparisons between borrowers with similar credit track records",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_history == 'existing paid', 1.0, np.where(credit_history == 'critical/other existing credit', 0.75, np.where(credit_history == 'all paid', 0.5, np.where(credit_history == 'delayed previously', 0.25, 0.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prototype_distance_low_risk",
+      "type": "formula",
+      "description": "Euclidean-style distance from an unsupervised low-risk prototype defined by median/modal values of key numeric features (short duration, low credit, older age, high stability)",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a single prototype-distance feature that captures overall deviation from a typical low-risk borrower profile, improving KNN neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((duration - 12.0) / 12.052783537424043) ** 2 + ((credit_amount - 1500.0) / 2821.3251545038192) ** 2 + ((age - 40.0) / 11.36977941738537) ** 2 + ((installment_commitment - 2.0) / 1.1181551770662246) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prototype_distance_high_risk",
+      "type": "formula",
+      "description": "Euclidean-style distance from an unsupervised high-risk prototype defined by extreme values of key numeric features (long duration, high credit, young age, high installment)",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures proximity to a high-risk borrower archetype, complementing the low-risk prototype distance for improved KNN separation",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((duration - 48.0) / 12.052783537424043) ** 2 + ((credit_amount - 9000.0) / 2821.3251545038192) ** 2 + ((age - 25.0) / 11.36977941738537) ** 2 + ((installment_commitment - 4.0) / 1.1181551770662246) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_creditworthiness_judgment",
+      "type": "judgment",
+      "description": "Holistic semantic assessment of creditworthiness based on combination of checking status, savings status, employment stability, credit history, housing, and other parties. Score from 0 (very poor profile) to 10 (excellent profile) based on qualitative evaluation of all categorical risk indicators together.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Provides a semantically rich composite similarity score that captures qualitative creditworthiness patterns not easily captured by individual features, improving KNN neighborhood coherence for borrowers with similar overall profiles",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "70074474ef43063a",
+  "metadata": {}
+}

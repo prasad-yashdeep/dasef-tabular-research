@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_zscore_abs",
+      "type": "formula",
+      "description": "Absolute z-score of V1 (SpMax_L) for scale-normalized distance contribution.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes V1 magnitude so it contributes proportionally to neighborhood distance.",
+      "leakage_risk": "low",
+      "formula": "np.abs((V1 - 4.776870253164557) / 0.5484442083033194)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v8_zscore_abs",
+      "type": "formula",
+      "description": "Absolute z-score of V8 (SdssC) for scale-normalized distance contribution.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents large-scale V8 from dominating Euclidean neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.abs((V8 - 37.062658227848104) / 9.299336332500504)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v30_log_normalized",
+      "type": "formula",
+      "description": "Log-transformed and standardized V30 to compress its heavy-tailed scale.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Compresses skewed V30 so distance metrics treat near-zero and large values smoothly.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(V30) - 1.5) / 1.2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v31_log_normalized",
+      "type": "formula",
+      "description": "Log1p-normalized V31 to reduce skew before distance computation.",
+      "value_range": [
+        -3.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Stabilizes V31 scale, improving KNN sensitivity in mid-range values.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(V31) - 1.1) / 0.6",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "halogen_count_total",
+      "type": "formula",
+      "description": "Aggregate count of halogen-like atom indicator columns (V3..V7, V11) forming a chemistry similarity axis.",
+      "value_range": [
+        0.0,
+        70.0
+      ],
+      "feature_family": "similarity_aggregate",
+      "expected_model_benefit": "Creates a composite halogen-substituent axis that improves chemical-neighborhood proximity.",
+      "leakage_risk": "low",
+      "formula": "V3 + V4 + V5 + V6 + V7 + V11",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ring_aromatic_intensity",
+      "type": "formula",
+      "description": "Log-scaled sum of ring/aromatic-related counts (V16, V23, V33, V34, V35) providing a structural density signal.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "similarity_aggregate",
+      "expected_model_benefit": "Combines correlated structural counts into one feature for cleaner KNN distance geometry.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V16 + V23 + V33 + V34 + V35)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "centroid_distance_continuous",
+      "type": "formula",
+      "description": "Euclidean distance from the unsupervised training-mean prototype across key continuous columns (standardized).",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a global prototype-distance signal that anchors KNN voting in feature space.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 4.7769) / 0.5484)**2 + ((V2 - 3.0600) / 0.8118)**2 + ((V8 - 37.0627) / 9.2993)**2 + ((V13 - 3.4301) / 0.5570)**2 + ((V15 - 9.9261) / 0.9417)**2 + ((V36 - 3.7932) / 0.6994)**2 + ((V39 - 8.4859) / 1.0073)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "centroid_distance_indices",
+      "type": "formula",
+      "description": "Euclidean distance from training-mean prototype across topological index columns V17, V18, V22, V27.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Adds a topological-index prototype distance to capture compactness-axis similarity.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V17 - 1.0102) / 0.0440)**2 + ((V18 - 1.1313) / 0.0289)**2 + ((V22 - 1.2384) / 0.0936)**2 + ((V27 - 2.2152) / 0.2299)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_substituent_flag",
+      "type": "formula",
+      "description": "Indicator that the row contains rare-event substituent counts (V19, V24, V29 > 0) suggesting an outlier cluster.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Identifies rare-structure rows so KNN can isolate sparse neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.where((V19 + V24 + V29) > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_v28_sign_cluster",
+      "type": "formula",
+      "description": "Sign-combination cluster id for V12 and V28 (both negative-mean continuous descriptors).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Encodes 4-way sign cluster for V12/V28 to sharpen local KNN neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.where(V12 >= 0, 2, 0) + np.where(V28 >= 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_complexity_score",
+      "type": "judgment",
+      "description": "Semantic judgment of overall molecular structural complexity combining size (V8, V15), branching (V16), and substituent diversity (halogens, heteroatoms). Higher values indicate more complex molecules expected to cluster together in QSAR space.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a holistic complexity axis that KNN can use to find structurally similar neighbors.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lipophilicity_proxy_band",
+      "type": "judgment",
+      "description": "Semantic band indicator for lipophilicity-like behavior inferred from V12 (potential logP-like descriptor) and ring intensity. Bands: 0=hydrophilic, 1=neutral, 2=lipophilic, derived without target reference.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a chemistry-motivated coarse partition to improve KNN neighborhood relevance for biodegradation behavior.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "625b83e0063d8fa9",
+  "metadata": {}
+}

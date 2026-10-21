@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_cost_score",
+      "type": "formula",
+      "description": "Sum of buying and maintenance costs to represent the overall economic burden of the vehicle.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "economic",
+      "expected_model_benefit": "Provides a single continuous split point for tree models to evaluate total cost rather than splitting on buying and maint separately.",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_capacity_score",
+      "type": "formula",
+      "description": "Sum of doors, persons, and luggage boot size to represent the overall utility and capacity of the vehicle.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "utility",
+      "expected_model_benefit": "Aggregates physical capacity attributes into a single ordinal feature, allowing trees to easily isolate high-utility vehicles.",
+      "leakage_risk": "low",
+      "formula": "doors + persons + lug_boot",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_high_safety",
+      "type": "formula",
+      "description": "Boolean indicator for vehicles with the highest safety rating.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety",
+      "expected_model_benefit": "Creates a direct binary split for top-tier safety, which is often a critical decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.where(safety == 2, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_low_safety",
+      "type": "formula",
+      "description": "Boolean indicator for vehicles with the lowest safety rating.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety",
+      "expected_model_benefit": "Creates a direct binary split for poor safety, allowing the model to quickly filter out unviable options.",
+      "leakage_risk": "low",
+      "formula": "np.where(safety == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_to_capacity_ratio",
+      "type": "formula",
+      "description": "Ratio of total cost to total capacity, representing the price per unit of utility.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "value",
+      "expected_model_benefit": "Introduces a nonlinear interaction between cost and utility that tree models cannot easily synthesize on their own.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) / (doors + persons + lug_boot + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_car_suitability",
+      "type": "formula",
+      "description": "Boolean indicator for vehicles that meet minimum requirements for a family car (adequate persons capacity, doors, and safety).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "utility",
+      "expected_model_benefit": "Provides a pre-computed logical AND condition, saving the tree from needing multiple deep splits to identify family-appropriate vehicles.",
+      "leakage_risk": "low",
+      "formula": "np.where((persons >= 1) & (doors >= 1) & (safety >= 1), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "luxury_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for vehicles with high buying cost, high maintenance, and high safety.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_grouping",
+      "expected_model_benefit": "Groups high-end vehicles into a single category, helping the model identify premium segments efficiently.",
+      "leakage_risk": "low",
+      "formula": "np.where((buying >= 2) & (maint >= 2) & (safety == 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "practicality_index",
+      "type": "formula",
+      "description": "Weighted sum of utility features, giving extra importance to luggage boot size.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "utility",
+      "expected_model_benefit": "Offers an alternative ordinal ranking of utility that prioritizes cargo space, providing a different perspective for tree splits.",
+      "leakage_risk": "low",
+      "formula": "(lug_boot * 2) + persons + doors",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_safety_assessment",
+      "type": "judgment",
+      "description": "Semantic evaluation of the vehicle's overall safety and reliability profile, considering the safety rating and maintenance level.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "safety",
+      "expected_model_benefit": "Captures nuanced semantic relationships between maintenance quality and safety ratings that simple arithmetic might miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_value_proposition",
+      "type": "judgment",
+      "description": "Semantic evaluation of the vehicle's value proposition based on the trade-off between cost (buying, maint) and utility (doors, persons, lug_boot).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "value",
+      "expected_model_benefit": "Provides a holistic, human-like assessment of whether the vehicle is 'worth it', giving the tree a powerful high-level feature to split on.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_safety_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between passenger capacity and safety rating.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Highlights the critical combination of carrying many people and keeping them safe, which is a strong nonlinear signal.",
+      "leakage_risk": "low",
+      "formula": "persons * safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_quality_score",
+      "type": "formula",
+      "description": "A composite score rewarding safety, capacity, and luggage space while penalizing buying and maintenance costs.",
+      "value_range": [
+        -6.0,
+        10.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a single, strong monotonic feature that aligns with general vehicle desirability, reducing the depth required for the tree to make accurate predictions.",
+      "leakage_risk": "low",
+      "formula": "(safety * 3) + lug_boot + persons - buying - maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "bbf8c5ce918481c1",
+  "metadata": {}
+}

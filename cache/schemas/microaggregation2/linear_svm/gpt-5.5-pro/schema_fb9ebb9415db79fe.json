@@ -1,0 +1,190 @@
+{
+  "dataset_name": "microaggregation2",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "ordinal_block1_level_norm",
+      "type": "formula",
+      "description": "Normalized average level of the first ordinal block a1-a5 on the observed 1-to-5 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_level",
+      "expected_model_benefit": "Provides a smooth low-dimensional level signal that linear SVM margins can weight instead of relying only on five separate ordinal inputs.",
+      "leakage_risk": "low",
+      "formula": "((1.0*a1 + 1.0*a2 + 1.0*a3 + 1.0*a4 + 1.0*a5) - 5.0) / 20.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_block2_level_norm",
+      "type": "formula",
+      "description": "Normalized average level of the second ordinal block a6-a10 on the observed 1-to-5 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_level",
+      "expected_model_benefit": "Adds a second smooth ordinal level axis, useful when the two ordinal blocks carry different row structure.",
+      "leakage_risk": "low",
+      "formula": "((1.0*a6 + 1.0*a7 + 1.0*a8 + 1.0*a9 + 1.0*a10) - 5.0) / 20.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_level_gap_norm",
+      "type": "formula",
+      "description": "Signed normalized difference between the second and first ordinal block levels.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "ordinal_contrast",
+      "expected_model_benefit": "Gives the linear margin a direct contrast feature for rows where relative block elevation is more informative than absolute level.",
+      "leakage_risk": "low",
+      "formula": "((1.0*a6 + 1.0*a7 + 1.0*a8 + 1.0*a9 + 1.0*a10) - (1.0*a1 + 1.0*a2 + 1.0*a3 + 1.0*a4 + 1.0*a5)) / 20.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_ramp_projection",
+      "type": "formula",
+      "description": "Weighted left-to-right ramp projection across both ordinal blocks, emphasizing low-index versus high-index positions.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Approximates an interpretable linear trend direction that a linear SVM can use as a compact shape coordinate.",
+      "leakage_risk": "low",
+      "formula": "(-2.0*a1 - 1.0*a2 + 1.0*a4 + 2.0*a5 - 2.0*a6 - 1.0*a7 + 1.0*a9 + 2.0*a10) / 24.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ordinal_pair_mismatch_norm",
+      "type": "formula",
+      "description": "Mean absolute paired disagreement between a1-a5 and a6-a10 after aligning positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_consistency",
+      "expected_model_benefit": "Summarizes cross-block consistency as a continuous severity measure that can improve margin placement.",
+      "leakage_risk": "low",
+      "formula": "(np.abs(1.0*a1 - 1.0*a6) + np.abs(1.0*a2 - 1.0*a7) + np.abs(1.0*a3 - 1.0*a8) + np.abs(1.0*a4 - 1.0*a9) + np.abs(1.0*a5 - 1.0*a10)) / 20.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_block1_log_level_norm",
+      "type": "formula",
+      "description": "Log-compressed average magnitude of continuous block a11-a15, normalized by the training-fold upper range for that block.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "continuous_log_level",
+      "expected_model_benefit": "Compresses heavy-tailed magnitudes into a smooth level score suited to linear SVM scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(a11) + np.log1p(a12) + np.log1p(a13) + np.log1p(a14) + np.log1p(a15)) / (5.0 * np.log1p(39.675)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_block2_log_level_norm",
+      "type": "formula",
+      "description": "Log-compressed average magnitude of continuous block a16-a20, normalized by the training-fold upper range for that block.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "continuous_log_level",
+      "expected_model_benefit": "Creates a comparable smooth continuous-level axis for the second continuous block.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(a16) + np.log1p(a17) + np.log1p(a18) + np.log1p(a19) + np.log1p(a20)) / (5.0 * np.log1p(39.448)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_log_level_gap_norm",
+      "type": "formula",
+      "description": "Signed difference between log-compressed continuous block levels for a16-a20 and a11-a15.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "continuous_log_contrast",
+      "expected_model_benefit": "Supplies a normalized contrast between continuous blocks, reducing the need for the SVM to infer this difference from many raw inputs.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((np.log1p(a16) + np.log1p(a17) + np.log1p(a18) + np.log1p(a19) + np.log1p(a20)) / (5.0 * np.log1p(39.448))) - ((np.log1p(a11) + np.log1p(a12) + np.log1p(a13) + np.log1p(a14) + np.log1p(a15)) / (5.0 * np.log1p(39.675))), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_pair_log_mismatch_norm",
+      "type": "formula",
+      "description": "Mean absolute paired disagreement between log-compressed continuous blocks after aligning positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "continuous_consistency",
+      "expected_model_benefit": "Converts paired continuous discrepancies into one smooth severity coordinate for margin-based separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs(np.log1p(a11) - np.log1p(a16)) + np.abs(np.log1p(a12) - np.log1p(a17)) + np.abs(np.log1p(a13) - np.log1p(a18)) + np.abs(np.log1p(a14) - np.log1p(a19)) + np.abs(np.log1p(a15) - np.log1p(a20))) / (5.0 * np.log1p(40.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_endpoint_log_share",
+      "type": "formula",
+      "description": "Share of total log-compressed continuous magnitude concentrated in endpoint columns a15 and a20.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "continuous_tail_ratio",
+      "expected_model_benefit": "Adds an interpretable ratio for endpoint concentration, helpful when tail-heavy rows form a near-linear pattern.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(a15) + np.log1p(a20)) / (np.log1p(a11) + np.log1p(a12) + np.log1p(a13) + np.log1p(a14) + np.log1p(a15) + np.log1p(a16) + np.log1p(a17) + np.log1p(a18) + np.log1p(a19) + np.log1p(a20) + 0.000001), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_shape_coherence_score",
+      "type": "judgment",
+      "description": "Numeric semantic review of the row shape across the two ordinal runs and two continuous runs. Score 1 means smooth, internally consistent progression with similar paired blocks; score 0 means strong reversals, broken ordering, or mismatched paired blocks.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_shape",
+      "expected_model_benefit": "Captures soft shape regularities not fully represented by algebraic summaries, adding a near-linear cue for SVM margins.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heavy_tail_salience_score",
+      "type": "judgment",
+      "description": "Numeric semantic review of unusual large continuous values among a11-a20, considering both multiple high values and isolated spikes relative to the fixed training-fold ranges. Score 0 means none are notable; score 1 means severe row-wide or spike-like extremes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_tail",
+      "expected_model_benefit": "Gives a single severity axis for rare large-magnitude patterns, helping a linear SVM use heavy-tail intensity without many sparse extreme indicators.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "fb9ebb9415db79fe",
+  "metadata": {}
+}

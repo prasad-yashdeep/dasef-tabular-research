@@ -1,0 +1,190 @@
+{
+  "dataset_name": "loan_status",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_income_to_loan_ratio",
+      "type": "formula",
+      "description": "Log-transformed ratio of person's income to the loan amount, capturing the applicant's capacity to repay the principal.",
+      "value_range": [
+        0.1,
+        10.0
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Provides a smooth, scaled measure of financial capacity, which helps linear models establish a clear decision boundary based on relative income.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(person_income / np.maximum(loan_amnt, 500.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "debt_burden_index",
+      "type": "formula",
+      "description": "Interaction between the percentage of income dedicated to the loan and the interest rate, representing the ongoing financial strain.",
+      "value_range": [
+        0.0,
+        13.0
+      ],
+      "feature_family": "risk_composite",
+      "expected_model_benefit": "Creates an explicit interaction term for linear SVMs, combining two critical risk factors into a single continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "loan_percent_income * loan_int_rate",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_normalized",
+      "type": "formula",
+      "description": "Min-max normalized credit score to ensure it is on a similar scale to other features.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_profile",
+      "expected_model_benefit": "Scaling prevents the large magnitude of credit scores from dominating the SVM margin calculations.",
+      "leakage_risk": "low",
+      "formula": "(credit_score - 400.0) / 450.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_ratio",
+      "type": "formula",
+      "description": "Ratio of employment experience to adult age, indicating long-term job stability.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic_ratio",
+      "expected_model_benefit": "Normalizes employment length by age, providing a more comparable stability metric across different age groups for linear projections.",
+      "leakage_risk": "low",
+      "formula": "np.clip(person_emp_exp / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_risk_composite",
+      "type": "formula",
+      "description": "Composite score combining the log of the loan amount and the scaled interest rate.",
+      "value_range": [
+        3.0,
+        22.0
+      ],
+      "feature_family": "risk_composite",
+      "expected_model_benefit": "Provides a weighted composite of loan size and cost, allowing the linear model to easily separate high-cost, large loans.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(loan_amnt) * (loan_int_rate / 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_age_ratio",
+      "type": "formula",
+      "description": "Ratio of credit history length to adult age, reflecting how early the applicant established credit.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_profile",
+      "expected_model_benefit": "Offers a normalized view of credit maturity, which is more linearly separable than raw credit history length.",
+      "leakage_risk": "low",
+      "formula": "np.clip(cb_person_cred_hist_length / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_risk_profile_indicator",
+      "type": "formula",
+      "description": "Indicator for applicants with both a low credit score and a high loan-to-income percentage.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_indicator",
+      "expected_model_benefit": "Introduces a non-linear threshold effect as a distinct feature, helping the linear SVM capture specific high-risk intersections.",
+      "leakage_risk": "low",
+      "formula": "np.where((credit_score < 600) & (loan_percent_income > 0.3), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_adjusted_interest",
+      "type": "formula",
+      "description": "Interest rate adjusted by the logarithm of the applicant's income.",
+      "value_range": [
+        0.3,
+        2.5
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Creates a continuous severity measure that penalizes high interest rates more heavily for lower-income applicants.",
+      "leakage_risk": "low",
+      "formula": "loan_int_rate / np.log1p(person_income)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_vulnerability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the applicant's overall financial vulnerability based on income, employment experience, and home ownership status.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures nuanced financial stability signals that raw formulas might miss, providing a smooth continuous feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_purpose_risk_alignment",
+      "type": "judgment",
+      "description": "Semantic evaluation of the inherent risk associated with the loan intent, contextualized by the applicant's education and credit history.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Translates categorical loan intents into an ordinal risk scale, which is highly effective for linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "previous_default_severity",
+      "type": "formula",
+      "description": "Combines the presence of previous defaults with the current loan-to-income percentage to gauge compounded risk.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "risk_composite",
+      "expected_model_benefit": "Scales a binary categorical feature by a continuous risk metric, creating a more informative feature for linear boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.where(previous_loan_defaults_on_file == 'Yes', 1.0, 0.0) * (1.0 + loan_percent_income)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_income_interaction",
+      "type": "formula",
+      "description": "Log of income divided by age, representing the rate of wealth accumulation over time.",
+      "value_range": [
+        0.05,
+        1.0
+      ],
+      "feature_family": "demographic_ratio",
+      "expected_model_benefit": "Provides a normalized earning power metric, helping the model differentiate between early-career and late-career income levels.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(person_income) / np.maximum(person_age, 20.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ec180f979afcdb8f",
+  "metadata": {}
+}

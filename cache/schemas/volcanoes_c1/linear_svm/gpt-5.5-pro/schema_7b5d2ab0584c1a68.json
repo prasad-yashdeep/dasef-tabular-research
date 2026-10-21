@@ -1,0 +1,190 @@
+{
+  "dataset_name": "volcanoes_c1",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "v1_centered_z",
+      "type": "formula",
+      "description": "Z-standardized V1 coordinate using fixed training-fold mean and spread.",
+      "value_range": [
+        -1.763,
+        1.777
+      ],
+      "feature_family": "coordinate_standardization",
+      "expected_model_benefit": "Stabilizes the V1 contribution by putting it on a comparable numeric scale for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 509.9693723069757) / 280.3206803251786",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_centered_z",
+      "type": "formula",
+      "description": "Z-standardized V2 coordinate using fixed training-fold mean and spread.",
+      "value_range": [
+        -1.714,
+        1.725
+      ],
+      "feature_family": "coordinate_standardization",
+      "expected_model_benefit": "Puts V2 on comparable scale with other inputs and supports stable spatial margins.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 510.44392686619307) / 288.5767599415063",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_centered_z",
+      "type": "formula",
+      "description": "Z-standardized V3 magnitude using fixed training-fold mean and spread.",
+      "value_range": [
+        -6.77,
+        6.22
+      ],
+      "feature_family": "intensity_standardization",
+      "expected_model_benefit": "Highlights smooth departures from typical V3 levels with a continuous margin-friendly signal.",
+      "leakage_risk": "low",
+      "formula": "(V3 - 0.41113052486316526) / 0.06076998440149803",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "coordinate_balance_ratio",
+      "type": "formula",
+      "description": "Signed ratio comparing V1 with V2; near zero when the two coordinates are balanced.",
+      "value_range": [
+        -0.968,
+        0.968
+      ],
+      "feature_family": "spatial_ratio",
+      "expected_model_benefit": "Adds a scale-stable diagonal projection for margins sensitive to asymmetric spatial layout.",
+      "leakage_risk": "low",
+      "formula": "(V1 - V2) / (V1 + V2 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "central_radial_distance",
+      "type": "formula",
+      "description": "Euclidean distance from the central point (512, 512) after scaling both axes by the training-fold half-range.",
+      "value_range": [
+        0.0,
+        1.4142135623730951
+      ],
+      "feature_family": "spatial_geometry",
+      "expected_model_benefit": "Turns radial geometry into a single smooth coordinate that a linear SVM can weight directly.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 512.0) / 496.0) ** 2 + ((V2 - 512.0) / 496.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "edge_proximity_severity",
+      "type": "formula",
+      "description": "Severity of closeness to any observed coordinate boundary; 0 near the center and 1 on a border.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boundary_geometry",
+      "expected_model_benefit": "Allows a linear SVM to model edge effects without many hard threshold indicators.",
+      "leakage_risk": "low",
+      "formula": "1.0 - (np.minimum(np.minimum(V1 - 16.0, 1008.0 - V1), np.minimum(V2 - 16.0, 1008.0 - V2)) / 496.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "axis_anisotropy",
+      "type": "formula",
+      "description": "Difference between squared horizontal and vertical displacements from the center point.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "quadratic_spatial_contrast",
+      "expected_model_benefit": "Provides a quadratic contrast as a linear input, useful for elongated spatial structure.",
+      "leakage_risk": "low",
+      "formula": "(((V1 - 512.0) / 496.0) ** 2) - (((V2 - 512.0) / 496.0) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "centered_xy_interaction",
+      "type": "formula",
+      "description": "Product of centered horizontal and vertical displacements scaled by squared half-range.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "quadratic_spatial_interaction",
+      "expected_model_benefit": "Encodes quadrant-style interaction as one signed continuous feature for margin shaping.",
+      "leakage_risk": "low",
+      "formula": "((V1 - 512.0) * (V2 - 512.0)) / (496.0 ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_log_intensity",
+      "type": "formula",
+      "description": "Log-scaled V3 magnitude using a fixed multiplier to compress high values while preserving order.",
+      "value_range": [
+        0.0,
+        2.185
+      ],
+      "feature_family": "intensity_transform",
+      "expected_model_benefit": "Captures diminishing sensitivity to larger V3 values and can improve linear margin calibration.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(10.0 * V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "radial_adjusted_v3_ratio",
+      "type": "formula",
+      "description": "V3 normalized by its observed high value and divided by one plus central radial distance.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "intensity_spatial_composite",
+      "expected_model_benefit": "Emphasizes elevated V3 near central coordinates while remaining smooth and bounded.",
+      "leakage_risk": "low",
+      "formula": "(V3 / 0.788685) / (1.0 + np.sqrt(((V1 - 512.0) / 496.0) ** 2 + ((V2 - 512.0) / 496.0) ** 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "terrain_prominence_judgment",
+      "type": "judgment",
+      "description": "Assessor score from 0 to 1 for how prominent V3 appears relative to the row's spatial context and training-fold V3 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_terrain_assessment",
+      "expected_model_benefit": "Adds a domain-style continuous cue for unusual terrain intensity that algebraic terms may only approximate.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spatial_pattern_coherence_judgment",
+      "type": "judgment",
+      "description": "Assessor score from 0 to 1 for whether V1, V2, and V3 jointly resemble a coherent volcanic terrain pattern, considering centrality, boundary proximity, diagonal position, and intensity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_spatial_assessment",
+      "expected_model_benefit": "Supplies a bounded semantic composite that a linear SVM can weight as an additional smooth projection.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "7b5d2ab0584c1a68",
+  "metadata": {}
+}

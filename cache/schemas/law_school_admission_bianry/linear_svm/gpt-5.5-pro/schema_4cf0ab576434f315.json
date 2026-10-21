@@ -1,0 +1,190 @@
+{
+  "dataset_name": "law_school_admission_bianry",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "lsat_z_clipped",
+      "type": "formula",
+      "description": "Training-fold standardized LSAT score, clipped to reduce the influence of extreme values.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "exam_normalization",
+      "expected_model_benefit": "Gives the linear SVM a centered continuous axis aligned with exam strength while limiting outlier leverage.",
+      "leakage_risk": "low",
+      "formula": "np.clip((lsat - 36.818605769230764) / 5.3450763629111355, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_mean_score",
+      "type": "formula",
+      "description": "Average of first and third decile positions scaled from the observed 1-to-10 scale to 0-to-1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_decile_level",
+      "expected_model_benefit": "Provides a smooth academic standing measure that a linear margin can weight directly.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((decile1 + decile3) / 2.0) - 1.0) / 9.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_change_score",
+      "type": "formula",
+      "description": "Change from first to third decile scaled by the full decile span.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "academic_decile_trend",
+      "expected_model_benefit": "Adds direction of longitudinal movement rather than only level.",
+      "leakage_risk": "low",
+      "formula": "np.clip((decile3 - decile1) / 9.0, -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_stability_score",
+      "type": "formula",
+      "description": "One minus the absolute decile change scaled by the full decile span; higher values indicate steadier standing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_decile_stability",
+      "expected_model_benefit": "Captures variability as a continuous severity measure for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - (np.abs(decile3 - decile1) / 9.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lsat_decile_product_score",
+      "type": "formula",
+      "description": "Product of clipped LSAT range score and clipped average decile score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_interaction",
+      "expected_model_benefit": "Adds a simple nonlinear alignment term that remains usable as a single linear input.",
+      "leakage_risk": "low",
+      "formula": "np.clip((lsat - 15.0) / 33.0, 0.0, 1.0) * np.clip((((decile1 + decile3) / 2.0) - 1.0) / 9.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_income_score",
+      "type": "formula",
+      "description": "Family income bracket scaled from the observed 1-to-5 scale to 0-to-1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic_context",
+      "expected_model_benefit": "Supplies a smooth socioeconomic context axis for margin shifts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((fam_inc - 1.0) / 4.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lsat_income_contrast_score",
+      "type": "formula",
+      "description": "Clipped LSAT range score minus clipped family-income range score.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "contextual_academic_contrast",
+      "expected_model_benefit": "Helps the SVM represent performance relative to socioeconomic context with one signed input.",
+      "leakage_risk": "low",
+      "formula": "np.clip((lsat - 15.0) / 33.0, 0.0, 1.0) - np.clip((fam_inc - 1.0) / 4.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_z_clipped",
+      "type": "formula",
+      "description": "Training-fold standardized age value, clipped to reduce sensitivity to unusual records.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "age_context",
+      "expected_model_benefit": "Adds a centered demographic timing axis with bounded leverage.",
+      "leakage_risk": "low",
+      "formula": "np.clip((age - 59.08461538461538) / 5.257036235396911, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fulltime_program_indicator",
+      "type": "formula",
+      "description": "Indicator for the full-time program code.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "program_format",
+      "expected_model_benefit": "Lets the linear margin capture systematic program-format shifts.",
+      "leakage_risk": "low",
+      "formula": "np.where((fulltime == '1') | (fulltime == 1), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "school_cluster_code_score",
+      "type": "formula",
+      "description": "Maps the six reported school-cluster codes to a 0-to-1 scaled numeric projection.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "school_context",
+      "expected_model_benefit": "Provides an approximate linear projection of school context without creating many sparse indicators.",
+      "leakage_risk": "low",
+      "formula": "(np.where((cluster == '1') | (cluster == 1), 1.0, np.where((cluster == '2') | (cluster == 2), 2.0, np.where((cluster == '3') | (cluster == 3), 3.0, np.where((cluster == '4') | (cluster == 4), 4.0, np.where((cluster == '5') | (cluster == 5), 5.0, 6.0))))) - 1.0) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "academic_profile_coherence_judgment",
+      "type": "judgment",
+      "description": "A 0-to-1 assessor score of how coherent the academic profile appears when considering lsat, decile1, decile3, decile change, and decile stability; 0 means internally weak or inconsistent, 1 means jointly strong and consistent.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_academic_profile",
+      "expected_model_benefit": "Adds a smooth expert-style synthesis of academic signals that can align with a linear margin when simple arithmetic misses context.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contextual_support_stability_judgment",
+      "type": "judgment",
+      "description": "A 0-to-1 assessor score of likely logistical and financial support based on fam_inc, fulltime, age, and school cluster; 0 means more constrained context, 1 means more stable support context.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_context_support",
+      "expected_model_benefit": "Summarizes several contextual cues into a single smooth input, reducing burden on sparse or weakly ordered fields.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "4cf0ab576434f315",
+  "metadata": {}
+}

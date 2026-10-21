@@ -1,0 +1,190 @@
+{
+  "dataset_name": "click_prediction_small",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "position_depth_ratio",
+      "type": "formula",
+      "description": "Relative position of the ad within the result list depth. Lower values indicate top placement.",
+      "value_range": [
+        0.33,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Smooth continuous signal of ad prominence useful for linear margin.",
+      "leakage_risk": "low",
+      "formula": "position / depth",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "position_from_bottom",
+      "type": "formula",
+      "description": "Number of slots from the bottom of the displayed list; higher means more prominent.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal",
+      "expected_model_benefit": "Linear ordinal signal of ad visibility.",
+      "leakage_risk": "low",
+      "formula": "depth - position",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_top_position",
+      "type": "formula",
+      "description": "Indicator that the ad is shown in the top position slot.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Sharp linear feature capturing top-slot prominence effect.",
+      "leakage_risk": "low",
+      "formula": "np.where(position == 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_position_severity",
+      "type": "formula",
+      "description": "Normalized position score scaled to [0,1] where 1 indicates the bottom of the list.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_score",
+      "expected_model_benefit": "Smooth normalized severity ideal for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "(position - 1.0) / np.maximum(depth - 1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_impression",
+      "type": "formula",
+      "description": "Log-transformed impression count to compress heavy-tailed distribution.",
+      "value_range": [
+        0.0,
+        8.61
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Linearizes skewed impression counts for SVM.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(impression)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_keyword_id",
+      "type": "formula",
+      "description": "Log-scaled keyword identifier as a smooth proxy for keyword rarity ordering.",
+      "value_range": [
+        0.0,
+        14.01
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Smooth proxy of keyword space for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(keyword_id)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_user_id",
+      "type": "formula",
+      "description": "Log-scaled user identifier to compress wide ID range.",
+      "value_range": [
+        0.0,
+        17.0
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Provides bounded continuous proxy for user-id grouping.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(user_id)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_description",
+      "type": "formula",
+      "description": "Indicator that the ad has a non-missing description id.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Binary content-completeness signal useful in linear models.",
+      "leakage_risk": "low",
+      "formula": "np.where(description_id > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_description_consistency",
+      "type": "formula",
+      "description": "Smooth similarity between log-scaled title and description ids, capturing co-occurrence pattern.",
+      "value_range": [
+        0.0,
+        17.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Approximates linear interaction between title and description identifiers.",
+      "leakage_risk": "low",
+      "formula": "np.abs(np.log1p(title_id) - np.log1p(description_id))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_advertiser_scale",
+      "type": "formula",
+      "description": "Weighted composite of log ad_id and log advertiser_id capturing scale of advertising entity.",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Smooth composite providing linear projection of ad-entity scale.",
+      "leakage_risk": "low",
+      "formula": "0.5 * np.log1p(ad_id) + 0.5 * np.log1p(advertiser_id)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "impression_per_slot",
+      "type": "formula",
+      "description": "Impressions normalized by depth, a smooth measure of exposure density.",
+      "value_range": [
+        0.33,
+        5467.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Continuous severity score of exposure intensity.",
+      "leakage_risk": "low",
+      "formula": "impression / depth",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_content_richness_score",
+      "type": "judgment",
+      "description": "Semantic judgment of ad content richness based on presence and magnitude of keyword, title, and description identifiers, scaled to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_score",
+      "expected_model_benefit": "Provides bounded interpretable richness signal complementing linear features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e95f62c6d4dd6169",
+  "metadata": {}
+}

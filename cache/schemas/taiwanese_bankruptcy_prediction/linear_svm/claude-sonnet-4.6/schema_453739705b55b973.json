@@ -1,0 +1,190 @@
+{
+  "dataset_name": "taiwanese_bankruptcy_prediction",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "profitability_composite_score",
+      "type": "formula",
+      "description": "Weighted composite of three ROA variants normalized to [0,1], capturing overall profitability from multiple accounting perspectives. Higher values indicate stronger earnings relative to assets.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "profitability",
+      "expected_model_benefit": "Smooth continuous profitability signal that linear SVM can use as a strong margin separator between financially healthy and distressed firms.",
+      "leakage_risk": "low",
+      "formula": "(0.4 * ROA_C_Before_Interest_Depreciation + 0.35 * ROA_A_Before_Interest_After_Tax + 0.25 * ROA_B_Before_Interest_Depreciation_After_Tax)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "solvency_stress_index",
+      "type": "formula",
+      "description": "Combines debt ratio and current liability to assets ratio to form a solvency stress measure. Higher values indicate greater financial stress from leverage and short-term obligations.",
+      "value_range": [
+        0.0,
+        0.6
+      ],
+      "feature_family": "leverage",
+      "expected_model_benefit": "Continuous leverage severity measure that provides a linear projection of financial distress risk useful for SVM margin optimization.",
+      "leakage_risk": "low",
+      "formula": "(0.6 * Debt_Ratio_Percent + 0.4 * Current_Liability_to_Assets)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_coverage_ratio",
+      "type": "formula",
+      "description": "Ratio of working capital to total assets minus current liability to assets, measuring net liquidity buffer. Higher values indicate stronger short-term financial cushion.",
+      "value_range": [
+        0.3,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Normalized liquidity measure that helps linear SVM distinguish firms with adequate working capital from those facing liquidity constraints.",
+      "leakage_risk": "low",
+      "formula": "np.clip(Working_Capital_to_Total_Assets - Current_Liability_to_Assets, 0.3, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cash_flow_strength_score",
+      "type": "formula",
+      "description": "Weighted average of cash flow to total assets and CFO to assets, representing operational cash generation capacity relative to asset base.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "cash_flow",
+      "expected_model_benefit": "Smooth cash generation signal that linear SVM can leverage to identify firms with strong operational cash flows versus those with weak or negative flows.",
+      "leakage_risk": "low",
+      "formula": "(0.5 * Cash_Flow_to_Total_Assets + 0.5 * CFO_to_Assets)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "equity_quality_index",
+      "type": "formula",
+      "description": "Composite of net worth to assets and retained earnings to total assets, measuring equity quality and accumulated earnings strength.",
+      "value_range": [
+        0.5,
+        1.0
+      ],
+      "feature_family": "equity",
+      "expected_model_benefit": "High-quality equity signal that provides a strong linear discriminant for firms with solid equity bases versus those with eroded equity positions.",
+      "leakage_risk": "low",
+      "formula": "(0.5 * Net_Worth_to_Assets + 0.5 * Retained_Earnings_to_Total_Assets)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "operating_efficiency_score",
+      "type": "formula",
+      "description": "Combines operating profit rate and gross profit to sales ratio to measure operational efficiency. Higher values indicate better cost management and pricing power.",
+      "value_range": [
+        0.4,
+        1.0
+      ],
+      "feature_family": "efficiency",
+      "expected_model_benefit": "Operational efficiency composite that provides a smooth continuous feature for linear SVM to separate efficient from inefficient firms.",
+      "leakage_risk": "low",
+      "formula": "(0.5 * Operating_Profit_Rate + 0.5 * Gross_Profit_to_Sales)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "debt_coverage_adequacy",
+      "type": "formula",
+      "description": "Ratio of cash flow to liability relative to debt ratio, measuring how well operating cash flows cover debt obligations. Higher values indicate better debt coverage.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "debt_coverage",
+      "expected_model_benefit": "Debt coverage ratio that helps linear SVM identify firms with adequate cash flow to service debt versus those at risk of default.",
+      "leakage_risk": "low",
+      "formula": "np.clip(Cash_Flow_to_Liability * (1.0 - Debt_Ratio_Percent), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "asset_utilization_efficiency",
+      "type": "formula",
+      "description": "Total asset turnover combined with quick assets to total assets ratio, measuring how efficiently assets are deployed to generate revenue and maintain liquidity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "efficiency",
+      "expected_model_benefit": "Asset efficiency composite useful for linear SVM to distinguish operationally efficient firms from those with underutilized or illiquid assets.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.5 * Total_Asset_Turnover + 0.5 * Quick_Assets_to_Total_Assets, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "earnings_stability_score",
+      "type": "formula",
+      "description": "Combines persistent EPS over last 4 seasons with after-tax net interest rate to measure earnings stability and consistency over time.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "earnings_quality",
+      "expected_model_benefit": "Earnings stability measure that provides a smooth signal for linear SVM to identify firms with consistent earnings versus those with volatile or declining profits.",
+      "leakage_risk": "low",
+      "formula": "(0.6 * Persistent_EPS_Last_4_Seasons + 0.4 * AfterTax_Net_Interest_Rate)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_distress_composite",
+      "type": "formula",
+      "description": "Altman Z-score inspired composite using equity quality, profitability, and leverage signals normalized to a continuous distress severity scale. Lower values indicate higher distress.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "distress",
+      "expected_model_benefit": "Comprehensive financial distress index that approximates a linear projection of bankruptcy risk, directly useful for SVM margin separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.3 * Net_Worth_to_Assets + 0.25 * ROA_A_Before_Interest_After_Tax + 0.25 * (1.0 - Debt_Ratio_Percent) + 0.2 * Cash_Flow_to_Total_Assets, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_coverage_quality",
+      "type": "judgment",
+      "description": "Semantic assessment of interest coverage adequacy combining interest coverage ratio and operating profit rate. Score from 0 (very poor coverage, high default risk) to 1 (excellent coverage, low default risk). Assessed based on whether interest coverage ratio exceeds 0.5 and operating profit rate exceeds 0.99.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "debt_coverage",
+      "expected_model_benefit": "Interpretable interest coverage quality score that helps linear SVM identify firms with inadequate interest coverage as a key bankruptcy predictor.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_structure_health",
+      "type": "formula",
+      "description": "Measures capital structure health by combining equity to liability ratio with net income to stockholders equity, penalized by current liabilities to equity. Higher values indicate healthier capital structure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capital_structure",
+      "expected_model_benefit": "Capital structure health index that provides a smooth continuous feature for linear SVM to separate firms with sound financing from those with problematic debt structures.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.4 * np.clip(Equity_to_Liability, 0.0, 1.0) + 0.4 * Net_Income_to_Stockholders_Equity + 0.2 * (1.0 - np.clip(Current_Liabilities_to_Equity, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "453739705b55b973",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "molecular_complexity_score",
+      "type": "formula",
+      "description": "Normalized composite of molecular size indicators V1 (log scale), V7 (branching), and V16 (ring count), capturing overall structural complexity as a smooth continuous score",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Linear SVM benefits from a single smooth composite that captures molecular complexity along a principal axis separating biodegradable from recalcitrant compounds",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V1 - 2.0) / 4.496 * 0.4 + np.clip(V7 / 18.0, 0.0, 1.0) * 0.3 + np.clip(V16 / 40.0, 0.0, 1.0) * 0.3), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lipophilicity_proxy",
+      "type": "formula",
+      "description": "Approximation of lipophilicity using V2 (hydrophobic descriptor) normalized by V1 (molecular size), reflecting tendency to partition into lipid phases which affects biodegradation",
+      "value_range": [
+        0.1,
+        2.5
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Lipophilicity is a key driver of biodegradation; this ratio provides a smooth continuous feature aligned with SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "np.clip(V2 / np.maximum(V1, 0.5), 0.1, 2.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heteroatom_density",
+      "type": "formula",
+      "description": "Density of heteroatoms (V3 nitrogen-like, V4 halogen-like, V6 oxygen-like counts) relative to molecular size V1, indicating functional group richness",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "functional_groups",
+      "expected_model_benefit": "Heteroatom density captures chemical reactivity relevant to biodegradation pathways; normalized ratio is well-suited for linear decision boundaries",
+      "leakage_risk": "low",
+      "formula": "np.clip((V3 + V4 * 2.0 + V6) / np.maximum(V1, 0.5), 0.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "electronic_charge_asymmetry",
+      "type": "formula",
+      "description": "Absolute deviation of partial charge descriptor V12 from zero, scaled by V13 (electronegativity-related), capturing electronic polarization of the molecule",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "electronic",
+      "expected_model_benefit": "Electronic asymmetry affects enzyme recognition and biodegradation susceptibility; smooth continuous measure improves linear SVM separability",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(V12) / np.maximum(V13, 0.5), 0.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "topological_branching_index",
+      "type": "formula",
+      "description": "Composite branching measure combining V7 (branching count), V9 (connectivity), and V10 (path length), normalized to unit scale for linear projection",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "topological",
+      "expected_model_benefit": "Branching topology strongly influences biodegradation; this normalized index provides a smooth feature for SVM hyperplane alignment",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.clip(V7 / 18.0, 0.0, 1.0) * 0.4 + np.clip(V9 / 24.0, 0.0, 1.0) * 0.3 + np.clip(V10 / 12.0, 0.0, 1.0) * 0.3), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_surface_estimate",
+      "type": "formula",
+      "description": "Estimate of molecular surface area using V8 (surface-related descriptor) normalized by training mean and std, providing a z-score-like continuous feature",
+      "value_range": [
+        -4.5,
+        2.6
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Molecular surface area affects aqueous solubility and microbial accessibility; z-score normalization is ideal for SVM margin computation",
+      "leakage_risk": "low",
+      "formula": "(V8 - 37.056) / 9.140",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ring_system_complexity",
+      "type": "formula",
+      "description": "Log-transformed count of ring-related features V16 and V33, capturing aromatic and aliphatic ring contributions to structural rigidity",
+      "value_range": [
+        0.0,
+        3.8
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Ring systems reduce biodegradation rates; log transformation compresses the heavy tail for better linear separability",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V16 + V33)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "polarity_balance_score",
+      "type": "formula",
+      "description": "Ratio of polar descriptor V14 to nonpolar size V15, capturing the hydrophilic-hydrophobic balance relevant to aqueous biodegradation",
+      "value_range": [
+        0.0,
+        1.1
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Polarity balance is a key physicochemical driver; this ratio provides a smooth continuous feature aligned with linear decision boundaries",
+      "leakage_risk": "low",
+      "formula": "np.clip(V14 / np.maximum(V15, 1.0), 0.0, 1.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "connectivity_index_normalized",
+      "type": "formula",
+      "description": "Z-score normalized version of V27 (Wiener-type connectivity index), a key topological descriptor for molecular graph structure",
+      "value_range": [
+        -5.4,
+        2.8
+      ],
+      "feature_family": "topological",
+      "expected_model_benefit": "Connectivity indices are strong predictors of biodegradation; z-score normalization directly supports SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "(V27 - 2.2156) / 0.2260",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fragment_diversity_score",
+      "type": "formula",
+      "description": "Weighted sum of diverse fragment indicators V20, V21, V24, V25, V26, V29 capturing presence of rare functional groups that affect biodegradation pathways",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "functional_groups",
+      "expected_model_benefit": "Rare functional fragments often indicate recalcitrant structures; this weighted composite provides a smooth severity score for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip(V20 * 0.8 + V21 * 1.2 + V24 * 1.5 + V25 * 0.6 + V26 * 0.9 + V29 * 1.0, 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_adjusted_polarity",
+      "type": "formula",
+      "description": "Interaction between molecular size V1 and electronic descriptor V12, capturing how charge distribution scales with molecular size",
+      "value_range": [
+        -15.0,
+        15.0
+      ],
+      "feature_family": "electronic",
+      "expected_model_benefit": "Size-polarity interaction captures nonlinear structure-activity relationships in a single linear feature, improving SVM margin quality",
+      "leakage_risk": "low",
+      "formula": "np.clip((V1 - 4.783) * V12, -15.0, 15.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "biodegradation_structural_risk",
+      "type": "judgment",
+      "description": "Semantic assessment of structural features associated with biodegradation difficulty: high values indicate molecules with large ring systems (V16 > 6), high halogen content (V4 > 0), low polarity (V14 < 0.5), and high molecular complexity (V1 > 5), all of which are known to reduce biodegradability. Score ranges from 0 (easily biodegradable structural profile) to 4 (highly recalcitrant structural profile).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "domain_knowledge",
+      "expected_model_benefit": "Encodes domain expertise about structural recalcitrance into a single ordinal score, providing a strong linear feature for SVM classification",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a5077b247d0ad403",
+  "metadata": {}
+}

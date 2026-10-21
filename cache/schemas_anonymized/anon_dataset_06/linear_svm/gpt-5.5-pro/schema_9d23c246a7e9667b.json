@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_06",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "x001_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x001 using the training-fold mean and scale.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "standardized_level",
+      "expected_model_benefit": "Provides a scale-aligned continuous input so a linear SVM can assign a stable margin weight without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x001 - 0.823262) / 0.853562306272561, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x002_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x002 using the training-fold mean and scale.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "standardized_level",
+      "expected_model_benefit": "Provides a scale-aligned continuous input so a linear SVM can assign a stable margin weight without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x002 - 1.248752) / 0.8268675104448919, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x003_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x003 using the training-fold mean and scale.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "standardized_level",
+      "expected_model_benefit": "Provides a scale-aligned continuous input so a linear SVM can assign a stable margin weight without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x003 - 0.7785720000000002) / 0.9281793688808214, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x004_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x004 using the training-fold mean and scale.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "standardized_level",
+      "expected_model_benefit": "Provides a scale-aligned continuous input so a linear SVM can assign a stable margin weight without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x004 - 0.3951213333333333) / 0.7988536953732864, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x005_centered_z_clip",
+      "type": "formula",
+      "description": "Clipped z-style normalization of x005 using the training-fold mean and scale.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "standardized_level",
+      "expected_model_benefit": "Provides a scale-aligned continuous input so a linear SVM can assign a stable margin weight without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x005 - 0.10097800000000001) / 0.5872891975134567, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_centered_level",
+      "type": "formula",
+      "description": "Average standardized level across all five numeric columns, clipped for robustness.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Captures broad elevation or depression as a smooth near-linear projection for margin placement.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x001 - 0.823262) / 0.853562306272561 + (x002 - 1.248752) / 0.8268675104448919 + (x003 - 0.7785720000000002) / 0.9281793688808214 + (x004 - 0.3951213333333333) / 0.7988536953732864 + (x005 - 0.10097800000000001) / 0.5872891975134567) / 5.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "first_three_vs_last_two_z_contrast",
+      "type": "formula",
+      "description": "Contrasts the average standardized level of x001-x003 against x004-x005.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "normalized_contrast",
+      "expected_model_benefit": "Exposes a signed axis separating early-column and later-column behavior in one bounded feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((x001 - 0.823262) / 0.853562306272561 + (x002 - 1.248752) / 0.8268675104448919 + (x003 - 0.7785720000000002) / 0.9281793688808214) / 3.0) - (((x004 - 0.3951213333333333) / 0.7988536953732864 + (x005 - 0.10097800000000001) / 0.5872891975134567) / 2.0), -6.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x001_x002_signed_balance",
+      "type": "formula",
+      "description": "Bounded signed ratio comparing x001 with x002, damped by their absolute magnitudes.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "bounded_ratio",
+      "expected_model_benefit": "Adds a stable pairwise imbalance cue while limiting leverage from extreme raw values.",
+      "leakage_risk": "low",
+      "formula": "(x001 - x002) / (np.abs(x001) + np.abs(x002) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x003_x004_signed_balance",
+      "type": "formula",
+      "description": "Bounded signed ratio comparing x003 with x004, damped by their absolute magnitudes.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "bounded_ratio",
+      "expected_model_benefit": "Adds a stable pairwise imbalance cue while limiting leverage from extreme raw values.",
+      "leakage_risk": "low",
+      "formula": "(x003 - x004) / (np.abs(x003) + np.abs(x004) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "radial_standardized_deviation",
+      "type": "formula",
+      "description": "Euclidean norm of the five standardized deviations from the training-fold center, clipped for stability.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "continuous_severity",
+      "expected_model_benefit": "Summarizes overall distance from the central profile as one smooth severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((x001 - 0.823262) / 0.853562306272561) ** 2 + ((x002 - 1.248752) / 0.8268675104448919) ** 2 + ((x003 - 0.7785720000000002) / 0.9281793688808214) ** 2 + ((x004 - 0.3951213333333333) / 0.7988536953732864) ** 2 + ((x005 - 0.10097800000000001) / 0.5872891975134567) ** 2), 0.0, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "coherent_direction_score",
+      "type": "judgment",
+      "description": "Assessor score from 0.0 to 1.0 for how consistently the five measurements sit on the same side of their training-fold means; high values indicate a coherent one-direction profile.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile_judgment",
+      "expected_model_benefit": "Supplies a bounded shape cue that can improve a linear margin when individual coordinates have coordinated movement.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "unusual_profile_shape_score",
+      "type": "judgment",
+      "description": "Assessor score from 0.0 to 1.0 for unusual multi-column profile geometry relative to the training-fold ranges, considering simultaneous extremes and uneven spacing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile_judgment",
+      "expected_model_benefit": "Adds a smooth expert-style severity measure that complements radial distance and pair ratios.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9d23c246a7e9667b",
+  "metadata": {}
+}

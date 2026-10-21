@@ -1,0 +1,190 @@
+{
+  "dataset_name": "amazon_employee_access",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "resource_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score from frequent resource codes with training-fold counts encoded as constants; values outside the listed frequent codes receive 0.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Gives a normalized commonness axis for resource identifiers, helping a linear SVM use frequency structure without expanding thousands of sparse indicators.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((resource == 4675) | (resource == '4675'), 262.0, 0.0) + np.where((resource == 79092) | (resource == '79092'), 131.0, 0.0) + np.where((resource == 75078) | (resource == '75078'), 131.0, 0.0) + np.where((resource == 3853) | (resource == '3853'), 110.0, 0.0) + np.where((resource == 25993) | (resource == '25993'), 108.0, 0.0) + np.where((resource == 32270) | (resource == '32270'), 87.0, 0.0) + np.where((resource == 1020) | (resource == '1020'), 74.0, 0.0) + np.where((resource == 75834) | (resource == '75834'), 70.0, 0.0) + np.where((resource == 17308) | (resource == '17308'), 70.0, 0.0) + np.where((resource == 42085) | (resource == '42085'), 63.0, 0.0))/np.log1p(262.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "manager_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score from frequent manager identifiers with training-fold counts encoded as constants; values outside the listed frequent identifiers receive 0.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Provides a compact manager commonness projection that can be weighted directly by a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((mgr_id == 770) | (mgr_id == '770'), 37.0, 0.0) + np.where((mgr_id == 2270) | (mgr_id == '2270'), 26.0, 0.0) + np.where((mgr_id == 7807) | (mgr_id == '7807'), 25.0, 0.0) + np.where((mgr_id == 2014) | (mgr_id == '2014'), 25.0, 0.0) + np.where((mgr_id == 3966) | (mgr_id == '3966'), 25.0, 0.0) + np.where((mgr_id == 1350) | (mgr_id == '1350'), 24.0, 0.0) + np.where((mgr_id == 2594) | (mgr_id == '2594'), 24.0, 0.0) + np.where((mgr_id == 16850) | (mgr_id == '16850'), 21.0, 0.0) + np.where((mgr_id == 1903) | (mgr_id == '1903'), 21.0, 0.0) + np.where((mgr_id == 50806) | (mgr_id == '50806'), 21.0, 0.0))/np.log1p(37.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rollup1_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for high-level role_rollup_1 frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Captures broad role hierarchy commonness as a smooth numeric axis suitable for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_rollup_1 == 117961) | (role_rollup_1 == '117961'), 6413.0, 0.0) + np.where((role_rollup_1 == 117902) | (role_rollup_1 == '117902'), 236.0, 0.0) + np.where((role_rollup_1 == 91261) | (role_rollup_1 == '91261'), 231.0, 0.0) + np.where((role_rollup_1 == 118315) | (role_rollup_1 == '118315'), 135.0, 0.0) + np.where((role_rollup_1 == 118290) | (role_rollup_1 == '118290'), 133.0, 0.0) + np.where((role_rollup_1 == 118212) | (role_rollup_1 == '118212'), 124.0, 0.0) + np.where((role_rollup_1 == 119062) | (role_rollup_1 == '119062'), 120.0, 0.0) + np.where((role_rollup_1 == 118887) | (role_rollup_1 == '118887'), 101.0, 0.0) + np.where((role_rollup_1 == 118752) | (role_rollup_1 == '118752'), 95.0, 0.0) + np.where((role_rollup_1 == 117916) | (role_rollup_1 == '117916'), 93.0, 0.0))/np.log1p(6413.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rollup2_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for mid-level role_rollup_2 frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Adds a second hierarchy commonness projection that can complement the broader rollup feature in a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_rollup_2 == 118300) | (role_rollup_2 == '118300'), 1330.0, 0.0) + np.where((role_rollup_2 == 118343) | (role_rollup_2 == '118343'), 1180.0, 0.0) + np.where((role_rollup_2 == 118327) | (role_rollup_2 == '118327'), 819.0, 0.0) + np.where((role_rollup_2 == 118225) | (role_rollup_2 == '118225'), 793.0, 0.0) + np.where((role_rollup_2 == 118386) | (role_rollup_2 == '118386'), 538.0, 0.0) + np.where((role_rollup_2 == 117962) | (role_rollup_2 == '117962'), 468.0, 0.0) + np.where((role_rollup_2 == 118052) | (role_rollup_2 == '118052'), 466.0, 0.0) + np.where((role_rollup_2 == 118413) | (role_rollup_2 == '118413'), 383.0, 0.0) + np.where((role_rollup_2 == 118446) | (role_rollup_2 == '118446'), 289.0, 0.0) + np.where((role_rollup_2 == 118026) | (role_rollup_2 == '118026'), 231.0, 0.0))/np.log1p(1330.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "department_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for role_deptname frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Represents department commonness as a single normalized feature, reducing reliance on many sparse department indicators.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_deptname == 117878) | (role_deptname == '117878'), 338.0, 0.0) + np.where((role_deptname == 117941) | (role_deptname == '117941'), 211.0, 0.0) + np.where((role_deptname == 117945) | (role_deptname == '117945'), 202.0, 0.0) + np.where((role_deptname == 118514) | (role_deptname == '118514'), 193.0, 0.0) + np.where((role_deptname == 118403) | (role_deptname == '118403'), 167.0, 0.0) + np.where((role_deptname == 117884) | (role_deptname == '117884'), 161.0, 0.0) + np.where((role_deptname == 117920) | (role_deptname == '117920'), 157.0, 0.0) + np.where((role_deptname == 120722) | (role_deptname == '120722'), 155.0, 0.0) + np.where((role_deptname == 119598) | (role_deptname == '119598'), 151.0, 0.0) + np.where((role_deptname == 119181) | (role_deptname == '119181'), 146.0, 0.0))/np.log1p(338.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for role_title frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Supplies a dense approximation of title prevalence that is well scaled for linear SVM weights.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_title == 118321) | (role_title == '118321'), 1400.0, 0.0) + np.where((role_title == 117905) | (role_title == '117905'), 1090.0, 0.0) + np.where((role_title == 118784) | (role_title == '118784'), 532.0, 0.0) + np.where((role_title == 117879) | (role_title == '117879'), 360.0, 0.0) + np.where((role_title == 118568) | (role_title == '118568'), 277.0, 0.0) + np.where((role_title == 117885) | (role_title == '117885'), 254.0, 0.0) + np.where((role_title == 118054) | (role_title == '118054'), 222.0, 0.0) + np.where((role_title == 118685) | (role_title == '118685'), 174.0, 0.0) + np.where((role_title == 118777) | (role_title == '118777'), 157.0, 0.0) + np.where((role_title == 307024) | (role_title == '307024'), 157.0, 0.0))/np.log1p(1400.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_desc_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for role_family_desc frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Condenses a high-cardinality family-description field into a normalized prevalence signal useful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_family_desc == 117906) | (role_family_desc == '117906'), 2099.0, 0.0) + np.where((role_family_desc == 240983) | (role_family_desc == '240983'), 349.0, 0.0) + np.where((role_family_desc == 117913) | (role_family_desc == '117913'), 210.0, 0.0) + np.where((role_family_desc == 279443) | (role_family_desc == '279443'), 194.0, 0.0) + np.where((role_family_desc == 117886) | (role_family_desc == '117886'), 138.0, 0.0) + np.where((role_family_desc == 168365) | (role_family_desc == '168365'), 113.0, 0.0) + np.where((role_family_desc == 117897) | (role_family_desc == '117897'), 110.0, 0.0) + np.where((role_family_desc == 130134) | (role_family_desc == '130134'), 107.0, 0.0) + np.where((role_family_desc == 117879) | (role_family_desc == '117879'), 102.0, 0.0) + np.where((role_family_desc == 133686) | (role_family_desc == '133686'), 99.0, 0.0))/np.log1p(2099.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for role_family frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Adds a low-cardinality family prevalence signal that can stabilize sparse role features in a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_family == 290919) | (role_family == '290919'), 3329.0, 0.0) + np.where((role_family == 118424) | (role_family == '118424'), 811.0, 0.0) + np.where((role_family == 19721) | (role_family == '19721'), 738.0, 0.0) + np.where((role_family == 117887) | (role_family == '117887'), 727.0, 0.0) + np.where((role_family == 118398) | (role_family == '118398'), 398.0, 0.0) + np.where((role_family == 292795) | (role_family == '292795'), 392.0, 0.0) + np.where((role_family == 308574) | (role_family == '308574'), 363.0, 0.0) + np.where((role_family == 118331) | (role_family == '118331'), 288.0, 0.0) + np.where((role_family == 118453) | (role_family == '118453'), 254.0, 0.0) + np.where((role_family == 118643) | (role_family == '118643'), 237.0, 0.0))/np.log1p(3329.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "code_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled row score for role_code frequency using training-fold counts encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_frequency_prior",
+      "expected_model_benefit": "Provides a dense role-code prevalence projection that aligns well with linear SVM scaling assumptions.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where((role_code == 118322) | (role_code == '118322'), 1400.0, 0.0) + np.where((role_code == 117908) | (role_code == '117908'), 1090.0, 0.0) + np.where((role_code == 118786) | (role_code == '118786'), 532.0, 0.0) + np.where((role_code == 117880) | (role_code == '117880'), 360.0, 0.0) + np.where((role_code == 118570) | (role_code == '118570'), 277.0, 0.0) + np.where((role_code == 117888) | (role_code == '117888'), 254.0, 0.0) + np.where((role_code == 118055) | (role_code == '118055'), 222.0, 0.0) + np.where((role_code == 118687) | (role_code == '118687'), 174.0, 0.0) + np.where((role_code == 118779) | (role_code == '118779'), 157.0, 0.0) + np.where((role_code == 118332) | (role_code == '118332'), 157.0, 0.0))/np.log1p(1400.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_code_pair_log_popularity_score",
+      "type": "formula",
+      "description": "Log-scaled score for frequent role_title and role_code pair alignments, using high-frequency pairs encoded as constants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "role_pair_alignment",
+      "expected_model_benefit": "Captures a compact cross-field consistency signal that a purely additive set of single-column scores may miss.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where(((role_title == 118321) | (role_title == '118321')) & ((role_code == 118322) | (role_code == '118322')), 1400.0, 0.0) + np.where(((role_title == 117905) | (role_title == '117905')) & ((role_code == 117908) | (role_code == '117908')), 1090.0, 0.0) + np.where(((role_title == 118784) | (role_title == '118784')) & ((role_code == 118786) | (role_code == '118786')), 532.0, 0.0) + np.where(((role_title == 117879) | (role_title == '117879')) & ((role_code == 117880) | (role_code == '117880')), 360.0, 0.0) + np.where(((role_title == 118568) | (role_title == '118568')) & ((role_code == 118570) | (role_code == '118570')), 277.0, 0.0) + np.where(((role_title == 117885) | (role_title == '117885')) & ((role_code == 117888) | (role_code == '117888')), 254.0, 0.0) + np.where(((role_title == 118054) | (role_title == '118054')) & ((role_code == 118055) | (role_code == '118055')), 222.0, 0.0) + np.where(((role_title == 118685) | (role_title == '118685')) & ((role_code == 118687) | (role_code == '118687')), 174.0, 0.0) + np.where(((role_title == 118777) | (role_title == '118777')) & ((role_code == 118779) | (role_code == '118779')), 157.0, 0.0) + np.where(((role_title == 307024) | (role_title == '307024')) & ((role_code == 118332) | (role_code == '118332')), 157.0, 0.0))/np.log1p(1400.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_routine_access_score",
+      "type": "judgment",
+      "description": "Assessor assigns a numeric score from 0.0 to 1.0 using only the row codes and fixed training-fold frequency context: 0.0 indicates an unusual or weakly supported request pattern, while 1.0 indicates a routine, internally coherent request pattern.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_access_context",
+      "expected_model_benefit": "Adds a soft ordinal axis capturing cross-field coherence that exact top-code formulas may not fully represent.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_role_specificity_score",
+      "type": "judgment",
+      "description": "Assessor assigns a numeric score from 0.0 to 1.0 from rollup, department, title, family description, family, and code context: 0.0 indicates broad or generic role scope, while 1.0 indicates narrow or specialized role scope.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_access_context",
+      "expected_model_benefit": "Provides a continuous scope measure that can be combined through linear weights with commonness and pair-alignment scores.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "69250bb81d602a9d",
+  "metadata": {}
+}

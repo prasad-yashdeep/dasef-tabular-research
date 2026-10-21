@@ -1,0 +1,190 @@
+{
+  "dataset_name": "loan_approval_status_classification",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "applicant_log_income_norm",
+      "type": "formula",
+      "description": "Log-transformed annual income scaled by training-fold minimum and maximum income values.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "affordability_capacity",
+      "expected_model_benefit": "Reduces income skew and gives the linear SVM a bounded capacity signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(person_income) - np.log1p(8000.0)) / (np.log1p(5556399.0) - np.log1p(8000.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_amount_log_norm",
+      "type": "formula",
+      "description": "Log-transformed requested principal scaled by training-fold principal bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "principal_scale",
+      "expected_model_benefit": "Captures requested size on a stable scale while limiting influence of large amounts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(loan_amnt) - np.log1p(500.0)) / (np.log1p(35000.0) - np.log1p(500.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_loan_log_headroom",
+      "type": "formula",
+      "description": "Log income minus log requested principal, normalized by training-fold span; larger values indicate greater income cushion.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "affordability_margin",
+      "expected_model_benefit": "Provides an approximate linear affordability projection that combines capacity and requested size.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(person_income) - np.log1p(loan_amnt)) / (np.log1p(5556399.0) - np.log1p(500.0)), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_income_share_norm",
+      "type": "formula",
+      "description": "Requested principal as a fraction of income, scaled by the observed upper bound of loan_percent_income.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "debt_burden",
+      "expected_model_benefit": "Adds a direct smooth debt-burden severity measure for margin placement.",
+      "leakage_risk": "low",
+      "formula": "np.clip(loan_percent_income / 0.63, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_rate_norm",
+      "type": "formula",
+      "description": "Interest rate scaled to the training-fold observed range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "pricing",
+      "expected_model_benefit": "Encodes pricing severity on a bounded linear scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((loan_int_rate - 5.42) / (20.0 - 5.42), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_norm",
+      "type": "formula",
+      "description": "Credit score scaled to the training-fold observed score range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_quality",
+      "expected_model_benefit": "Gives the SVM a monotonic credit-quality axis.",
+      "leakage_risk": "low",
+      "formula": "np.clip((credit_score - 418.0) / (807.0 - 418.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "human_capital_maturity_score",
+      "type": "formula",
+      "description": "Composite of education level and employment experience relative to plausible adult years.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "employment_education_stability",
+      "expected_model_benefit": "Combines education and work history into one smooth stability coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * (person_education / 4.0) + 0.45 * np.clip(person_emp_exp / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_depth_score",
+      "type": "formula",
+      "description": "Composite of absolute credit history length and share of adult years with recorded history.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_history_depth",
+      "expected_model_benefit": "Supplies a bounded maturity signal that can complement credit score.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.70 * np.clip((cb_person_cred_hist_length - 2.0) / (30.0 - 2.0), 0.0, 1.0) + 0.30 * np.clip(cb_person_cred_hist_length / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "repayment_pressure_composite",
+      "type": "formula",
+      "description": "Weighted blend of income share, interest-rate severity, and prior default indicator.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "repayment_pressure",
+      "expected_model_benefit": "Precomputes a nonlinear burden interaction useful for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.50 * np.clip(loan_percent_income / 0.63, 0.0, 1.0) + 0.25 * np.clip((loan_int_rate - 5.42) / (20.0 - 5.42), 0.0, 1.0) + 0.25 * defaults_yes, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_default_stability_score",
+      "type": "formula",
+      "description": "Row-level stability score from home status and absence of prior default.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "housing_payment_history",
+      "expected_model_benefit": "Condenses sparse housing one-hots and payment-history flag into a compact support signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.60 * home_own + 0.45 * home_mortgage + 0.20 * home_other + 0.05 * home_rent + 0.25 * defaults_no, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "purpose_productivity_semantic_score",
+      "type": "judgment",
+      "description": "Numeric semantic review of loan purpose using only intent_* one-hot fields. Assign 0.0 to 1.0, with higher values for purposes plausibly linked to earning capacity or durable assets, middle values for mixed or discretionary uses, and lower values for emergency or liability-management uses.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "purpose_semantics",
+      "expected_model_benefit": "Provides an ordinal purpose axis so the linear SVM can use business meaning in addition to sparse intent indicators.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "repayment_concern_semantic_score",
+      "type": "judgment",
+      "description": "Numeric review of overall repayment concern from principal size, income share, interest rate, credit score, prior default flags, housing status, employment experience, education, and credit history length. 0.0 means minimal concern; 1.0 means severe concern.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_risk_review",
+      "expected_model_benefit": "Captures expert-style severity cues in one bounded coordinate that can shift the margin when multiple weak concerns align.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "bd78ba7c56a3bc10",
+  "metadata": {}
+}

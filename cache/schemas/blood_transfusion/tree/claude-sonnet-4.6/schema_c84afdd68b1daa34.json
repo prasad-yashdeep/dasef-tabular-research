@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "donation_frequency_ratio",
+      "type": "formula",
+      "description": "Ratio of total donations (V2) to months since first donation (V1), capturing donation rate over lifetime",
+      "value_range": [
+        0.043,
+        21.0
+      ],
+      "feature_family": "donation_behavior",
+      "expected_model_benefit": "Captures donation intensity normalized by donor tenure; frequent recent donors more likely to donate again",
+      "leakage_risk": "low",
+      "formula": "V2 / V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of recency (V1): 1=very recent (1-3), 2=recent (4-7), 3=moderate (8-14), 4=distant (15+)",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "recency",
+      "expected_model_benefit": "Tree-splittable ordinal encoding of recency; very recent donors have higher return probability",
+      "leakage_risk": "low",
+      "formula": "1 if V1 <= 3 else (2 if V1 <= 7 else (3 if V1 <= 14 else 4))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_very_recent_donor",
+      "type": "formula",
+      "description": "Boolean indicator: 1 if months since last donation (V1) <= 3, else 0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency",
+      "expected_model_benefit": "Strong binary split signal; very recent donors are most likely to donate again",
+      "leakage_risk": "low",
+      "formula": "1 if V1 <= 3 else 0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_volume_per_donation",
+      "type": "formula",
+      "description": "Average blood volume donated per visit: total volume (V3) divided by total donations (V2)",
+      "value_range": [
+        250.0,
+        5250.0
+      ],
+      "feature_family": "donation_volume",
+      "expected_model_benefit": "Consistency check; should be ~250cc per donation; outliers may indicate data anomalies or high-volume donors",
+      "leakage_risk": "low",
+      "formula": "V3 / V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_frequency_donor",
+      "type": "formula",
+      "description": "Boolean indicator: 1 if total donations (V2) >= 5, else 0; marks habitual donors",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "donation_behavior",
+      "expected_model_benefit": "Habitual donors with 5+ donations are more likely to continue donating",
+      "leakage_risk": "low",
+      "formula": "1 if V2 >= 5 else 0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_to_recency_ratio",
+      "type": "formula",
+      "description": "Ratio of months since first donation (V4) to months since last donation (V1); higher values indicate long-term donors who donated recently",
+      "value_range": [
+        0.02,
+        98.0
+      ],
+      "feature_family": "donor_loyalty",
+      "expected_model_benefit": "Captures loyalty and recency interaction; long-tenure recent donors are prime candidates for repeat donation",
+      "leakage_risk": "low",
+      "formula": "V4 / V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_density",
+      "type": "formula",
+      "description": "Donations per month of tenure: V2 / V4; measures how densely packed donations are over donor lifetime",
+      "value_range": [
+        0.01,
+        10.5
+      ],
+      "feature_family": "donation_behavior",
+      "expected_model_benefit": "High density donors are habitual and likely to donate again; good nonlinear split feature",
+      "leakage_risk": "low",
+      "formula": "V2 / V4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "long_tenure_donor",
+      "type": "formula",
+      "description": "Boolean indicator: 1 if months since first donation (V4) >= 36, else 0; marks established long-term donors",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "donor_loyalty",
+      "expected_model_benefit": "Long-tenure donors have demonstrated sustained commitment; useful binary split for tree models",
+      "leakage_risk": "low",
+      "formula": "1 if V4 >= 36 else 0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_interaction",
+      "type": "formula",
+      "description": "Product of inverse recency and frequency: (1/V1) * V2; high values indicate frequent and recent donors",
+      "value_range": [
+        0.048,
+        21.0
+      ],
+      "feature_family": "rfm_interaction",
+      "expected_model_benefit": "Nonlinear RFM interaction captures the joint effect of recency and frequency; strong predictor of return donation",
+      "leakage_risk": "low",
+      "formula": "(1.0 / V1) * V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of total blood volume (V3): 1=low (<=500), 2=medium (501-1500), 3=high (1501-3000), 4=very high (3000+)",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "donation_volume",
+      "expected_model_benefit": "Discretized volume for direct tree splits; high-volume donors have stronger donation history",
+      "leakage_risk": "low",
+      "formula": "1 if V3 <= 500 else (2 if V3 <= 1500 else (3 if V3 <= 3000 else 4))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dormancy_risk_score",
+      "type": "judgment",
+      "description": "Semantic assessment of donor dormancy risk based on recency and frequency patterns: 1=low risk (recent+frequent), 2=moderate risk, 3=high risk (distant+infrequent). Assessed by combining V1 > 12 and V2 < 3 thresholds.",
+      "value_range": [
+        1.0,
+        3.0
+      ],
+      "feature_family": "donor_loyalty",
+      "expected_model_benefit": "Captures semantic risk of donor lapsing; high dormancy risk donors less likely to return",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rfm_composite_score",
+      "type": "formula",
+      "description": "Composite RFM score: normalized sum of recency score (14-V1 clipped to 0), frequency score (V2), and monetary score (V3/250); higher is better donor profile",
+      "value_range": [
+        0.0,
+        55.0
+      ],
+      "feature_family": "rfm_interaction",
+      "expected_model_benefit": "Single composite score summarizing full RFM profile; enables tree to split on overall donor quality",
+      "leakage_risk": "low",
+      "formula": "max(0, 14 - V1) + V2 + (V3 / 250.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c84afdd68b1daa34",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_salmonella_serovar_20260401",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "anchor_mean_spectrum_rms_distance",
+      "type": "formula",
+      "description": "RMS standardized deviation from the training-fold mean spectrum at eight anchor wavelengths spanning 401 to 1001 nm.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Adds an unsupervised prototype-distance coordinate so nearby rows under the full spectrum also align on broad shape.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((((( `Band_2_W_401.00` - 152.97694656892662) / 131.51118686703134) ** 2) + (((`Band_50_W_496.80` - 573.6910135740426) / 258.22690144565456) ** 2) + (((`Band_77_W_550.90` - 1167.380470226384) / 602.7116088652798) ** 2) + (((`Band_100_W_596.90` - 908.575687139838) / 466.7874224762345) ** 2) + (((`Band_127_W_650.80` - 648.8256828713396) / 373.4758526409172) ** 2) + (((`Band_152_W_700.70` - 249.96717191866998) / 139.4100291929239) ** 2) + (((`Band_202_W_800.40` - 11.488354910258094) / 13.55848323544923) ** 2) + (((`Band_303_W_1000.90` - 18.64524966284291) / 17.96833336742246) ** 2)) / 8.0), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_visible_signal_level_z",
+      "type": "formula",
+      "description": "Log-scaled visible-band signal level centered on the training-fold average of representative visible anchors.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalized_intensity",
+      "expected_model_benefit": "Separates overall brightness while reducing dominance of raw intensity in nearest-neighbor distance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p((`Band_50_W_496.80` + `Band_77_W_550.90` + `Band_100_W_596.90` + `Band_127_W_650.80`) / 4.0) - np.log1p(824.618213452901)) / 0.75, -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blue_green_log_contrast",
+      "type": "formula",
+      "description": "Log contrast between blue-visible shoulders near 465-477 nm and green crest bands near 541-551 nm.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "spectral_similarity",
+      "expected_model_benefit": "Captures scale-stable color-shape differences that improve local neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p((`Band_34_W_465.00` + `Band_40_W_477.00`) / 2.0) - np.log1p((`Band_72_W_540.80` + `Band_77_W_550.90`) / 2.0), -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "green_red_normalized_contrast",
+      "type": "formula",
+      "description": "Normalized contrast between the green crest and the red-region shoulder around 651-665 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spectral_similarity",
+      "expected_model_benefit": "Provides a bounded shape-ratio coordinate that is less sensitive to multiplicative brightness shifts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_72_W_540.80` + `Band_77_W_550.90`) / 2.0) - ((`Band_127_W_650.80` + `Band_134_W_664.70`) / 2.0)) / (((`Band_72_W_540.80` + `Band_77_W_550.90`) / 2.0) + ((`Band_127_W_650.80` + `Band_134_W_664.70`) / 2.0) + 1.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "green_peak_sharpness_index",
+      "type": "formula",
+      "description": "Relative prominence of the 551-563 nm crest compared with shoulders near 501 and 597 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Adds local peak-shape information so neighbors match on curvature, not only absolute level.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_77_W_550.90` + `Band_83_W_562.70`) / 2.0) - ((`Band_52_W_500.90` + `Band_100_W_596.90`) / 2.0)) / (((`Band_77_W_550.90` + `Band_83_W_562.70`) / 2.0) + 1.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "red_falloff_slope_scaled",
+      "type": "formula",
+      "description": "Scale-normalized slope from 680.9 to 720.8 nm, expressed per wavelength interval and clipped for robustness.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "spectral_slope",
+      "expected_model_benefit": "Encodes the steepness of the red-to-far-red decline, improving matching of spectra with similar tails.",
+      "leakage_risk": "low",
+      "formula": "np.clip(100.0 * (`Band_162_W_720.80` - `Band_142_W_680.90`) / (39.9 * (((`Band_162_W_720.80` + `Band_142_W_680.90`) / 2.0) + 1.0)), -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "far_red_tail_fraction",
+      "type": "formula",
+      "description": "Fractional high-wavelength tail strength using 800-1001 nm anchors relative to visible anchors.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spectral_ratio",
+      "expected_model_benefit": "Gives a bounded tail-strength coordinate that helps KNN avoid pairing rows with very different long-wavelength behavior.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((`Band_202_W_800.40` + `Band_230_W_856.20` + `Band_263_W_921.60` + `Band_303_W_1000.90`) / 4.0) / (((`Band_60_W_517.00` + `Band_77_W_550.90` + `Band_100_W_596.90` + `Band_127_W_650.80`) / 4.0) + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "oxygen_760_dip_index",
+      "type": "formula",
+      "description": "Local dip index at 760.5 nm relative to shoulders at 740.4 and 780.4 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "local_absorption_shape",
+      "expected_model_benefit": "Adds a local-shape similarity signal around a narrow spectral trough region.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_172_W_740.40` + `Band_192_W_780.40`) / 2.0) - `Band_182_W_760.50`) / (((`Band_172_W_740.40` + `Band_192_W_780.40`) / 2.0) + 1.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "water_970_dip_index",
+      "type": "formula",
+      "description": "Local dip index at 969.1 nm relative to shoulders at 951.0 and 989.3 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "local_absorption_shape",
+      "expected_model_benefit": "Helps nearest-neighbor search respect high-wavelength trough patterns that may be weak in raw Euclidean space.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_278_W_951.00` + `Band_297_W_989.30`) / 2.0) - `Band_287_W_969.10`) / (((`Band_278_W_951.00` + `Band_297_W_989.30`) / 2.0) + 1.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bright_visible_plateau_indicator",
+      "type": "formula",
+      "description": "Binary indicator for an upper-tail green-visible plateau around 541-563 nm using a training-fold distribution threshold.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a simple unsupervised grouping cue so very bright plateau spectra are compared with more appropriate neighbors.",
+      "leakage_risk": "low",
+      "formula": "np.where(((`Band_72_W_540.80` + `Band_77_W_550.90` + `Band_83_W_562.70`) / 3.0) > 1750.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_continuity_quality_score",
+      "type": "judgment",
+      "description": "Numeric row-level assessment from 0.0 to 1.0 of adjacent-wavelength continuity, with lower values for severe jumps, saturation, or dropout-like artifacts and higher values for smooth coherent traces.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_quality_score",
+      "expected_model_benefit": "Adds a reliability coordinate for distance computations, reducing accidental neighbor matches caused by discontinuous traces.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_shape_typicality_score",
+      "type": "judgment",
+      "description": "Numeric row-level assessment from 0.0 to 1.0 of how closely the row follows the unsupervised training-fold spectral shape: broad 520-570 nm crest, smooth decline through 650-730 nm, and low high-wavelength tail.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_shape_score",
+      "expected_model_benefit": "Provides an interpretable manifold coordinate that groups rows with comparable overall morphology in nearest-neighbor search.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cached_raw_normalized",
+  "metadata": {}
+}

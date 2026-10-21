@@ -1,0 +1,190 @@
+{
+  "dataset_name": "codexglue",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "project_qemu_indicator",
+      "type": "formula",
+      "description": "Indicator variable for the 'qemu' project, mapped to -1.0 and 1.0 for SVM margin optimization.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Provides a linear shift in the decision boundary based on the project domain, allowing the SVM to learn project-specific base rates.",
+      "leakage_risk": "low",
+      "formula": "np.where(project == 'qemu', 1.0, -1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "project_ffmpeg_indicator",
+      "type": "formula",
+      "description": "Indicator variable for the 'FFmpeg' project, mapped to -1.0 and 1.0 for SVM margin optimization.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Allows the linear model to adjust its intercept for FFmpeg-specific code patterns.",
+      "leakage_risk": "low",
+      "formula": "np.where(project == 'FFmpeg', 1.0, -1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "id_standardized",
+      "type": "formula",
+      "description": "Standardized version of the row ID, centered and scaled using training set mean and standard deviation.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "numeric_scaling",
+      "expected_model_benefit": "Ensures the numeric ID feature is on a similar scale to other features, preventing it from dominating the SVM margin penalty.",
+      "leakage_risk": "medium",
+      "formula": "(id - 13745.75) / 7895.77",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_cyclomatic_complexity_score",
+      "type": "judgment",
+      "description": "Semantic estimation of the cyclomatic complexity of the C/C++ function, counting branching statements like if, for, while, and switch cases, normalized to a continuous score.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "code_complexity",
+      "expected_model_benefit": "Provides a continuous severity measure of control flow complexity, which often correlates linearly with bug density.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_pointer_arithmetic_risk",
+      "type": "judgment",
+      "description": "Assessment of the intensity and risk of pointer arithmetic and direct memory access operations within the function.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "memory_safety",
+      "expected_model_benefit": "Acts as a continuous risk score for memory-related vulnerabilities, highly relevant for linear separation in C/C++ code analysis.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_memory_management_risk",
+      "type": "judgment",
+      "description": "Evaluation of manual memory management complexity, including allocations, deallocations, and buffer size calculations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "memory_safety",
+      "expected_model_benefit": "Captures the likelihood of memory leaks or use-after-free issues as a smooth normalized score.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_error_handling_ratio",
+      "type": "judgment",
+      "description": "Ratio of error handling and logging code (e.g., goto fail, return error codes) relative to the total function logic.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_structure",
+      "expected_model_benefit": "Provides a ratio feature that helps the SVM distinguish between robustly written functions and those lacking proper error checks.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_length_chars_log",
+      "type": "judgment",
+      "description": "Logarithmic scale of the total number of characters in the function source code, capturing function size.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "code_size",
+      "expected_model_benefit": "Transforms a heavily skewed length metric into a smooth, linearly separable feature suitable for SVMs.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_api_call_density",
+      "type": "judgment",
+      "description": "Density of external API or function calls per line of code, indicating the level of abstraction and external dependencies.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_structure",
+      "expected_model_benefit": "Offers a normalized ratio of external interactions, useful for modeling the attack surface of the function.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_bitwise_operations_intensity",
+      "type": "judgment",
+      "description": "Intensity of bitwise operations (AND, OR, XOR, shifts) used in the function, common in low-level parsing and cryptography.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "domain_specific_logic",
+      "expected_model_benefit": "Highlights low-level data manipulation patterns, providing a continuous feature for the SVM to weight parsing-related risks.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_loop_depth_max",
+      "type": "judgment",
+      "description": "Maximum nesting depth of loops within the function, reflecting algorithmic complexity and potential performance bottlenecks.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "code_complexity",
+      "expected_model_benefit": "Provides a bounded integer-like continuous feature representing structural depth, useful for linear combinations with complexity scores.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "func_condition_complexity",
+      "type": "judgment",
+      "description": "Average number of boolean operators (&&, ||) per conditional statement, indicating the complexity of control flow decisions.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "code_complexity",
+      "expected_model_benefit": "Acts as a continuous severity measure of decision logic complexity, aiding the linear model in identifying convoluted conditions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cdfd8cbe097aea41",
+  "metadata": {}
+}

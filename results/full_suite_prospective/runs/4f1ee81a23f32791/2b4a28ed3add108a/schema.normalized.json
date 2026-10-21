@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_prime_working_age",
+      "type": "formula",
+      "description": "Boolean indicator for individuals in their prime working years (25 to 55).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Provides a clear threshold for tree models to split on a key demographic segment, reducing the need for multiple age-based splits.",
+      "leakage_risk": "low",
+      "formula": "np.where((age >= 25) & (age <= 55), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_capital_change",
+      "type": "formula",
+      "description": "The net difference between capital gains and capital losses.",
+      "value_range": [
+        -4356.0,
+        99999.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Allows the model to directly split on net capital accumulation, capturing overall financial investment status in a single feature.",
+      "leakage_risk": "low",
+      "formula": "capital_gain - capital_loss",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_per_week_category",
+      "type": "formula",
+      "description": "Ordinal categorization of working hours: part-time (0), standard full-time (1), overtime (2), and extreme overtime (3).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "employment",
+      "expected_model_benefit": "Groups working hours into standard ordinal buckets, allowing tree models to make semantic splits on employment type rather than continuous hours.",
+      "leakage_risk": "low",
+      "formula": "np.where(hours_per_week < 40, 0, np.where(hours_per_week == 40, 1, np.where(hours_per_week <= 60, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_hours_interaction",
+      "type": "formula",
+      "description": "Nonlinear interaction between years of education and hours worked per week.",
+      "value_range": [
+        1.0,
+        1584.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the combined effect of human capital and labor input, highlighting individuals with both high education and high work commitment.",
+      "leakage_risk": "low",
+      "formula": "education_num * hours_per_week",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_capital_anomaly",
+      "type": "formula",
+      "description": "Boolean indicator for the presence of any capital market participation (either gains or losses).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Creates a direct boolean split for financial activity, which is often a strong differentiator in economic datasets.",
+      "leakage_risk": "low",
+      "formula": "np.where((capital_gain > 0) | (capital_loss > 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_education_ratio",
+      "type": "formula",
+      "description": "Ratio of age to years of education, indicating the relative time spent in the workforce versus in school.",
+      "value_range": [
+        1.0,
+        90.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Provides a continuous ratio that helps identify individuals who may have delayed their education or advanced quickly, offering a unique splitting criterion.",
+      "leakage_risk": "low",
+      "formula": "age / np.maximum(education_num, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_fnlwgt",
+      "type": "formula",
+      "description": "Logarithmic transformation of the final weight variable.",
+      "value_range": [
+        9.5,
+        14.3
+      ],
+      "feature_family": "statistical",
+      "expected_model_benefit": "Compresses the large range of the final weight variable, reducing the impact of extreme outliers and creating a smoother distribution for tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(fnlwgt)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_intensity_metric",
+      "type": "formula",
+      "description": "A nonlinear metric combining the square root of hours worked and the logarithm of age.",
+      "value_range": [
+        2.8,
+        45.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Creates a continuous feature that scales work hours by age, helping the model identify patterns of intense labor participation across different life stages.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(hours_per_week) * np.log1p(age)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "career_stage_index",
+      "type": "judgment",
+      "description": "Semantic assessment of the individual's career stage based on their age, education level, and hours worked per week, ranging from early career (low score) to late career/retirement (high score).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "employment",
+      "expected_model_benefit": "Offers a semantic grouping of individuals into career stages, allowing tree models to make broader demographic splits before fine-tuning with continuous variables.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "An estimated score representing financial stability derived from capital gains, capital losses, and consistent working hours.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Provides a holistic assessment of financial health, giving the model a high-level feature to separate individuals with stable versus unstable economic situations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "occupational_skill_requirement",
+      "type": "judgment",
+      "description": "A semantic judgment of the skill level typically required for the individual's occupation and education combination.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "employment",
+      "expected_model_benefit": "Translates categorical occupation and education codes into an ordinal skill metric, which tree models can split on more effectively than high-cardinality nominal variables.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_responsibility_index",
+      "type": "judgment",
+      "description": "An index evaluating the level of family responsibility based on marital status, relationship role, and age.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Combines multiple relationship and marital status categories into a single ordinal index, simplifying the tree's ability to split on household structure.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c4117cb03f7a6661",
+  "metadata": {}
+}

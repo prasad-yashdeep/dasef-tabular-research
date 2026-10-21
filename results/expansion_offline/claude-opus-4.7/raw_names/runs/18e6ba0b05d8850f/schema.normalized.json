@@ -1,0 +1,190 @@
+{
+  "dataset_name": "house_16h",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_p1_population",
+      "type": "formula",
+      "description": "Log-transformed P1 population-like count to compress extreme tail and produce a near-linear scale suitable for SVM margins.",
+      "value_range": [
+        0.0,
+        16.0
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Compresses heavy-tailed P1 into a smooth scale that linearly separates regions of low vs high counts.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(P1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p1_zscore_clipped",
+      "type": "formula",
+      "description": "Standardized P1 using training mean/std then clipped to robust range; provides a bounded linear feature.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Provides a bounded, centered numeric feature aligned with linear SVM scale assumptions.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(P1) - 7.5) / 1.8, -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p15p1_deviation_from_high",
+      "type": "formula",
+      "description": "Absolute deviation of P15p1 from its upper bound of 1.0, capturing how far from saturation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Smooth severity score capturing distance from a natural ceiling, useful for linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.abs(1.0 - P15p1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h10p1_deviation_from_high",
+      "type": "formula",
+      "description": "Absolute deviation of H10p1 from 1.0; captures rarity of low values in this near-saturated feature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Highlights uncommon low values, providing a sharp linear signal.",
+      "leakage_risk": "low",
+      "formula": "np.abs(1.0 - H10p1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p_ratio_p6p2_to_p15p1",
+      "type": "formula",
+      "description": "Ratio of P6p2 to P15p1 with small epsilon, capturing relative composition.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio features supply multiplicative structure that linear models can leverage as projections.",
+      "leakage_risk": "low",
+      "formula": "np.clip(P6p2 / (P15p1 + 0.001), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h_ratio_h2p2_to_h13p1",
+      "type": "formula",
+      "description": "Ratio of H2p2 to H13p1 capturing housing composition relative shares.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Combines two housing percentages into a single relative measure linear models can weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(H2p2 / (H13p1 + 0.001), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_p_composite",
+      "type": "formula",
+      "description": "Weighted composite of small P-percentage features approximating an aggregate share signal.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Linear combination of related percentages produces a smooth aggregate score for SVM.",
+      "leakage_risk": "low",
+      "formula": "P6p2 + P11p4 + P14p9 + P15p3 + P18p2 + P27p4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_h_composite",
+      "type": "formula",
+      "description": "Weighted composite of housing-related percentage features.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Aggregates housing signals into one smooth axis useful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "H2p2 + H8p2 + H18pA + H40p4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p5p1_centered",
+      "type": "formula",
+      "description": "P5p1 centered at its training mean, providing a zero-centered linear input.",
+      "value_range": [
+        -0.3,
+        0.5
+      ],
+      "feature_family": "centering",
+      "expected_model_benefit": "Centering improves SVM margin geometry for near-normal features.",
+      "leakage_risk": "low",
+      "formula": "P5p1 - 0.483",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p16p2_centered",
+      "type": "formula",
+      "description": "P16p2 centered at its training mean for symmetric linear contribution.",
+      "value_range": [
+        -0.5,
+        0.4
+      ],
+      "feature_family": "centering",
+      "expected_model_benefit": "Symmetric centered values yield cleaner linear margins.",
+      "leakage_risk": "low",
+      "formula": "P16p2 - 0.717",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sqrt_h_diversity_score",
+      "type": "formula",
+      "description": "Square-root transformed product-sum of H features capturing diversity in housing distribution.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "nonlinear_transform",
+      "expected_model_benefit": "Sqrt compresses range and provides a smooth continuous severity signal.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(H2p2 * H13p1 + H18pA * H40p4 + 0.0001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "urban_density_judgment_score",
+      "type": "judgment",
+      "description": "Semantic judgment score combining P1 magnitude and housing saturation (H10p1 high, H40p4 mid-high) to approximate an urban density indicator. Computed as a smooth bounded composite.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a domain-motivated smooth severity axis that linear SVM can weight directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "611e6daf74515e53",
+  "metadata": {}
+}

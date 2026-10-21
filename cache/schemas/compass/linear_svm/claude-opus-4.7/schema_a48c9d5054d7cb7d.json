@@ -1,0 +1,190 @@
+{
+  "dataset_name": "compass",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "priors_log_intensity",
+      "type": "formula",
+      "description": "Log-scaled prior count emphasizing the smooth gradient between zero, few, and many priors; well-suited for linear margin.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "criminal_history",
+      "expected_model_benefit": "Smooth monotonic feature compresses heavy-tailed priors_count for a stable linear coefficient.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(priors_count)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "juvenile_total_severity",
+      "type": "formula",
+      "description": "Weighted composite of juvenile felony, misdemeanor, and other counts with felony weighted most.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "criminal_history",
+      "expected_model_benefit": "Single composite reduces collinearity among 3 small juvenile counters for cleaner linear weights.",
+      "leakage_risk": "low",
+      "formula": "3.0 * juv_fel_count + 2.0 * juv_misd_count + 1.0 * juv_other_count",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_inverse_risk",
+      "type": "formula",
+      "description": "Inverse age proxy; younger offenders score higher on this smooth descending curve.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Provides a continuous nonlinear age transform usable as a linear margin contributor.",
+      "leakage_risk": "low",
+      "formula": "1.0 / (1.0 + (age - 18.0) / 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_centered_z",
+      "type": "formula",
+      "description": "Standardized centered age using training mean and std for linear projection.",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Centered scaled numeric feature improves SVM margin geometry.",
+      "leakage_risk": "low",
+      "formula": "(age - 33.74) / 11.51",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_score_norm",
+      "type": "formula",
+      "description": "Normalized COMPAS decile score to a 0-1 continuous risk gradient.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Provides smooth continuous risk axis; ideal feature for linear separation.",
+      "leakage_risk": "low",
+      "formula": "(decile_score.1.astype('float64')) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v_decile_score_norm",
+      "type": "formula",
+      "description": "Normalized violent decile score to a continuous 0-1 axis.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Smooth secondary risk gradient complementing the general decile score.",
+      "leakage_risk": "low",
+      "formula": "(v_decile_score.astype('float64')) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "combined_risk_projection",
+      "type": "formula",
+      "description": "Average of normalized general and violent decile risk scores.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Averaged composite reduces noise and provides a stronger linear projection.",
+      "leakage_risk": "low",
+      "formula": "0.5 * (decile_score.1.astype('float64') / 9.0) + 0.5 * (v_decile_score.astype('float64') / 9.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "score_text_severity_ratio",
+      "type": "formula",
+      "description": "Continuous severity ratio derived from score_text and v_score_text categories.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Averaged ordinal severity provides smooth linear input.",
+      "leakage_risk": "low",
+      "formula": "0.5 * (score_text.astype('float64') / 2.0) + 0.5 * (v_score_text.astype('float64') / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "screening_delay_abs_log",
+      "type": "formula",
+      "description": "Absolute days between arrest and screening, log-scaled to dampen extreme tails.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "process_timing",
+      "expected_model_benefit": "Tail-compressed magnitude makes the variable usable as a linear margin contributor.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.abs(days_b_screening_arrest))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "compas_days_log",
+      "type": "formula",
+      "description": "Log-scaled days from COMPAS event to dampen long-tail distribution.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "process_timing",
+      "expected_model_benefit": "Smooth heavy-tail compression improves linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(c_days_from_compas)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "priors_per_adult_year",
+      "type": "formula",
+      "description": "Prior count normalized by years lived since legal adulthood; a per-year intensity ratio.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "criminal_history",
+      "expected_model_benefit": "Ratio captures intensity per exposure year, providing a smooth normalized score.",
+      "leakage_risk": "low",
+      "formula": "priors_count / np.maximum(age - 17.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "charge_severity_judgment",
+      "type": "judgment",
+      "description": "Semantic ordinal mapping of c_charge_degree into a severity score reflecting typical legal hierarchy of charge degrees (encoded categories ordered by approximate severity).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "charge_semantics",
+      "expected_model_benefit": "Provides a continuous severity proxy from a high-cardinality categorical, usable as a single linear coefficient instead of many one-hot dummies.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a48c9d5054d7cb7d",
+  "metadata": {}
+}

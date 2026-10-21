@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recency_normalized",
+      "type": "formula",
+      "description": "Recency (V1) normalized to [0,1] using training set min/max. Lower recency may indicate more recent donation activity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized input improves linear SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "(V1 - 1.0) / (23.0 - 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_normalized",
+      "type": "formula",
+      "description": "Frequency (V2) normalized to [0,1] using training set min/max. Higher frequency indicates more donations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized input improves linear SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "(V2 - 1.0) / (44.0 - 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monetary_log_normalized",
+      "type": "formula",
+      "description": "Log-transformed monetary value (V3) normalized using log of training min/max to reduce skewness.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Log normalization reduces skew in monetary distribution, improving linear separability",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(V3) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_normalized",
+      "type": "formula",
+      "description": "Time since first donation (V4) normalized to [0,1] using training set min/max.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized input improves linear SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "(V4 - 2.0) / (98.0 - 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate",
+      "type": "formula",
+      "description": "Ratio of frequency to time since first donation (V2/V4), measuring average donation rate over donor history.",
+      "value_range": [
+        0.01,
+        22.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures donation intensity as a continuous ratio useful for linear margins",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_to_time_ratio",
+      "type": "formula",
+      "description": "Ratio of recency to total time (V1/V4), indicating how recently the donor gave relative to their full history.",
+      "value_range": [
+        0.01,
+        11.5
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures relative recency as a continuous ratio for linear separation",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monetary_per_donation",
+      "type": "formula",
+      "description": "Average monetary value per donation (V3/V2), measuring consistency of donation volume.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalized per-donation amount as smooth continuous feature for SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip((V3 / np.maximum(V2, 1.0) - 250.0) / (11000.0 - 250.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rfm_composite_score",
+      "type": "formula",
+      "description": "Weighted composite of normalized recency (inverted), frequency, and monetary features approximating RFM scoring.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Single composite score as linear projection of key donor features improves SVM margin",
+      "leakage_risk": "low",
+      "formula": "0.4 * (1.0 - (V1 - 1.0) / 22.0) + 0.35 * np.clip((V2 - 1.0) / 43.0, 0.0, 1.0) + 0.25 * np.clip((np.log1p(V3) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_interaction",
+      "type": "formula",
+      "description": "Product of normalized recency (inverted) and normalized frequency, capturing joint effect of recent and frequent donation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Interaction term approximates nonlinear relationship in linear SVM feature space",
+      "leakage_risk": "low",
+      "formula": "(1.0 - (V1 - 1.0) / 22.0) * np.clip((V2 - 1.0) / 43.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_frequency_low_recency_indicator",
+      "type": "formula",
+      "description": "Soft indicator for donors with high frequency and low recency, using smooth sigmoid-like approximation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures a specific donor profile pattern as a smooth continuous feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V2 - 1.0) / 43.0) * (1.0 - (V1 - 1.0) / 22.0) * 4.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_consistency_score",
+      "type": "judgment",
+      "description": "Semantic assessment of donation consistency based on the ratio of actual donations to expected donations given time span. Scores range from 0 (very inconsistent/infrequent) to 1 (highly consistent/frequent donor).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures holistic donation behavior pattern not easily expressed by single formula",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_engagement_severity",
+      "type": "judgment",
+      "description": "Continuous severity measure of overall donor engagement combining recency, frequency, monetary, and time dimensions. Higher values indicate stronger engagement profile.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Smooth severity score provides interpretable continuous feature for SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e5ee48e95b4740b4",
+  "metadata": {}
+}

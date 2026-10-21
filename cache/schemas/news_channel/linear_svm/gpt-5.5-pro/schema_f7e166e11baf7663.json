@@ -1,0 +1,190 @@
+{
+  "dataset_name": "news_channel",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "log_content_length_norm",
+      "type": "formula",
+      "description": "Log-scaled article body length normalized by the training-fold maximum token count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "content_scale",
+      "expected_model_benefit": "Gives the linear margin a bounded article-size axis and reduces influence of very long outliers.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(n_tokens_content) / np.log1p(7764.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lexical_uniqueness_z",
+      "type": "formula",
+      "description": "Standardized unique-token ratio, clipped to limit extreme short-document effects.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "lexical_style",
+      "expected_model_benefit": "Centers vocabulary repetition versus variety on training-fold scale, enabling a near-linear style separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((n_unique_tokens - 0.5272377154172623) / 0.12160790880297856, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "avg_token_length_z",
+      "type": "formula",
+      "description": "Standardized average word length, clipped to a robust numeric interval.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "lexical_style",
+      "expected_model_benefit": "Captures concise versus complex wording as a standardized style coordinate for linear/SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((average_token_length - 4.5976575079864865) / 0.6899823994985161, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "link_density_log_norm",
+      "type": "formula",
+      "description": "Log-scaled hyperlinks per 100 content tokens, saturated at a high-density reference level.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "link_structure",
+      "expected_model_benefit": "Adds a smooth normalized citation-intensity axis that can combine linearly with length and title semantics.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p((100.0 * num_hrefs) / np.maximum(n_tokens_content, 1.0)) / np.log1p(25.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "self_link_share",
+      "type": "formula",
+      "description": "Fraction of hyperlinks that point internally, clipped to a valid share interval.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "link_structure",
+      "expected_model_benefit": "Separates internally navigational pieces from externally referenced pieces with a bounded ratio.",
+      "leakage_risk": "low",
+      "formula": "np.clip(num_self_hrefs / np.maximum(num_hrefs, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "media_richness_norm",
+      "type": "formula",
+      "description": "Log-scaled composite of images and videos, counting each video as two visual units.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "media_composition",
+      "expected_model_benefit": "Summarizes visual/video load into one continuous score, useful where presentation format differs by editorial area.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(num_imgs + 2.0 * num_videos) / np.log1p(258.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "affect_valence_balance",
+      "type": "formula",
+      "description": "Signed balance between upbeat and adverse word-rate signals, ratio-normalized by total affect-word rate.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "affect",
+      "expected_model_benefit": "Provides a signed affect direction that is already ratio-normalized, reducing need for nonlinear interactions.",
+      "leakage_risk": "low",
+      "formula": "np.clip((global_rate_positive_words - global_rate_negative_words) / np.maximum(global_rate_positive_words + global_rate_negative_words, 0.001), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "subjective_sentiment_intensity_norm",
+      "type": "formula",
+      "description": "Subjectivity-weighted absolute sentiment magnitude, normalized by training-fold extrema.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "affect",
+      "expected_model_benefit": "Adds an emotional intensity dimension independent of sign, complementing the valence-balance feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip((global_subjectivity * np.abs(global_sentiment_polarity)) / 0.44576515151538, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_public_affairs_focus_score",
+      "type": "judgment",
+      "description": "Numeric assessment from article_title only: 0.0 means no public-events emphasis; 1.0 means the title is mainly about government, elections, courts, policy, conflict, disasters, or international institutions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "title_semantics",
+      "expected_model_benefit": "Exposes high-cardinality title meaning as a smooth topical coordinate for the linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_digital_platform_focus_score",
+      "type": "judgment",
+      "description": "Numeric assessment from article_title only: 0.0 means no digital-platform emphasis; 1.0 means the title is mainly about apps, gadgets, software, web platforms, online communities, memes, or viral web behavior.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "title_semantics",
+      "expected_model_benefit": "Creates a continuous semantic axis from sparse title cues around digital products and networked online activity.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_commercial_finance_focus_score",
+      "type": "judgment",
+      "description": "Numeric assessment from article_title only: 0.0 means no commerce or finance emphasis; 1.0 means the title is mainly about companies, markets, money, jobs, startups, deals, or corporate decisions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "title_semantics",
+      "expected_model_benefit": "Supplies a smooth economic-topic coordinate that a linear model can weight without sparse text expansion.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_culture_living_focus_score",
+      "type": "judgment",
+      "description": "Numeric assessment from article_title only: 0.0 means no culture or everyday-living emphasis; 1.0 means the title is mainly about celebrities, TV, film, music, food, health, style, travel, family, relationships, or personal habits.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "title_semantics",
+      "expected_model_benefit": "Condenses broad human-interest title meaning into a bounded feature suitable for linear/SVM separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f7e166e11baf7663",
+  "metadata": {}
+}

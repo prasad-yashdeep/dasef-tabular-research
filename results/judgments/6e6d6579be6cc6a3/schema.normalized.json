@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_glucose",
+      "type": "formula",
+      "description": "Z-score normalized plasma glucose concentration, improving distance metric scaling for KNN.",
+      "value_range": [
+        -4.0,
+        3.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents the glucose feature from dominating distance calculations due to its larger raw scale.",
+      "leakage_risk": "low",
+      "formula": "(plas - 120.02) / 31.20",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_bmi",
+      "type": "formula",
+      "description": "Z-score normalized body mass index, ensuring equal contribution to distance metrics.",
+      "value_range": [
+        -4.5,
+        3.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Standardizes BMI variance, improving the geometry of the neighborhood space.",
+      "leakage_risk": "low",
+      "formula": "(mass - 31.17) / 7.37",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_age",
+      "type": "formula",
+      "description": "Z-score normalized age, aligning its scale with other metabolic indicators.",
+      "value_range": [
+        -1.5,
+        4.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Balances age with other features in Euclidean distance computations.",
+      "leakage_risk": "low",
+      "formula": "(age - 32.69) / 11.32",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_risk_prototype_distance",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised high-risk metabolic prototype (elevated glucose, BMI, and age) in normalized space.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a direct similarity score to a known high-risk cluster, enhancing neighborhood separation.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((plas - 150.0)/31.2)**2 + ((mass - 35.0)/7.4)**2 + ((age - 50.0)/11.3)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "healthy_prototype_distance",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised healthy metabolic prototype (normal glucose, BMI, and younger age) in normalized space.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Acts as a continuous similarity measure to a baseline healthy state, aiding KNN in grouping similar profiles.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((plas - 90.0)/31.2)**2 + ((mass - 22.0)/7.4)**2 + ((age - 25.0)/11.3)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_bmi_interaction",
+      "type": "formula",
+      "description": "Product of normalized glucose and normalized BMI, capturing the synergistic effect of these two variables.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Exposes non-linear interactions to the distance metric, allowing KNN to capture complex metabolic states.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.0) / 31.2) * ((mass - 31.2) / 7.4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_resistance_proxy",
+      "type": "formula",
+      "description": "Ratio of plasma glucose to insulin (when insulin is non-zero), serving as an unsupervised proxy for insulin resistance.",
+      "value_range": [
+        0.0,
+        200.0
+      ],
+      "feature_family": "domain_knowledge",
+      "expected_model_benefit": "Creates a physiologically relevant continuous feature that improves the semantic meaning of distances.",
+      "leakage_risk": "low",
+      "formula": "np.where(insu > 0, plas / (insu + 1.0), 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_age_risk_score",
+      "type": "formula",
+      "description": "Interaction between diabetes pedigree function and the log of age, representing accumulated genetic risk over time.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Combines genetic predisposition with temporal exposure, creating a unified risk dimension for distance calculation.",
+      "leakage_risk": "low",
+      "formula": "pedi * np.log1p(age)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "missing_value_indicator_count",
+      "type": "formula",
+      "description": "Count of biologically implausible zero values across key measurements (glucose, blood pressure, skin thickness, insulin, BMI).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "data_quality",
+      "expected_model_benefit": "Groups records with similar patterns of missing data, preventing artificial proximity between complete and incomplete records.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas == 0, 1, 0) + np.where(pres == 0, 1, 0) + np.where(skin == 0, 1, 0) + np.where(insu == 0, 1, 0) + np.where(mass == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_deviation",
+      "type": "formula",
+      "description": "Absolute normalized deviation of blood pressure from a typical healthy baseline of 72 mm Hg.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Transforms a bidirectional variable into a unidirectional magnitude of abnormality, improving distance semantics.",
+      "leakage_risk": "low",
+      "formula": "np.abs(pres - 72.0) / 18.3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_metabolic_severity",
+      "type": "judgment",
+      "description": "Semantic assessment of the overall severity of the metabolic profile based on the combination of glucose, BMI, and insulin levels.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, non-linear evaluation of metabolic health that smooths out noise in individual features for better neighborhood formation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_genetic_risk_profile",
+      "type": "judgment",
+      "description": "Evaluates the genetic risk profile by semantically interpreting the pedigree function in the context of age and number of pregnancies.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Translates complex, multi-variable genetic and demographic interactions into a single continuous dimension for KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "50264ade25c8c2d2",
+  "metadata": {}
+}

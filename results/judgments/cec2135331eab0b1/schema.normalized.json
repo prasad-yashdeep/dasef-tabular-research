@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "months_since_last_donation",
+      "type": "formula",
+      "description": "Recency in months (V1) - lower values indicate more recent donor activity.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "recency",
+      "expected_model_benefit": "Direct recency signal; trees can split on recent vs lapsed donors.",
+      "leakage_risk": "low",
+      "formula": "V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_recent_donor",
+      "type": "formula",
+      "description": "Boolean flag indicating donation within last 4 months.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency_threshold",
+      "expected_model_benefit": "Provides a clean threshold split for highly active donors.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 <= 4, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_lapsed_donor",
+      "type": "formula",
+      "description": "Boolean flag indicating no donation in over 12 months.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency_threshold",
+      "expected_model_benefit": "Identifies inactive donors which is a strong split signal.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 > 12, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_frequency_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of total donations: 0=1, 1=2-4, 2=5-10, 3=11+.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "frequency_ordinal",
+      "expected_model_benefit": "Pre-bucketed frequency aids tree splits without deep depth.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 <= 1, 0, np.where(V2 <= 4, 1, np.where(V2 <= 10, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate_per_month",
+      "type": "formula",
+      "description": "Average donations per month of donation history (V2 / V4).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Captures intensity of donor engagement over their history.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_donation_months",
+      "type": "formula",
+      "description": "Months between first donation and last donation (V4 - V1), gives active span.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "tenure",
+      "expected_model_benefit": "Distinguishes long-active from newly-inactive donors.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V4 - V1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "avg_gap_between_donations",
+      "type": "formula",
+      "description": "Average months between consecutive donations over the active span.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Low gap indicates regular donor habit; useful threshold split.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V4 - V1, 0) / np.maximum(V2 - 1, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_to_tenure_ratio",
+      "type": "formula",
+      "description": "Ratio of months since last donation to total donor tenure (V1 / V4).",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Higher ratio indicates donor went silent late in tenure; nonlinear signal.",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_total_volume",
+      "type": "formula",
+      "description": "Log-scaled total cc donated (log1p of V3) to compress heavy tail.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Compressed scale gives cleaner thresholds for trees on skewed volume.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_per_donation_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of average volume per donation from canonical 250cc unit.",
+      "value_range": [
+        0.0,
+        500.0
+      ],
+      "feature_family": "consistency",
+      "expected_model_benefit": "Detects anomalous volume/donation ratios that may signal data quirks.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V3 / np.maximum(V2, 1) - 250.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engaged_recent_donor",
+      "type": "formula",
+      "description": "Interaction flag: recent donor (V1<=4) AND frequent (V2>=5).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the joint effect of recency and frequency in a single split.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 <= 4) & (V2 >= 5), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_loyalty_score",
+      "type": "judgment",
+      "description": "Semantic ordinal score of donor loyalty profile combining tenure span, frequency, and recency: 0=one-shot inactive, 1=occasional, 2=regular, 3=highly loyal recent donor. Derived from row values only.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_profile",
+      "expected_model_benefit": "Provides a compact semantic grouping that trees can split into loyalty tiers.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "857e59001e7ac0d1",
+  "metadata": {}
+}

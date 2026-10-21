@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_00",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "age_life_stage_bucket",
+      "type": "formula",
+      "description": "Age bucket from x001: 0=17-24, 1=25-34, 2=35-44, 3=45-54, 4=55-64, 5=65+.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Turns a continuous age field into coarse thresholds, giving trees simple split candidates.",
+      "leakage_risk": "low",
+      "formula": "np.where(x001 < 25, 0, np.where(x001 < 35, 1, np.where(x001 < 45, 2, np.where(x001 < 55, 3, np.where(x001 < 65, 4, 5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_attainment_bucket",
+      "type": "formula",
+      "description": "Education-attainment bucket from x005: 0=1-8, 1=9-10, 2=11-12, 3=13, 4=14-16.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Converts the schooling scale into ordered levels, reducing the need for multiple adjacent numeric splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(x005 <= 8, 0, np.where(x005 <= 10, 1, np.where(x005 <= 12, 2, np.where(x005 <= 13, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weekly_hours_bucket",
+      "type": "formula",
+      "description": "Weekly hours bucket from x013: 0=under 20, 1=20-34, 2=35-44, 3=45-54, 4=55+.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Provides direct part-time, standard, extended, and extreme schedule regions for tree thresholds.",
+      "leakage_risk": "low",
+      "formula": "np.where(x013 < 20, 0, np.where(x013 < 35, 1, np.where(x013 <= 44, 2, np.where(x013 <= 54, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prime_working_fulltime_indicator",
+      "type": "formula",
+      "description": "Indicator for x001 between 30 and 60 with x013 at least 35, representing an established full-time working pattern.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_interaction",
+      "expected_model_benefit": "Captures nonlinear co-occurrence of mid-career age and at least full-time schedule in one binary split.",
+      "leakage_risk": "low",
+      "formula": "np.where(((x001 >= 30) & (x001 <= 60)) & (x013 >= 35), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "advanced_education_overtime_indicator",
+      "type": "formula",
+      "description": "Indicator for x005 at least 13 and x013 at least 45, representing high schooling with elevated weekly hours.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_interaction",
+      "expected_model_benefit": "Highlights rows combining high schooling and elevated weekly hours, a useful interaction for tree branches.",
+      "leakage_risk": "low",
+      "formula": "np.where((x005 >= 13) & (x013 >= 45), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_gain_bucket",
+      "type": "formula",
+      "description": "Bucketed x011 monetary spike signal: 0=zero, 1=1-999, 2=1000-4999, 3=5000-9999, 4=10000+.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Isolates zero, small, moderate, large, and very large x011 spikes in a form trees can split cleanly.",
+      "leakage_risk": "low",
+      "formula": "np.where(x011 == 0, 0, np.where(x011 < 1000, 1, np.where(x011 < 5000, 2, np.where(x011 < 10000, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_loss_bucket",
+      "type": "formula",
+      "description": "Bucketed x012 monetary offset signal: 0=zero, 1=1-1000, 2=1001-2000, 3=2001+.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Separates the common zero region from sparse x012 magnitudes with compact split-ready bins.",
+      "leakage_risk": "low",
+      "formula": "np.where(x012 == 0, 0, np.where(x012 <= 1000, 1, np.where(x012 <= 2000, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_gain_capital_log",
+      "type": "formula",
+      "description": "Log-scaled excess of x011 over x012, floored at zero.",
+      "value_range": [
+        0.0,
+        11.513
+      ],
+      "feature_family": "nonlinear_transform",
+      "expected_model_benefit": "Handles the extreme right tail in x011 while keeping a zero region that tree splits can isolate.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(x011 - x012, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_context_code",
+      "type": "formula",
+      "description": "Joint categorical context code formed by x006 and x008, preserving both codes in a single integer.",
+      "value_range": [
+        0.0,
+        41.0
+      ],
+      "feature_family": "categorical_interaction",
+      "expected_model_benefit": "Creates a compact interaction of two related categorical context codes so trees can form branches on joint household patterns.",
+      "leakage_risk": "low",
+      "formula": "(x006 * 6) + x008",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_context_code",
+      "type": "formula",
+      "description": "Joint categorical context code formed by x002 and x007, preserving work setting and role code information together.",
+      "value_range": [
+        0.0,
+        97.0
+      ],
+      "feature_family": "categorical_interaction",
+      "expected_model_benefit": "Creates a compact interaction of work setting and role codes, enabling direct splits on common joint work patterns.",
+      "leakage_risk": "low",
+      "formula": "(x002 * 14) + x007",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "career_maturity_judgment_score",
+      "type": "judgment",
+      "description": "Ordinal semantic score from 0 to 5 assigned from x001, x005, x013, x002, and x007. A value of 0 represents an early or lightly attached work profile; 5 represents a highly established and intensive work profile.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_ordinal_profile",
+      "expected_model_benefit": "Summarizes multi-column career context into a small ordered signal; trees can split coarse profiles early and refine with raw fields.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_complexity_judgment_score",
+      "type": "judgment",
+      "description": "Ordinal semantic score from 0 to 5 assigned from x011, x012, x013, x005, x006, and x008. A value of 0 represents no monetary movement with simple work and household context; 5 represents substantial monetary movement with intensive schedule or advanced schooling context.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_ordinal_profile",
+      "expected_model_benefit": "Condenses monetary movement, workload, and schooling context into an ordered profile, giving trees an additional semantic split axis.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8919b48d114c0e57",
+  "metadata": {}
+}

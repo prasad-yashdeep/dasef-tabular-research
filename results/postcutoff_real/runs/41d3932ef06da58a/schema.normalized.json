@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_ro_real_estate_20260503",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "area_per_room",
+      "type": "formula",
+      "description": "Average area per room, indicating spaciousness.",
+      "value_range": [
+        0.0,
+        181.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a continuous measure of room size, which is often linearly correlated with property value.",
+      "leakage_risk": "low",
+      "formula": "area_sqm / np.maximum(rooms, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_area_sqm",
+      "type": "formula",
+      "description": "Log-transformed area to reduce skewness and linearize relationships.",
+      "value_range": [
+        0.0,
+        5.21
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Helps linear models handle right-skewed area distributions more effectively.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(area_sqm)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "floor_normalized",
+      "type": "formula",
+      "description": "Floor number normalized to a 0-1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Keeps feature scales consistent for SVM margin calculations.",
+      "leakage_risk": "low",
+      "formula": "(floor + 1.0) / 55.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_ground_or_basement",
+      "type": "formula",
+      "description": "Indicator for ground floor or basement properties.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Captures the non-linear value drop often associated with lowest floors in a linear-friendly way.",
+      "leakage_risk": "low",
+      "formula": "np.where(floor <= 0.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_normalized",
+      "type": "formula",
+      "description": "Normalized title feature.",
+      "value_range": [
+        0.02,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Scales the title feature for stable SVM optimization.",
+      "leakage_risk": "low",
+      "formula": "title / 132.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_normalized",
+      "type": "formula",
+      "description": "Normalized location feature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Scales the location feature for stable SVM optimization.",
+      "leakage_risk": "low",
+      "formula": "location / 36.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "area_location_interaction",
+      "type": "formula",
+      "description": "Interaction between normalized area and normalized location.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear model to capture the combined effect of size and location.",
+      "leakage_risk": "low",
+      "formula": "(area_sqm / 181.0) * (location / 36.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rooms_to_floor_ratio",
+      "type": "formula",
+      "description": "Ratio of rooms to floor level.",
+      "value_range": [
+        0.01,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures architectural patterns (e.g., large apartments on lower vs higher floors).",
+      "leakage_risk": "low",
+      "formula": "rooms / np.maximum(floor + 2.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "scraped_at_normalized",
+      "type": "formula",
+      "description": "Normalized scraping timestamp.",
+      "value_range": [
+        0.001,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides a scaled temporal feature for the linear model.",
+      "leakage_risk": "low",
+      "formula": "scraped_at / 2828.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spaciousness_index",
+      "type": "formula",
+      "description": "An index measuring how spacious the property is beyond a baseline of 15 sqm per room.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a continuous severity measure of spaciousness, useful for linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((area_sqm - 15.0 * rooms) / 100.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "luxury_semantic_score",
+      "type": "judgment",
+      "description": "Semantic assessment of luxury level based on the combination of area, rooms, and floor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures non-linear luxury concepts in a single continuous score suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_desirability_estimate",
+      "type": "judgment",
+      "description": "Semantic estimation of location desirability based on the location ID and property characteristics.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Translates categorical or opaque location IDs into a continuous desirability score.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2ee1067c333679a1",
+  "metadata": {}
+}

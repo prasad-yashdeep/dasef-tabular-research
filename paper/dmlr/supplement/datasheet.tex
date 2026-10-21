@@ -1,0 +1,73 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\def\UrlBreaks{\do\/\do-\do_\do.}
+\setlist{nosep}
+\title{Supplementary documentation: the DASEF two-tier benchmark\\[2pt]
+\large Datasheet, availability, licensing and maintenance\\[2pt]
+\normalsize Accompanies ``What Actually Helps in LLM Tabular Feature Engineering? A Controlled Decomposition of Deterministic Formulas vs.\ Per-Row Judgments''}
+\author{Hasan Aljabbouli \and Yashdeep Prasad \and Bhumika Dinesh Shetty\\ New York University}
+\date{October 2026}
+\begin{document}
+\maketitle
+
+\noindent This document follows the structure of Datasheets for Datasets (Gebru et al., 2021) and the DMLR requirement that submissions incorporating a benchmark document intended uses, give reviewers a URL for access, and state hosting, licensing and maintenance plans. It documents the benchmark \emph{as used in the paper}; the paper's Appendix~C (the benchmark dataset table) and Appendix~B (the post-cutoff provenance table) hold the per-dataset tables.
+
+\section*{Motivation}
+\begin{itemize}
+\item \textbf{Purpose.} The benchmark exists to measure whether features proposed by large language models (LLMs) for tabular classification carry row-aligned signal, under controls that separate signal from feature-count effects (column permutation, count-matched noise) and from memorization of public datasets (column anonymization, post-cutoff tables). It was assembled for this paper; no new raw data were collected.
+\item \textbf{Creators.} The authors, at New York University. No specific grant funded the work; the language-model API calls were paid from faculty research funds.
+\end{itemize}
+
+\section*{Composition}
+\begin{itemize}
+\item \textbf{Core tier.} Ten OpenML classification datasets (adult income, bank marketing, blood transfusion, car evaluation, credit-g, electricity, phoneme, pima diabetes, QSAR biodegradation, spambase). Each has schemas from four LLM generators and three schema families, per-row judgment matrices from the primary judgment model (a second judgment model covers 93 of the 120 runs), and an anonymized-column control.
+\item \textbf{Expansion tier.} Thirty-nine further OpenML classification datasets selected by a fixed rule from a pool of 42 datasets that had been configured for a planned larger study (every pool dataset with at least one valid cached linear/SVM-family schema and a valid stratified 30/70 split); three pool datasets are excluded for stated reasons. Each has the linear/SVM schema of every generator that produced one.
+\item \textbf{Post-cutoff tier.} Six real tabular datasets published on the Hugging Face Hub between March and May 2026 with binary targets derived as stated in the paper's Appendix~B; used only as feature matrices.
+\item \textbf{Instances.} Rows are the original datasets' rows; datasets larger than 5,000 rows are capped to a stratified 5,000-row sample (seed 42) before a stratified 30\% schema-design / 70\% evaluation split (seed 42). The benchmark adds, per dataset and generator, the LLM schema (formula and judgment specifications), the materialized formula matrix, count-matched uniform-noise matrices, the column-permuted formula matrix and, on the core tier, the judgment matrix.
+\item \textbf{Labels.} The original dataset targets (one-vs-rest ROC-AUC for multiclass tasks).
+\item \textbf{Sensitive or personal data.} Several public OpenML tables contain demographic attributes (for example adult income, credit-g, compass, law school admission, okcupid). They are used unchanged and only to score downstream models; the benchmark adds no person-level information. The post-cutoff real-estate table consists of scraped public listings with no personal identifiers retained.
+\item \textbf{Known weaknesses.} Documented in the paper (the post-cutoff section of the results and the Limitations): leaky targets in the prediction-market table, duplicated listings in the real-estate table, shared site covariates in the water-quality table, integer-coded categorical columns on three cached core datasets (the schema generators saw the codes; the downstream models receive the columns one-hot encoded), and a single primary judgment model, replicated with a second model on the core tier.
+\end{itemize}
+
+\section*{Collection and preparation}
+\begin{itemize}
+\item \textbf{Sources.} OpenML datasets are obtained through the OpenML Python client by dataset identifier (one fixed version each; identifiers, versions and licences are in the paper's Appendix~C and in \texttt{dataset\_provenance.csv}). Three core datasets are locally cached variants of the listed table (documented in Section~4.1). Post-cutoff tables are the Hugging Face repositories listed in the paper's Appendix~B, with the preparation steps given there; because the prediction-market repository is no longer publicly accessible and the real-estate repository is updated continuously, the prepared matrices of all six tables are part of the release.
+\item \textbf{Schema generation.} One call per (dataset, generator, family) cell with a column-level summary of the design split only (no rows, no labels), cached by prompt hash; the exact API identifiers, settings and dates are in the paper's reproducibility section. No schema was selected or edited after its evaluation was known.
+\item \textbf{Preprocessing.} Median imputation, standardization for linear and distance models, most-frequent imputation and one-hot encoding for categoricals; formula outputs are clipped to the range the generator declared.
+\end{itemize}
+
+\section*{Intended uses}
+\begin{itemize}
+\item \textbf{Intended.} Benchmarking LLM-based and classical automated feature generators for tabular classification under contamination and feature-count controls; studying the mechanism (which downstream models benefit from which transformations); reproducing and extending the paper's analyses from the stored matrices without API access.
+\item \textbf{Not intended.} Reporting state-of-the-art accuracy on the underlying datasets; drawing conclusions about the people described in the demographic datasets; any use that violates the source licences listed below.
+\end{itemize}
+
+\section*{Availability and hosting}
+\begin{itemize}
+\item \textbf{Code and small artifacts (supplementary zip and repository).} Source code, configuration, tests, the cached LLM schemas and raw responses, per-run result files with per-fold scores, aggregated statistics, the generated tables and figures, and the provenance file. Repository: \url{https://github.com/prasad-yashdeep/dasef-tabular-research}.
+\item \textbf{Large artifacts (release assets).} The stored feature matrices (formula, noise, permuted and judgment matrices, Parquet) and the 74 MB prepared salmonella table are published as release assets of the same repository; the other five prepared post-cutoff tables and the six locally cached core tables are committed under \texttt{data/local\_cache}. The matrices are regenerable from the cached schemas with the released scripts, except the judgment matrices, which record LLM outputs and are therefore stored verbatim.
+\item \textbf{Reviewer access.} Everything needed to regenerate every table and figure offline is in the supplementary zip; the README lists one command per table and figure.
+\end{itemize}
+
+\section*{Licensing}
+\begin{itemize}
+\item \textbf{Code.} MIT License.
+\item \textbf{Schemas, responses, result files, statistics and the provenance file.} Creative Commons Attribution 4.0 (CC BY 4.0); the grant covers the generated columns and derived numbers, not the raw dataset columns embedded in the matrices.
+\item \textbf{OpenML datasets.} Each is used under the licence recorded on OpenML (Appendix~C of the paper); the benchmark redistributes only the six locally cached core tables (the three variants documented in Section~4.1 of the paper and verbatim copies of car evaluation, phoneme and spambase, all recorded as public on OpenML; licences in \texttt{data/local\_cache/NOTICE.md}) and the raw evaluation-split columns embedded in the stored matrices, which remain under their sources' terms; every other OpenML table is downloaded by identifier.
+\item \textbf{Post-cutoff tables.} Used under their stated licences (Apache 2.0, CC BY 4.0, MIT, CC BY-NC 4.0 and CC BY-NC-SA 4.0). Matrices derived from the two non-commercial tables (prediction markets, web trackers) are distributed under the same non-commercial terms; the preparation script regenerates the four tables whose repositories remain public and unchanged; the real-estate repository is updated continuously, so its current head differs from the table used here, and the prepared matrices of all six tables are therefore in the release.
+\item \textbf{Author responsibility.} The authors confirm that they bear all responsibility for any violation of rights or licences arising from the benchmark, and that the licences above are reported as recorded by the respective sources on 11 October 2026.
+\end{itemize}
+
+\section*{Maintenance}
+\begin{itemize}
+\item \textbf{Maintainer.} Yashdeep Prasad (\texttt{yp2693@nyu.edu}) maintains the repository; issues and pull requests are accepted on GitHub.
+\item \textbf{Versioning.} The submitted state is tagged as a release; corrections are published as new tagged releases with a changelog, and the paper's tables cite the release used.
+\item \textbf{Erratum policy.} If an evaluator or aggregation defect is found (as happened three times during the authors' own audit, all documented in the paper), every stored run is re-materialized and the affected numbers are republished with the change log.
+\end{itemize}
+\end{document}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "news_channel",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "content_length_log",
+      "type": "formula",
+      "description": "Logarithmic transformation of the number of words in the content to compress the long-tailed distribution.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "magnitude_scaling",
+      "expected_model_benefit": "Compresses extreme values in article length, providing a smoother, more normally distributed feature that improves linear SVM margin stability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(n_tokens_content)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lexical_diversity_score",
+      "type": "formula",
+      "description": "Composite index of vocabulary richness, calculated as the product of unique token rate and non-stop unique token rate.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_term",
+      "expected_model_benefit": "Creates a non-linear interaction between two diversity metrics, allowing the linear model to separate highly repetitive text from in-depth vocabulary usage.",
+      "leakage_risk": "low",
+      "formula": "n_unique_tokens * n_non_stop_unique_tokens",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "visual_media_ratio",
+      "type": "formula",
+      "description": "Ratio of visual media (images and videos) to the total number of media and links.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes visual content counts into a bounded [0,1] ratio, which scales perfectly for linear models and captures the visual-heaviness of an article.",
+      "leakage_risk": "low",
+      "formula": "(num_imgs + num_videos) / np.maximum(1.0, num_imgs + num_videos + num_hrefs)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "self_reference_ratio",
+      "type": "formula",
+      "description": "Proportion of hyperlinks that point to the publisher's own domain, clipped to a maximum of 1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a bounded continuous measure of self-promotion, helping the SVM establish margins based on internal vs. external linking behavior.",
+      "leakage_risk": "low",
+      "formula": "np.clip(num_self_hrefs / np.maximum(1.0, num_hrefs), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sentiment_polarity_intensity",
+      "type": "formula",
+      "description": "Absolute magnitude of the global sentiment polarity, representing the intensity of opinion regardless of positive or negative direction.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "magnitude_scaling",
+      "expected_model_benefit": "Converts a signed sentiment score into a continuous severity measure of opinionation, useful for separating neutral reporting from highly opinionated pieces.",
+      "leakage_risk": "low",
+      "formula": "np.abs(global_sentiment_polarity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positive_to_negative_word_ratio",
+      "type": "formula",
+      "description": "Ratio of the rate of positive words to the rate of negative words, with a small constant added to the denominator to prevent division by zero.",
+      "value_range": [
+        0.0,
+        160.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Expresses the relative balance of positive to negative tone as a continuous ratio, aiding linear separation based on overall emotional skew.",
+      "leakage_risk": "low",
+      "formula": "global_rate_positive_words / np.maximum(0.001, global_rate_negative_words)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "subjectivity_sentiment_interaction",
+      "type": "formula",
+      "description": "Interaction between global subjectivity and global sentiment polarity.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "interaction_term",
+      "expected_model_benefit": "Weights sentiment by subjectivity, creating an interaction term that allows a linear model to capture content that is both highly subjective and strongly polarized.",
+      "leakage_risk": "low",
+      "formula": "global_subjectivity * global_sentiment_polarity",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "keyword_density",
+      "type": "formula",
+      "description": "Number of keywords normalized by the logarithmic length of the article content.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes keyword counts against article length, providing a density metric that scales well and prevents long articles from dominating the feature space.",
+      "leakage_risk": "low",
+      "formula": "num_keywords / np.maximum(1.0, np.log1p(n_tokens_content))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_clickbait_score",
+      "type": "judgment",
+      "description": "Semantic evaluation of the article title to determine the presence of clickbait patterns, such as listicles, sensationalism, or phrases like 'Must Reads' and 'Missed'.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Provides a continuous semantic score evaluating engagement tactics, adding non-linear semantic value that a linear model can use as a direct projection.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_digital_domain_score",
+      "type": "judgment",
+      "description": "Semantic evaluation of how strongly the article title relates to digital media, apps, software, gadgets, or internet culture.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Evaluates the semantic relevance of the title to digital topics, providing a direct linear projection for topic-based margins without relying on raw text.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_pop_culture_score",
+      "type": "judgment",
+      "description": "Semantic evaluation of how strongly the article title relates to viral media, memes, celebrities, or general pop culture.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Offers a continuous semantic feature for topic separation, allowing the SVM to linearly weight the presence of pop-culture themes.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_complexity_index",
+      "type": "formula",
+      "description": "Product of average token length and the rate of non-stop words, serving as a proxy for reading complexity.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "interaction_term",
+      "expected_model_benefit": "Combines word length and non-stop word frequency into a single complexity index, helping the linear model distinguish between simple and complex writing styles.",
+      "leakage_risk": "low",
+      "formula": "average_token_length * n_non_stop_words",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "b0ae97964f385f08",
+  "metadata": {}
+}

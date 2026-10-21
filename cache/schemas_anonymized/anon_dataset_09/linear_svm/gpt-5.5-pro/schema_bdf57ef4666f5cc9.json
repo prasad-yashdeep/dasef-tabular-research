@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_09",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "commerce_offer_pressure",
+      "type": "formula",
+      "description": "Weighted, log-scaled blend of offer, action, money, and opt-out indicator columns x016, x024, x020, x023, x007, and x053, scaled to a 0-1 interval with training-fold extrema.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Compresses sparse high-magnitude commercial cues into a smooth axis that can receive a stable linear coefficient.",
+      "leakage_risk": "low",
+      "formula": "np.clip((1.2 * np.log1p(x016) / np.log1p(7.35) + 1.0 * np.log1p(x024) / np.log1p(9.09) + 0.9 * np.log1p(x020) / np.log1p(5.22) + 0.8 * np.log1p(x023) / np.log1p(3.38) + 0.8 * np.log1p(x007) / np.log1p(7.27) + 0.8 * np.log1p(x053) / np.log1p(5.3)) / 5.5, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "direct_address_intensity",
+      "type": "formula",
+      "description": "Weighted, log-scaled blend of direct-address, ownership, and message-contact columns x019, x021, x005, x010, and x018.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Adds a smooth personalization axis that helps the linear margin capture tone without relying on any single sparse column.",
+      "leakage_risk": "low",
+      "formula": "np.clip((1.1 * np.log1p(x019) / np.log1p(18.75) + 1.1 * np.log1p(x021) / np.log1p(8.69) + 0.8 * np.log1p(x005) / np.log1p(5.0) + 0.6 * np.log1p(x010) / np.log1p(5.26) + 0.6 * np.log1p(x018) / np.log1p(9.09)) / 4.2, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "institutional_thread_context",
+      "type": "formula",
+      "description": "Weighted, log-scaled blend of institutional, project, and thread-context columns x025, x026, x027, x042, x043, x044, x045, x046, and x048.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Provides a compact contextual axis that a linear model can weight against emphasis-heavy or commercial axes.",
+      "leakage_risk": "low",
+      "formula": "np.clip((1.0 * np.log1p(x025) / np.log1p(16.66) + 1.0 * np.log1p(x026) / np.log1p(16.66) + 1.0 * np.log1p(x027) / np.log1p(25.0) + 0.8 * np.log1p(x042) / np.log1p(14.28) + 0.4 * np.log1p(x043) / np.log1p(1.69) + 0.8 * np.log1p(x044) / np.log1p(5.0) + 0.4 * np.log1p(x045) / np.log1p(16.66) + 0.8 * np.log1p(x046) / np.log1p(15.35) + 0.8 * np.log1p(x048) / np.log1p(8.33)) / 7.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "technical_token_context",
+      "type": "formula",
+      "description": "Weighted, log-scaled blend of technical, numeric, and lab-like context columns x029, x030, x031, x032, x033, x034, x035, x036, x037, and x041.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Summarizes a broad technical vocabulary pattern into one continuous projection suited to linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(x029) / np.log1p(10.0) + np.log1p(x030) / np.log1p(5.88) + np.log1p(x031) / np.log1p(4.76) + np.log1p(x032) / np.log1p(4.76) + np.log1p(x033) / np.log1p(18.18) + np.log1p(x034) / np.log1p(4.76) + np.log1p(x035) / np.log1p(5.88) + np.log1p(x036) / np.log1p(7.69) + np.log1p(x037) / np.log1p(4.54) + np.log1p(x041) / np.log1p(7.14)) / 10.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "symbol_emphasis_intensity",
+      "type": "formula",
+      "description": "Weighted, log-scaled blend of punctuation and symbol frequency columns x049, x050, x051, x052, x053, and x054.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Captures emphasis style as a bounded continuous score, reducing sensitivity to extreme raw symbol frequencies.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.5 * np.log1p(x049) / np.log1p(4.123) + 0.4 * np.log1p(x050) / np.log1p(9.752) + 0.3 * np.log1p(x051) / np.log1p(4.081) + 1.4 * np.log1p(x052) / np.log1p(32.478) + 1.2 * np.log1p(x053) / np.log1p(5.3) + 1.2 * np.log1p(x054) / np.log1p(13.129)) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capitalization_run_intensity",
+      "type": "formula",
+      "description": "Log-scaled projection of capitalization run statistics x055, x056, and x057 into a single bounded intensity measure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Turns highly skewed run-length variables into a smooth severity measure for the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.45 * np.log1p(x055) / np.log1p(1021.5) + 0.35 * np.log1p(x056) / np.log1p(9989.0) + 0.20 * np.log1p(x057) / np.log1p(10062.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dominant_capital_run_ratio",
+      "type": "formula",
+      "description": "Clipped ratio of the longest capitalization run x056 to total capitalization count x057, with a small stabilizing denominator offset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights concentrated capitalization bursts that may be hidden when only aggregate run statistics are used.",
+      "leakage_risk": "low",
+      "formula": "np.clip(x056 / (x057 + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "length_adjusted_emphasis_density",
+      "type": "formula",
+      "description": "Clipped density of emphasis signals x052, x053, and x056 relative to total capitalization volume x057.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "density_ratio",
+      "expected_model_benefit": "Measures whether emphasis is unusually concentrated after accounting for overall message scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(x052) / np.log1p(32.478) + np.log1p(x053) / np.log1p(5.3) + np.log1p(x056) / np.log1p(9989.0)) / (1.0 + np.log1p(x057) / np.log1p(10062.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "offer_to_context_balance",
+      "type": "formula",
+      "description": "Scaled ratio contrasting commerce and emphasis indicators with institutional and thread-context indicators.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "contrast_ratio",
+      "expected_model_benefit": "Provides a single balance axis that can improve a linear boundary when raw cues appear in competing groups.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x016 + x020 + x023 + x024 + x007 + x053 + x052) / (1.0 + x025 + x026 + x027 + x042 + x044 + x046 + x048)) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "token_presence_breadth",
+      "type": "formula",
+      "description": "Fraction of x001 through x048 token-frequency columns that are nonzero.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "presence_count",
+      "expected_model_benefit": "Captures vocabulary breadth as a linear-friendly sparsity summary beyond individual token frequencies.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.where(x001 > 0.0, 1.0, 0.0) + np.where(x002 > 0.0, 1.0, 0.0) + np.where(x003 > 0.0, 1.0, 0.0) + np.where(x004 > 0.0, 1.0, 0.0) + np.where(x005 > 0.0, 1.0, 0.0) + np.where(x006 > 0.0, 1.0, 0.0) + np.where(x007 > 0.0, 1.0, 0.0) + np.where(x008 > 0.0, 1.0, 0.0) + np.where(x009 > 0.0, 1.0, 0.0) + np.where(x010 > 0.0, 1.0, 0.0) + np.where(x011 > 0.0, 1.0, 0.0) + np.where(x012 > 0.0, 1.0, 0.0) + np.where(x013 > 0.0, 1.0, 0.0) + np.where(x014 > 0.0, 1.0, 0.0) + np.where(x015 > 0.0, 1.0, 0.0) + np.where(x016 > 0.0, 1.0, 0.0) + np.where(x017 > 0.0, 1.0, 0.0) + np.where(x018 > 0.0, 1.0, 0.0) + np.where(x019 > 0.0, 1.0, 0.0) + np.where(x020 > 0.0, 1.0, 0.0) + np.where(x021 > 0.0, 1.0, 0.0) + np.where(x022 > 0.0, 1.0, 0.0) + np.where(x023 > 0.0, 1.0, 0.0) + np.where(x024 > 0.0, 1.0, 0.0) + np.where(x025 > 0.0, 1.0, 0.0) + np.where(x026 > 0.0, 1.0, 0.0) + np.where(x027 > 0.0, 1.0, 0.0) + np.where(x028 > 0.0, 1.0, 0.0) + np.where(x029 > 0.0, 1.0, 0.0) + np.where(x030 > 0.0, 1.0, 0.0) + np.where(x031 > 0.0, 1.0, 0.0) + np.where(x032 > 0.0, 1.0, 0.0) + np.where(x033 > 0.0, 1.0, 0.0) + np.where(x034 > 0.0, 1.0, 0.0) + np.where(x035 > 0.0, 1.0, 0.0) + np.where(x036 > 0.0, 1.0, 0.0) + np.where(x037 > 0.0, 1.0, 0.0) + np.where(x038 > 0.0, 1.0, 0.0) + np.where(x039 > 0.0, 1.0, 0.0) + np.where(x040 > 0.0, 1.0, 0.0) + np.where(x041 > 0.0, 1.0, 0.0) + np.where(x042 > 0.0, 1.0, 0.0) + np.where(x043 > 0.0, 1.0, 0.0) + np.where(x044 > 0.0, 1.0, 0.0) + np.where(x045 > 0.0, 1.0, 0.0) + np.where(x046 > 0.0, 1.0, 0.0) + np.where(x047 > 0.0, 1.0, 0.0) + np.where(x048 > 0.0, 1.0, 0.0)) / 48.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "persuasive_style_assessment",
+      "type": "judgment",
+      "description": "Row-profile semantic score in [0,1]: 0.0 means neutral informational style; 1.0 means strong persuasive pressure style. Assign using only row values, especially x007, x016, x020, x023, x024, x052, x053, and x055-x057, interpreted relative to training-fold ranges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds expert-style monotone signal for co-occurrence of weak persuasion cues that may be hard for a linear margin to synthesize from raw sparse inputs.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "conversational_context_assessment",
+      "type": "judgment",
+      "description": "Row-profile semantic score in [0,1]: 0.0 means little work or discussion context; 1.0 means strong institutional, technical, or thread-like context. Assign using only row values, especially x025-x048 and restrained emphasis columns x052, x053, x055, and x056, interpreted relative to training-fold ranges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a separate interpretable context axis so the linear margin can weight informational style independently of emphasis.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "bdf57ef4666f5cc9",
+  "metadata": {}
+}

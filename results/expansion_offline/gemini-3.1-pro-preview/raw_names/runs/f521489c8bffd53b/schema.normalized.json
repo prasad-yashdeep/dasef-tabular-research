@@ -1,0 +1,190 @@
+{
+  "dataset_name": "first_order_theorem_proving",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of V1 to the absolute value of V2 (plus a constant to avoid division by zero), capturing the relative magnitude of these two primary features.",
+      "value_range": [
+        -2.0,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a normalized ratio of two primary heuristic features, allowing the linear SVM to capture their relative magnitude without instability near zero.",
+      "leakage_risk": "low",
+      "formula": "V1 / (np.abs(V2) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_v28_max",
+      "type": "formula",
+      "description": "The maximum value between V12 and V28, which are both features with potentially large positive outliers.",
+      "value_range": [
+        -1.0,
+        45.0
+      ],
+      "feature_family": "extreme_value",
+      "expected_model_benefit": "Captures the extreme values of two high-variance features, providing a strong margin signal for cases where either heuristic spikes.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V12, V28)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v9_v13_v15_composite",
+      "type": "formula",
+      "description": "A simple linear sum of V9, V13, and V15, aggregating features that share similar high-magnitude distributions.",
+      "value_range": [
+        -2.0,
+        40.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a linear composite of related high-magnitude features, reducing dimensionality and providing a smoother signal for the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "V9 + V13 + V15",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v45_v51_min",
+      "type": "formula",
+      "description": "The minimum value between V45 and V51, capturing the lower bound of two features with negative skew.",
+      "value_range": [
+        -3.0,
+        1.5
+      ],
+      "feature_family": "extreme_value",
+      "expected_model_benefit": "Captures the lower bound of two negatively skewed features, useful for defining a decision boundary based on minimum threshold conditions.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(V45, V51)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_to_v5_l2_approx",
+      "type": "formula",
+      "description": "Approximate L2 norm of the first five features, representing their combined magnitude in a Euclidean space.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Provides a continuous severity measure of the first five features' combined magnitude, transforming a spherical region into a linear feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.maximum(0, V1**2 + V2**2 + V3**2 + V4**2 + V5**2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_log_transform",
+      "type": "formula",
+      "description": "Logarithmic transformation of V12 to compress its long positive tail.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Compresses the long tail of V12, preventing extreme outliers from dominating the linear SVM weights and improving margin stability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(V12, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v28_v29_diff",
+      "type": "formula",
+      "description": "The linear difference between V28 and V29, measuring their divergence.",
+      "value_range": [
+        -30.0,
+        30.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Explicitly provides the linear difference between two highly variable features, allowing the SVM to directly weight their divergence.",
+      "leakage_risk": "low",
+      "formula": "V28 - V29",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v33_v43_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between V33 and V43, which both have relatively low variance.",
+      "value_range": [
+        -1.0,
+        15.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Introduces a multiplicative interaction between two low-variance features, enabling the linear model to capture their combined effect.",
+      "leakage_risk": "low",
+      "formula": "V33 * V43",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_value_count_approx",
+      "type": "formula",
+      "description": "Counts the number of features among a selected subset (V9, V12, V13, V15, V21, V22, V28, V29) that exceed a threshold of 5.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "count",
+      "expected_model_benefit": "Provides a discrete count of extreme heuristic values, acting as a step-function severity measure that can strongly influence the SVM decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.where(V9>5,1,0) + np.where(V12>5,1,0) + np.where(V13>5,1,0) + np.where(V15>5,1,0) + np.where(V21>5,1,0) + np.where(V22>5,1,0) + np.where(V28>5,1,0) + np.where(V29>5,1,0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_v3_v4_v5_mean",
+      "type": "formula",
+      "description": "The arithmetic mean of the first five features.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Averages the first five features to create a low-variance, smooth composite score, ideal for stable linear SVM weight assignment.",
+      "leakage_risk": "low",
+      "formula": "(V1 + V2 + V3 + V4 + V5) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heuristic_complexity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of the overall complexity of the theorem proving state, based on the magnitude and distribution of search-related variables.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, continuous severity measure of complexity that may not be easily captured by simple linear combinations, aiding in margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "proof_search_stability_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of the stability of the proof search, evaluating the variance and presence of extreme values across the heuristic features.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Offers a normalized score representing search stability, allowing the linear SVM to adjust its confidence or decision boundary based on state volatility.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "807d6a40c369bdfb",
+  "metadata": {}
+}

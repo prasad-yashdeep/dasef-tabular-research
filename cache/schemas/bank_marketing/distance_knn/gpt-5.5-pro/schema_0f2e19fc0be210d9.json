@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "age_z_distance",
+      "type": "formula",
+      "description": "Absolute z-scaled distance of age from the training-fold center.",
+      "value_range": [
+        0.0,
+        5.6
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Balances age contribution in neighbor search and reduces raw-scale dominance.",
+      "leakage_risk": "low",
+      "formula": "np.abs((age - 40.0328585302687) / 10.383885479407919)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_code_center_distance",
+      "type": "formula",
+      "description": "Euclidean distance to the training-fold center over z-scaled job, marital, and education codes.",
+      "value_range": [
+        0.0,
+        4.2
+      ],
+      "feature_family": "unsupervised_prototype_distance",
+      "expected_model_benefit": "Adds an unsupervised prototype-distance axis for broad personal-profile similarity.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((job - 3.732113952735513) / 3.602197285259682)**2 + ((marital - 1.1757850437034638) / 0.6045711062308231)**2 + ((education - 3.7663483327937843) / 2.140130660835836)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "calendar_contact_center_distance",
+      "type": "formula",
+      "description": "Euclidean distance to the training-fold center over z-scaled contact channel and calendar codes.",
+      "value_range": [
+        0.0,
+        3.4
+      ],
+      "feature_family": "unsupervised_prototype_distance",
+      "expected_model_benefit": "Groups rows with comparable timing and channel context using a compact distance coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((contact - 0.3654904499838135) / 0.4815674209853103)**2 + ((month - 4.216655875687925) / 2.3198269277712322)**2 + ((day_of_week - 2.0038038200064747) / 1.400550844912742)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_log_intensity",
+      "type": "formula",
+      "description": "Log-compressed current-campaign contact count normalized by the training-fold maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Keeps high-contact outliers from dominating while preserving outreach-effort ordering.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(campaign) / np.log1p(56.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_outreach_indicator",
+      "type": "formula",
+      "description": "Binary flag for current-campaign contact count above one training-fold standard deviation over the center.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a crisp neighborhood split for heavily contacted rows.",
+      "leakage_risk": "low",
+      "formula": "np.where(campaign > 5.206414968384452, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_recency_similarity",
+      "type": "formula",
+      "description": "Bounded similarity from days since earlier contact; sentinel-like large gap receives 0 and very recent contact approaches 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency_similarity",
+      "expected_model_benefit": "Improves local geometry by converting sparse recency into a smooth similarity coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 0.0, 1.0 / (1.0 + (pdays / 30.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_activity_log_norm",
+      "type": "formula",
+      "description": "Log-normalized count of earlier contacts, capped by the training-fold maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Preserves low-count differences while compressing repeated-contact outliers.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(previous) / np.log1p(6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_activity_indicator",
+      "type": "formula",
+      "description": "Binary indicator for any recorded earlier contact.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Separates rows with prior interaction history from first-interaction rows.",
+      "leakage_risk": "low",
+      "formula": "np.where(previous > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_commitment_code_norm",
+      "type": "formula",
+      "description": "Normalized aggregate of default, housing, and loan encoded fields.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoded_profile_similarity",
+      "expected_model_benefit": "Adds a compact financial-profile coordinate so neighbors share similar credit-code patterns.",
+      "leakage_risk": "low",
+      "formula": "(default + housing + loan) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "euribor_z_distance",
+      "type": "formula",
+      "description": "Absolute z-scaled distance of euribor3m from the training-fold center.",
+      "value_range": [
+        0.0,
+        1.8
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Adds normalized macro-rate context without letting its raw scale dominate neighbor distances.",
+      "leakage_risk": "low",
+      "formula": "np.abs((euribor3m - 3.627963661379087) / 1.7341672829220742)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_semantic_score",
+      "type": "judgment",
+      "description": "Domain judgment on regularity and stability implied by job, age, education, and marital fields; 0 means unstable or unclear profile and 1 means very stable profile.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity",
+      "expected_model_benefit": "Adds an interpretable semantic axis so neighbors with comparable employment profiles are closer even when raw codes are arbitrary.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_context_quality_semantic_score",
+      "type": "judgment",
+      "description": "Domain judgment of contact context using contact, month, day_of_week, campaign, pdays, and previous; 0 means unfavorable or saturated context and 1 means favorable and timely context.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity",
+      "expected_model_benefit": "Combines timing, channel, saturation, and prior interaction cues into one bounded coordinate for local neighborhood grouping.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0f2e19fc0be210d9",
+  "metadata": {}
+}

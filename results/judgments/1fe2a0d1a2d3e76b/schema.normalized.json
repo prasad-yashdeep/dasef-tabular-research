@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "zscore_age",
+      "type": "formula",
+      "description": "Z-score normalized age using training set mean and std, enabling scale-normalized distance computation for age dimension",
+      "value_range": [
+        -2.5,
+        5.6
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes age to unit scale so KNN distance metric treats age proportionally to other features",
+      "leakage_risk": "low",
+      "formula": "(age - 40.0328585302687) / 10.383885479407919",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zscore_duration",
+      "type": "formula",
+      "description": "Z-score normalized call duration using training set mean and std, critical for KNN as duration has high variance",
+      "value_range": [
+        -1.0,
+        15.1
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents duration from dominating KNN distance due to its large raw scale",
+      "leakage_risk": "low",
+      "formula": "(duration - 258.93921981223696) / 261.38739443665827",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zscore_euribor3m",
+      "type": "formula",
+      "description": "Z-score normalized euribor 3-month rate using training set statistics",
+      "value_range": [
+        -1.8,
+        0.8
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes macroeconomic rate feature for balanced contribution to KNN distance",
+      "leakage_risk": "low",
+      "formula": "(euribor3m - 3.627963661379087) / 1.7341672829220742",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "economic_conditions_score",
+      "type": "formula",
+      "description": "Composite economic environment score combining employment variation rate, consumer price index deviation from mean, and euribor rate normalized values",
+      "value_range": [
+        -6.0,
+        4.5
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures macroeconomic context as a single dimension, improving neighborhood geometry for economically similar observations",
+      "leakage_risk": "low",
+      "formula": "((emp.var.rate - 0.0899805762382648) / 1.57063998754873) + ((cons.price.idx - 93.57855940433798) / 0.5767702723107926) + ((euribor3m - 3.627963661379087) / 1.7341672829220742)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_recency_score",
+      "type": "formula",
+      "description": "Score reflecting recency and intensity of prior contact: penalizes high pdays (not recently contacted) and rewards previous contacts",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Encodes contact history geometry so KNN finds neighbors with similar outreach patterns",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 0.0, np.clip((999 - pdays) / 999.0 * 3.0 + np.minimum(previous, 6.0) * 0.5, 0.0, 7.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log1p_duration_normalized",
+      "type": "formula",
+      "description": "Log-transformed and normalized call duration to reduce right skew, improving distance metric behavior",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Log transformation reduces outlier influence on KNN distances for heavily skewed duration feature",
+      "leakage_risk": "low",
+      "formula": "np.log1p(duration) / np.log1p(4199.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_intensity_normalized",
+      "type": "formula",
+      "description": "Log-normalized campaign contact count to compress heavy tail and normalize for distance computation",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Reduces distortion from extreme campaign values in KNN distance calculations",
+      "leakage_risk": "low",
+      "formula": "np.log1p(campaign - 1.0) / np.log1p(55.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_risk_profile",
+      "type": "formula",
+      "description": "Composite financial risk indicator combining default status, housing loan, and personal loan encoded values",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Groups observations by financial obligation profile, creating meaningful clusters for KNN neighborhood structure",
+      "leakage_risk": "low",
+      "formula": "np.clip(default * 2.0 + housing + loan, 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sociodemographic_distance_from_mean",
+      "type": "formula",
+      "description": "Euclidean-like distance of sociodemographic features (age, education, job) from their training set means, normalized by standard deviations",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Measures how atypical a person is demographically, helping KNN identify outlier vs central observations",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((age - 40.0328585302687) / 10.383885479407919) ** 2 + ((education - 3.7663483327937843) / 2.140130660835836) ** 2 + ((job - 3.732113952735513) / 3.602197285259682) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macroeconomic_distance_from_mean",
+      "type": "formula",
+      "description": "Euclidean distance of macroeconomic indicators from their training means, normalized by standard deviations",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures how unusual the macroeconomic environment is for a given observation, improving KNN cluster separation",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((emp.var.rate - 0.0899805762382648) / 1.57063998754873) ** 2 + ((cons.price.idx - 93.57855940433798) / 0.5767702723107926) ** 2 + ((cons.conf.idx - (-40.45113305276788)) / 4.614954983136801) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_quality_score",
+      "type": "judgment",
+      "description": "Semantic assessment of overall engagement quality based on call duration, contact type, and previous outcome. Higher scores indicate stronger engagement signals: long duration with cellular contact and successful prior outcome score highest",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a semantically meaningful cluster indicator that groups observations by engagement quality, improving KNN neighborhood coherence",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "temporal_campaign_context_score",
+      "type": "judgment",
+      "description": "Semantic score reflecting the temporal context of the campaign contact: considers month seasonality (spring/summer vs winter), day of week (mid-week vs Monday/Friday), and campaign recency. Scores range from 0 (poor timing context) to 10 (optimal timing context)",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Encodes temporal patterns into a single dimension that helps KNN identify observations contacted under similar temporal circumstances",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "b08d0e56dfc446d1",
+  "metadata": {}
+}

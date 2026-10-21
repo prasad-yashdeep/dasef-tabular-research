@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "v1_standard_score",
+      "type": "formula",
+      "description": "V1 centered and scaled with the training-fold mean and standard deviation, clipped to reduce leverage of extreme rows.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_measurement",
+      "expected_model_benefit": "Places V1 on a margin-friendly scale while preserving ordered variation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V1 - 0.8269494139420112) / 0.8751619615160408, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_standard_score",
+      "type": "formula",
+      "description": "V2 centered and scaled with the training-fold mean and standard deviation, clipped to reduce leverage of extreme rows.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_measurement",
+      "expected_model_benefit": "Places V2 on a margin-friendly scale while preserving ordered variation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V2 - 1.2491036397285626) / 0.863725287551349, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_standard_score",
+      "type": "formula",
+      "description": "V3 centered and scaled with the training-fold mean and standard deviation, clipped to reduce leverage of extreme rows.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_measurement",
+      "expected_model_benefit": "Places V3 on a margin-friendly scale while preserving ordered variation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V3 - 0.7392850092535472) / 0.9149811796508119, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_standard_score",
+      "type": "formula",
+      "description": "V4 centered and scaled with the training-fold mean and standard deviation, clipped to reduce leverage of extreme rows.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_measurement",
+      "expected_model_benefit": "Places V4 on a margin-friendly scale while preserving ordered variation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V4 - 0.41070820481184456) / 0.805700948167739, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v5_standard_score",
+      "type": "formula",
+      "description": "V5 centered and scaled with the training-fold mean and standard deviation, clipped to reduce leverage of extreme rows.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "standardized_single_measurement",
+      "expected_model_benefit": "Places V5 on a margin-friendly scale while preserving ordered variation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V5 - 0.08228932757557063) / 0.5860058896612599, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_mean_standard_score",
+      "type": "formula",
+      "description": "Average of all five standardized measurements, clipped to create a compact overall level score.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Gives the margin a stable aggregate level cue that can help under regularization.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((V1 - 0.8269494139420112) / 0.8751619615160408) + ((V2 - 1.2491036397285626) / 0.863725287551349) + ((V3 - 0.7392850092535472) / 0.9149811796508119) + ((V4 - 0.41070820481184456) / 0.805700948167739) + ((V5 - 0.08228932757557063) / 0.5860058896612599)) / 5.0, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "early_late_balance_ratio",
+      "type": "formula",
+      "description": "Bounded ratio comparing the combined early measurements V1 and V2 with the later measurements V4 and V5.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "ratio_contrast",
+      "expected_model_benefit": "Provides a scale-normalized contrast that can remain informative when overall amplitude shifts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V1 + V2) - (V4 + V5)) / np.maximum(np.abs(V1) + np.abs(V2) + np.abs(V4) + np.abs(V5), 0.05), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "middle_edge_standard_contrast",
+      "type": "formula",
+      "description": "Standardized contrast of the middle measurement V3 against the two edge measurements V1 and V5.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Approximates a directional projection for central prominence, giving the margin a concise shape cue.",
+      "leakage_risk": "low",
+      "formula": "np.clip((2.0 * ((V3 - 0.7392850092535472) / 0.9149811796508119) - ((V1 - 0.8269494139420112) / 0.8751619615160408) - ((V5 - 0.08228932757557063) / 0.5860058896612599)) / 4.0, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "local_curvature_standard_score",
+      "type": "formula",
+      "description": "Second-difference style standardized curvature across V2, V3, and V4.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "shape_curvature",
+      "expected_model_benefit": "Captures bend in the central contour as a smooth numeric feature for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((V2 - 1.2491036397285626) / 0.863725287551349) - 2.0 * ((V3 - 0.7392850092535472) / 0.9149811796508119) + ((V4 - 0.41070820481184456) / 0.805700948167739)) / np.sqrt(6.0), -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_distance_from_average",
+      "type": "formula",
+      "description": "Root-mean-square standardized distance from the training-fold mean profile, clipped for robustness.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "continuous_severity",
+      "expected_model_benefit": "Supplies a bounded severity measure of how far the full row profile sits from the typical profile.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((V1 - 0.8269494139420112) / 0.8751619615160408) ** 2 + ((V2 - 1.2491036397285626) / 0.863725287551349) ** 2 + ((V3 - 0.7392850092535472) / 0.9149811796508119) ** 2 + ((V4 - 0.41070820481184456) / 0.805700948167739) ** 2 + ((V5 - 0.08228932757557063) / 0.5860058896612599) ** 2) / np.sqrt(5.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "acoustic_contour_smoothness_score",
+      "type": "judgment",
+      "description": "Row-level semantic score from 0.0 to 1.0 for how smoothly V1 through V5 form a coherent acoustic contour; 1.0 means gradual transitions with no isolated spike, 0.0 means highly jagged or inconsistent.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_acoustic_shape",
+      "expected_model_benefit": "Adds a compact row-wise assessment of contour regularity that can complement algebraic contrast terms in a linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "acoustic_profile_prominence_score",
+      "type": "judgment",
+      "description": "Row-level semantic score from -1.0 to 1.0 summarizing where the strongest standardized prominence lies across V1 through V5: lower values indicate later-variable emphasis, higher values indicate earlier-variable emphasis, and values near 0.0 indicate balanced prominence.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic_acoustic_shape",
+      "expected_model_benefit": "Offers a directional contour cue in one dimension, helping a linear margin use expert-like notions of where prominence appears.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cce179340ddd178f",
+  "metadata": {}
+}

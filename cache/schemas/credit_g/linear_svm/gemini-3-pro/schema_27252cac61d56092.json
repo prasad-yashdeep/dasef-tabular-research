@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "credit_amount_per_month",
+      "type": "formula",
+      "description": "Calculates the theoretical monthly principal payment by dividing the total credit amount by the duration in months.",
+      "value_range": [
+        3.0,
+        5000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a continuous ratio representing monthly financial burden, allowing the linear model to capture the interaction between loan size and term length directly.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / duration",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Min-max normalization of the applicant's age based on the training set minimum (19) and maximum (75).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Scales age to a [0, 1] range, preventing this feature from dominating the SVM margin calculation due to its naturally larger scale compared to categorical encodings.",
+      "leakage_risk": "low",
+      "formula": "(age - 19.0) / 56.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_normalized",
+      "type": "formula",
+      "description": "Min-max normalization of the loan duration based on the training set minimum (4) and maximum (72).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Normalizes the loan duration, ensuring the linear SVM treats time-based risk on a comparable scale to other normalized features.",
+      "leakage_risk": "low",
+      "formula": "(duration - 4.0) / 68.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "A continuous score assessing the applicant's financial reserves and income stability based on checking_status, savings_status, and employment duration. Higher values indicate greater financial stability.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a single, continuous linear projection of multiple categorical financial indicators, simplifying the feature space and improving margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_burden",
+      "type": "formula",
+      "description": "Scales the installment commitment rate (1 to 4) into a continuous fraction.",
+      "value_range": [
+        0.25,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Transforms an ordinal commitment scale into a continuous fraction, suitable for linear weighting in the SVM decision function.",
+      "leakage_risk": "low",
+      "formula": "installment_commitment / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_severity",
+      "type": "judgment",
+      "description": "A continuous severity measure of past credit behavior based on credit_history, where 0.0 represents perfect history ('all paid') and 1.0 represents severe issues ('critical/other existing credit' or 'delayed previously').",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Maps complex categorical credit history states into a monotonic severity score, allowing the linear model to assign a single, interpretable weight to past credit behavior.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_amount",
+      "type": "formula",
+      "description": "Applies a logarithmic transformation to the credit amount to reduce the impact of extreme high-value loans.",
+      "value_range": [
+        5.0,
+        10.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Applies a logarithmic transformation to a heavily skewed monetary variable, linearizing its relationship with risk and stabilizing the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "property_and_housing_strength",
+      "type": "judgment",
+      "description": "An assessment of asset ownership and living situation stability based on property_magnitude and housing. Higher values indicate stronger asset backing (e.g., owning real estate).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Combines property and housing categories into a continuous asset-strength dimension, providing a smooth gradient for the linear classifier to separate risk profiles.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_to_age_ratio",
+      "type": "formula",
+      "description": "Calculates the ratio of the requested credit amount to the applicant's age.",
+      "value_range": [
+        3.0,
+        1000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the interaction between requested credit and applicant age as a continuous ratio, exposing a potentially non-linear relationship in a linearly separable format.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_index",
+      "type": "judgment",
+      "description": "A composite index evaluating the applicant's job security and skill level based on employment duration and job type. Higher values indicate long-term, highly skilled employment.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Translates categorical employment duration and job type into a continuous stability metric, reducing dimensionality and aiding linear separability.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "existing_credits_normalized",
+      "type": "formula",
+      "description": "Min-max normalization of the number of existing credits based on the training set minimum (1) and maximum (4).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Scales the count of existing credits to a standard [0, 1] interval, ensuring consistent gradient updates and margin scaling in the SVM.",
+      "leakage_risk": "low",
+      "formula": "(existing_credits - 1.0) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_support_network",
+      "type": "judgment",
+      "description": "An evaluation of the applicant's social and familial support structure based on personal_status, other_parties (e.g., guarantor), and num_dependents. Higher values indicate a stronger support network.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregates personal status, dependents, and guarantors into a continuous support score, offering a unified linear feature that represents social stability.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "27252cac61d56092",
+  "metadata": {}
+}

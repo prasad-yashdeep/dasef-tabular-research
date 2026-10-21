@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_salmonella_serovar_20260401",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "visible_peak_mean_545_555",
+      "type": "formula",
+      "description": "Mean intensity over the 545-555 nm visible crest; robust to single-band noise and captures overall signal height near the dominant peak.",
+      "value_range": [
+        0.0,
+        6500.0
+      ],
+      "feature_family": "visible_peak",
+      "expected_model_benefit": "Gives trees a high-signal continuous split candidate for overall spectral magnitude in the main visible crest.",
+      "leakage_risk": "low",
+      "formula": "((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "visible_peak_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of the same visible crest using unsupervised cut points 600, 1000, 1500, and 2500 chosen from the training-fold intensity scale.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Pre-binned intensity lets shallow trees isolate very dim, moderate, bright, and extreme spectra without learning several raw cut points.",
+      "leakage_risk": "low",
+      "formula": "np.where(((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) < 600.0, 0, np.where(((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) < 1000.0, 1, np.where(((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) < 1500.0, 2, np.where(((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) < 2500.0, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blue_to_green_rise_norm",
+      "type": "formula",
+      "description": "Normalized contrast between the blue shoulder around 451-465 nm and the visible crest around 545-555 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spectral_contrast",
+      "expected_model_benefit": "Highlights spectra whose visible crest rises sharply from the blue region, a nonlinear shape cue that trees can threshold directly.",
+      "leakage_risk": "low",
+      "formula": "((((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) - ((`Band_27_W_451.10` + `Band_31_W_458.90` + `Band_34_W_465.00`) / 3.0)) / (((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) + ((`Band_27_W_451.10` + `Band_31_W_458.90` + `Band_34_W_465.00`) / 3.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "green_to_red_drop_norm",
+      "type": "formula",
+      "description": "Normalized contrast from the green-yellow crest to the red region near 651-663 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spectral_contrast",
+      "expected_model_benefit": "Captures slope steepness after the main visible crest, giving trees an interaction-like shape feature rather than isolated bands.",
+      "leakage_risk": "low",
+      "formula": "((((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) - ((`Band_127_W_650.80` + `Band_131_W_658.90` + `Band_133_W_662.90`) / 3.0)) / (((`Band_74_W_544.90` + `Band_75_W_546.80` + `Band_76_W_549.00` + `Band_77_W_550.90` + `Band_78_W_553.20` + `Band_79_W_555.00`) / 6.0) + ((`Band_127_W_650.80` + `Band_131_W_658.90` + `Band_133_W_662.90`) / 3.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "orange_red_valley_depth_norm",
+      "type": "formula",
+      "description": "Valley strength near 619-623 nm relative to neighboring shoulders at roughly 591 nm and 651 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "absorption_valley",
+      "expected_model_benefit": "Makes small absorption-like valley patterns easier for trees to use than comparing several neighboring raw bands independently.",
+      "leakage_risk": "low",
+      "formula": "((((`Band_97_W_591.00` + `Band_127_W_650.80`) / 2.0) - ((`Band_111_W_618.70` + `Band_112_W_620.90` + `Band_113_W_622.70`) / 3.0)) / (((`Band_97_W_591.00` + `Band_127_W_650.80`) / 2.0) + ((`Band_111_W_618.70` + `Band_112_W_620.90` + `Band_113_W_622.70`) / 3.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "red_edge_bump_norm",
+      "type": "formula",
+      "description": "Local curvature around 693 nm versus adjacent readings near 681 nm and 701 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "local_curvature",
+      "expected_model_benefit": "Second-derivative-like cue helps trees split on local bumps or dips around the red-edge transition.",
+      "leakage_risk": "low",
+      "formula": "((`Band_148_W_692.60` - ((`Band_142_W_680.90` + `Band_152_W_700.70`) / 2.0)) / (`Band_148_W_692.60` + ((`Band_142_W_680.90` + `Band_152_W_700.70`) / 2.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "near_red_tail_decay_norm",
+      "type": "formula",
+      "description": "Normalized decrease from the early near-red region around 705-721 nm to the longer-wavelength low-signal tail around 751-800 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "tail_decay",
+      "expected_model_benefit": "Summarizes tail collapse after about 700 nm as a single thresholdable feature for tree splits.",
+      "leakage_risk": "low",
+      "formula": "((((`Band_154_W_704.70` + `Band_157_W_711.00` + `Band_162_W_720.80`) / 3.0) - ((`Band_177_W_750.70` + `Band_192_W_780.40` + `Band_202_W_800.40`) / 3.0)) / (((`Band_154_W_704.70` + `Band_157_W_711.00` + `Band_162_W_720.80`) / 3.0) + ((`Band_177_W_750.70` + `Band_192_W_780.40` + `Band_202_W_800.40`) / 3.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nir_low_signal_count",
+      "type": "formula",
+      "description": "Count of selected long-wavelength bands with response below 1.0 intensity unit, indicating dropout or near-zero sensor response.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "sensor_quality",
+      "expected_model_benefit": "Discrete count offers direct thresholds for low-signal and dropout patterns that may otherwise be spread across many bands.",
+      "leakage_risk": "low",
+      "formula": "(np.where(`Band_207_W_810.50` < 1.0, 1, 0) + np.where(`Band_227_W_850.10` < 1.0, 1, 0) + np.where(`Band_252_W_899.90` < 1.0, 1, 0) + np.where(`Band_278_W_951.00` < 1.0, 1, 0) + np.where(`Band_294_W_982.90` < 1.0, 1, 0) + np.where(`Band_303_W_1000.90` < 1.0, 1, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "narrow_spike_815_norm",
+      "type": "formula",
+      "description": "Normalized narrow spike at 814.5 nm compared with immediate neighbors at 812.7 nm and 816.7 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "narrowband_spike",
+      "expected_model_benefit": "Allows a tree split to isolate spectra with a detector-line spike or sharp local emission at this wavelength.",
+      "leakage_risk": "low",
+      "formula": "((`Band_209_W_814.50` - ((`Band_208_W_812.70` + `Band_210_W_816.70`) / 2.0)) / (`Band_209_W_814.50` + ((`Band_208_W_812.70` + `Band_210_W_816.70`) / 2.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nir_bump_955_961_norm",
+      "type": "formula",
+      "description": "Normalized bump around 955-961 nm relative to shoulders near 948 nm and 973 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "longwave_bump",
+      "expected_model_benefit": "Captures broad long-wavelength bump or absorption contrast as a compact nonlinear feature for tree thresholds.",
+      "leakage_risk": "low",
+      "formula": "((((`Band_280_W_955.40` + `Band_281_W_957.50` + `Band_282_W_959.70` + `Band_283_W_961.40`) / 4.0) - ((`Band_276_W_947.60` + `Band_289_W_973.40`) / 2.0)) / (((`Band_280_W_955.40` + `Band_281_W_957.50` + `Band_282_W_959.70` + `Band_283_W_961.40`) / 4.0) + ((`Band_276_W_947.60` + `Band_289_W_973.40`) / 2.0) + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "holistic_spectrum_shape_grade",
+      "type": "judgment",
+      "description": "Semantic row-level morphology grade: 0=flat or weak, 1=smooth single crest, 2=sharp crest with steep red decline, 3=multi-crest or strong long-wavelength texture, 4=irregular or noisy morphology. Use only the row spectrum and fixed training-fold scale references.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_morphology",
+      "expected_model_benefit": "Supplies coarse morphology grouping that trees can combine with precise numeric thresholds for robust splits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "acquisition_artifact_severity_grade",
+      "type": "judgment",
+      "description": "Semantic ordinal grade of acquisition artifacts: 0=clean, 1=mild narrow spikes, 2=several narrow spikes, 3=near-zero dropouts, 4=strong saturation or clipping, 5=severe mixed artifacts. Use only visible sensor patterns in the row and training-fold numeric ranges.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_quality",
+      "expected_model_benefit": "Routes noisy or artifact-heavy rows into separate tree branches before finer spectral splits are applied.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cached_raw_normalized",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "fried",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "x1_x2_product_01",
+      "type": "formula",
+      "description": "Bounded product of X1 and X2, capturing their joint level on a 0 to 1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "pairwise_interaction",
+      "expected_model_benefit": "Adds a direct multiplicative axis so a linear SVM can represent joint X1-X2 effects.",
+      "leakage_risk": "low",
+      "formula": "np.clip(X1 * X2, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x2_midrange_hump_01",
+      "type": "formula",
+      "description": "Smooth hump over the X1-X2 product, highest when the product is near the middle of its range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "smooth_hump",
+      "expected_model_benefit": "Supplies a mid-product bump, enabling a linear margin to model rise-and-fall behavior from the X1-X2 pair.",
+      "leakage_risk": "low",
+      "formula": "np.clip(4.0 * (X1 * X2) * (1.0 - (X1 * X2)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x2_sqrt_product_01",
+      "type": "formula",
+      "description": "Concave transform of the X1-X2 product, emphasizing differences among smaller joint levels.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "concave_interaction_transform",
+      "expected_model_benefit": "Gives the SVM another smooth basis direction for approximating curved X1-X2 behavior.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip(X1 * X2, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_center_abs_01",
+      "type": "formula",
+      "description": "Normalized absolute distance of X3 from the midpoint 0.5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "center_distance",
+      "expected_model_benefit": "Measures severity of X3 being away from the midpoint with a linear-scale margin input.",
+      "leakage_risk": "low",
+      "formula": "np.clip(2.0 * np.abs(X3 - 0.5), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_center_quadratic_01",
+      "type": "formula",
+      "description": "Normalized squared distance of X3 from the midpoint 0.5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "quadratic_curvature",
+      "expected_model_benefit": "Encodes symmetric quadratic curvature in X3 as a margin-ready input.",
+      "leakage_risk": "low",
+      "formula": "np.clip(4.0 * ((X3 - 0.5) ** 2), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_level_01",
+      "type": "formula",
+      "description": "Bounded X4 level on the native 0 to 1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "bounded_level",
+      "expected_model_benefit": "Preserves the strong first-order X4 direction on a bounded scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(X4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x5_level_01",
+      "type": "formula",
+      "description": "Bounded X5 level on the native 0 to 1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "bounded_level",
+      "expected_model_benefit": "Preserves the first-order X5 direction on a bounded scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(X5, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_x5_weighted_level_01",
+      "type": "formula",
+      "description": "Weighted linear projection of X4 and X5 using a 2-to-1 emphasis on X4, scaled to 0 to 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_linear_projection",
+      "expected_model_benefit": "Precombines X4 and X5 in a simple ratio, reducing the burden on the SVM to discover a common linear projection.",
+      "leakage_risk": "low",
+      "formula": "(2.0 * np.clip(X4, 0.0, 1.0) + np.clip(X5, 0.0, 1.0)) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "smooth_core_projection_01",
+      "type": "formula",
+      "description": "Normalized weighted composite of X1-X2 hump, X3 curvature, X4 level, and X5 level.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_projection",
+      "expected_model_benefit": "Combines nonlinear and first-order row information into one calibrated axis, giving the linear SVM a high-information margin direction.",
+      "leakage_risk": "low",
+      "formula": "((10.0 * np.clip(4.0 * (X1 * X2) * (1.0 - (X1 * X2)), 0.0, 1.0)) + (5.0 * np.clip(4.0 * ((X3 - 0.5) ** 2), 0.0, 1.0)) + (10.0 * np.clip(X4, 0.0, 1.0)) + (5.0 * np.clip(X5, 0.0, 1.0))) / 30.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "background_center_energy_01",
+      "type": "formula",
+      "description": "Radial distance of X6 through X10 from the midpoint 0.5, normalized to 0 to 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "background_variability",
+      "expected_model_benefit": "Lets a linear margin account for unusual background-coordinate magnitude without fitting five separate weak directions.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip(((X6 - 0.5) ** 2 + (X7 - 0.5) ** 2 + (X8 - 0.5) ** 2 + (X9 - 0.5) ** 2 + (X10 - 0.5) ** 2) / 1.25, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "surface_alignment_judgment",
+      "type": "judgment",
+      "description": "Non-formulaic analyst rating from 0.0 to 1.0 of how strongly the row matches a coherent smooth-surface pattern: mid-range X1-X2 product, X3 far from the center, and elevated X4/X5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a row-level qualitative score aligned with the smooth surface pattern, useful when formula features leave small local mismatches.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "background_irregularity_judgment",
+      "type": "judgment",
+      "description": "Non-formulaic analyst rating from 0.0 to 1.0 of how unusual the X6-X10 combination appears relative to the training-fold 0 to 1 support and near-uniform column summaries.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a compact qualitative covariate-pattern score that can adjust margins for atypical background combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    }
+  ],
+  "prompt_hash": "f4e72253c44fd3a0",
+  "metadata": {}
+}

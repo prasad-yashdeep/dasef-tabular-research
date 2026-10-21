@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-2.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "bmi_obesity_indicator",
+      "type": "formula",
+      "description": "Binary indicator for obesity, defined as a Body Mass Index (mass) of 30 or greater.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "Body Composition",
+      "expected_model_benefit": "Creates a clear decision boundary based on a clinically significant threshold, which can help group similar individuals in the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.where(mass >= 30.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_level_indicator",
+      "type": "formula",
+      "description": "Categorical indicator for plasma glucose levels based on common unsupervised thresholds: 0 for normal (<100), 1 for elevated (100-140), 2 for high (>140).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "Metabolic",
+      "expected_model_benefit": "Segments the data into distinct metabolic groups, potentially improving the local neighborhood definition for KNN.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas < 100, 0, np.where(plas <= 140, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_resistance_proxy",
+      "type": "formula",
+      "description": "A ratio of insulin to plasma glucose, serving as a proxy for insulin resistance. Higher values suggest more resistance.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "Metabolic",
+      "expected_model_benefit": "Combines two correlated features into a single, more powerful metric that can improve distance calculations by capturing a key physiological state.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas > 0, insu / plas, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Age normalized using the training set's mean and standard deviation. This standardizes the scale of the age feature.",
+      "value_range": [
+        -1.04,
+        3.48
+      ],
+      "feature_family": "Demographic",
+      "expected_model_benefit": "Prevents the age feature from dominating distance calculations due to its scale, ensuring a more balanced contribution to neighborhood definitions.",
+      "leakage_risk": "low",
+      "formula": "(age - 32.69281045751634) / 11.320223701426936",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pregnancies_per_decade",
+      "type": "formula",
+      "description": "The number of pregnancies normalized by the person's age in decades. This creates a rate that is more comparable across different ages.",
+      "value_range": [
+        0.0,
+        6.2
+      ],
+      "feature_family": "Reproductive History",
+      "expected_model_benefit": "Creates a scale-invariant feature that might better capture the intensity of pregnancy history than the raw count, improving similarity measures.",
+      "leakage_risk": "low",
+      "formula": "np.where(age > 0, preg / (age / 10.0), 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_mean_profile",
+      "type": "formula",
+      "description": "The Euclidean distance of a person's standardized profile from the mean profile of the training set. A measure of how atypical an individual is.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "Prototype Distance",
+      "expected_model_benefit": "This is a powerful meta-feature for KNN, as it explicitly encodes a notion of distance (outlierness) from a central, unsupervised prototype.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(( (preg - 3.6405) / 3.1511 )**2 + ( (plas - 120.0261) / 31.1993 )**2 + ( (pres - 67.9085) / 18.3094 )**2 + ( (skin - 19.5359) / 16.2223 )**2 + ( (insu - 71.2941) / 104.0593 )**2 + ( (mass - 31.1725) / 7.3664 )**2 + ( (pedi - 0.4394) / 0.2738 )**2 + ( (age - 32.6928) / 11.3202 )**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_category",
+      "type": "formula",
+      "description": "Categorizes diastolic blood pressure (pres) into three levels: 0 for normal (<80), 1 for elevated (80-89), and 2 for high (>=90).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "Cardiovascular",
+      "expected_model_benefit": "Discretizes a continuous variable into meaningful clinical groups, which can help form more coherent neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.where(pres < 80, 0, np.where(pres < 90, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_implausible_zero_value",
+      "type": "formula",
+      "description": "Binary indicator that is 1 if any of the physiologically critical measures (glucose, blood pressure, skin thickness, or BMI) are zero, suggesting missing or invalid data.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "Data Quality",
+      "expected_model_benefit": "Helps the model isolate and treat potentially erroneous data points differently, preventing them from distorting the local neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.where((plas == 0) | (pres == 0) | (skin == 0) | (mass == 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_stress_score",
+      "type": "formula",
+      "description": "A composite score calculated as the sum of the z-scores for plasma glucose, BMI, and insulin. Higher scores indicate greater metabolic stress.",
+      "value_range": [
+        -12.0,
+        12.5
+      ],
+      "feature_family": "Metabolic",
+      "expected_model_benefit": "Projects several key indicators onto a single dimension, potentially creating a strong, linear separator that improves cluster definition.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.0261) / 31.1993) + ((mass - 31.1725) / 7.3664) + ((insu - 71.2941) / 104.0593)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_impact_level",
+      "type": "judgment",
+      "description": "A semantic grouping of the diabetes pedigree function value, representing genetic risk influence. 0 for low (pedi < 0.25), 1 for medium (0.25 <= pedi < 0.75), 2 for high (pedi >= 0.75).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "Genetic",
+      "expected_model_benefit": "Converts a skewed continuous variable into a more stable, categorical feature that can improve neighborhood similarity for individuals with comparable genetic predispositions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_pregnancy_interaction_risk",
+      "type": "judgment",
+      "description": "A judgment-based risk score based on the interaction between age and number of pregnancies. 0: Low (e.g., age < 30 and preg < 3), 1: Medium, 2: High (e.g., age > 40 and preg > 5).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "Reproductive History",
+      "expected_model_benefit": "Captures a non-linear interaction that simple distance metrics might miss, grouping individuals with similar life-stage and reproductive history profiles.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_health_profile_deviation",
+      "type": "judgment",
+      "description": "A semantic score indicating deviation from a generally accepted healthy profile (e.g., plas<100, mass<25, pres<80). 0: Close to healthy, 1: Moderate deviation, 2: Significant deviation across multiple factors.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "Composite",
+      "expected_model_benefit": "Provides a holistic, non-linear summary of a person's health. This acts as a distance-like feature from an abstract 'healthy' prototype, which can be very effective for KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f1618b94aa0c92c9",
+  "metadata": {}
+}

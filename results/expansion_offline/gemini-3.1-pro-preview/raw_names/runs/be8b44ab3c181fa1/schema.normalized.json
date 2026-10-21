@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bitcoinheist_ransomware",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_income",
+      "type": "formula",
+      "description": "Log-transformed income to handle extreme skewness and provide a smoother feature space for linear margins.",
+      "value_range": [
+        17.0,
+        29.0
+      ],
+      "feature_family": "magnitude_transform",
+      "expected_model_benefit": "Reduces the impact of extreme outliers in transaction values, allowing the linear SVM to learn more stable weights.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(income)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_count",
+      "type": "formula",
+      "description": "Log-transformed transaction count to compress the wide range of transaction volumes.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "magnitude_transform",
+      "expected_model_benefit": "Linearizes the relationship between transaction volume and the decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(count)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_looped",
+      "type": "formula",
+      "description": "Log-transformed looped transaction count to normalize the distribution of cyclic transaction behaviors.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "magnitude_transform",
+      "expected_model_benefit": "Provides a continuous, well-scaled measure of cyclic behavior suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(looped)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_neighbors",
+      "type": "formula",
+      "description": "Log-transformed neighbor count to handle the heavy-tailed distribution of network connectivity.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "magnitude_transform",
+      "expected_model_benefit": "Prevents highly connected nodes from dominating the linear SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(neighbors)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loop_to_count_ratio",
+      "type": "formula",
+      "description": "Ratio of looped transactions to total transactions, clipped to a maximum of 10 for stability.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the relative frequency of cyclic behavior, which is often a strong structural signal independent of total volume.",
+      "leakage_risk": "low",
+      "formula": "np.clip(looped / np.maximum(count, 1), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weight_per_length",
+      "type": "formula",
+      "description": "Average weight per unit of transaction length.",
+      "value_range": [
+        0.0,
+        200.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes transaction weight by its path length, providing a density metric useful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "weight / np.maximum(length, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_income_per_neighbor",
+      "type": "formula",
+      "description": "Log-transformed ratio of income to the number of neighbors.",
+      "value_range": [
+        10.0,
+        29.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Highlights nodes that receive disproportionately large amounts of income relative to their network degree.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(income / np.maximum(neighbors, 1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "network_density_proxy",
+      "type": "formula",
+      "description": "Ratio of neighbors to total transaction count, clipped for stability.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Measures the breadth of the network relative to activity volume, providing a structural feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(neighbors / np.maximum(count, 1), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mid_year_proximity",
+      "type": "formula",
+      "description": "Absolute normalized distance from the middle of the year (day 182.5).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Captures potential seasonality or temporal clustering in a continuous format suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.abs(day - 182.5) / 182.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sqrt_weight",
+      "type": "formula",
+      "description": "Square root of the transaction weight to reduce skewness while preserving zero values.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "magnitude_transform",
+      "expected_model_benefit": "Provides a milder transformation than log for the weight feature, balancing the distribution for linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(weight)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_transaction_complexity",
+      "type": "judgment",
+      "description": "A semantic assessment of the overall complexity of the transaction pattern, considering the interplay between length, weight, count, and looped values.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, non-linear interpretation of transaction complexity that a linear SVM cannot easily construct from raw features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_anomalous_topology_score",
+      "type": "judgment",
+      "description": "An expert-level judgment score evaluating the anomaly level of the network topology based on the relationship between neighbors, income, and cyclic loops.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Injects domain-specific structural anomaly detection into the feature space, enhancing the linear model's ability to separate complex patterns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c767e28c645ce7d8",
+  "metadata": {}
+}

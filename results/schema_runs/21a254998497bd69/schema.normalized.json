@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recency_zscore",
+      "type": "formula",
+      "description": "Standardized recency (months since last donation) to ensure equal weighting in distance calculations.",
+      "value_range": [
+        -1.2,
+        8.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Prevents the recency feature from dominating or being overshadowed by other features in KNN distance metrics.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 9.507) / 8.090",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_zscore",
+      "type": "formula",
+      "description": "Standardized frequency (total number of donations) to ensure equal weighting in distance calculations.",
+      "value_range": [
+        -0.8,
+        8.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes the frequency scale, improving the geometry of the neighborhood space.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 5.515) / 5.835",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_zscore",
+      "type": "formula",
+      "description": "Standardized time (months since first donation) to ensure equal weighting in distance calculations.",
+      "value_range": [
+        -1.4,
+        3.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes the time scale, allowing for fair distance comparisons across all dimensions.",
+      "leakage_risk": "low",
+      "formula": "(V4 - 34.282) / 24.360",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate",
+      "type": "formula",
+      "description": "The average number of donations per month since the first donation.",
+      "value_range": [
+        0.01,
+        25.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a normalized measure of donation intensity, which is highly discriminative for finding similar donor profiles.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_period",
+      "type": "formula",
+      "description": "The duration in months between the first and last donation.",
+      "value_range": [
+        0.0,
+        98.0
+      ],
+      "feature_family": "temporal_difference",
+      "expected_model_benefit": "Captures the actual span of active donation behavior, helping to group donors with similar longevity.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V4 - V1, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_frequency",
+      "type": "formula",
+      "description": "Log-transformed frequency to reduce the impact of extreme outliers in distance calculations.",
+      "value_range": [
+        0.69,
+        4.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Compresses the long tail of the frequency distribution, making Euclidean distances more robust to extreme values.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "avg_time_between_donations",
+      "type": "formula",
+      "description": "The average number of months between donations during the donor's active period.",
+      "value_range": [
+        0.0,
+        98.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a scale-invariant measure of donation rhythm, improving similarity matching for donors with different total tenures.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 > 1, np.maximum(V4 - V1, 0.0) / (V2 - 1), 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_centroid",
+      "type": "formula",
+      "description": "Euclidean distance to the global mean of the standardized features.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Acts as an anomaly or typicality score, helping KNN distinguish between average and outlier profiles.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 9.507)/8.090)**2 + ((V2 - 5.515)/5.835)**2 + ((V4 - 34.282)/24.360)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loyalty_ratio",
+      "type": "formula",
+      "description": "The ratio of the active donation period to the total time since the first donation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes the active period by the total tenure, providing a bounded similarity metric for donor retention.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V4 - V1, 0.0) / V4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_frequency_recent",
+      "type": "formula",
+      "description": "Indicator for donors who have above-average frequency and below-average recency.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a distinct subspace for highly engaged donors, forcing KNN to group them together.",
+      "leakage_risk": "low",
+      "formula": "np.where(np.logical_and(V2 > 5.515, V1 < 9.507), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_profile_cluster",
+      "type": "judgment",
+      "description": "Assigns a cluster ID (1 to 5) based on the donor's recency, frequency, and time profile, grouping similar donors together.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a categorical grouping that can act as a strong prior for neighborhood formation in distance-based models.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_similarity_to_ideal_donor",
+      "type": "judgment",
+      "description": "A semantic similarity score (0 to 1) comparing the donor's profile to a hypothetical ideal donor who donates frequently, has a long history, and donated recently.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Projects the multi-dimensional donor profile onto a single continuous axis of 'idealness', simplifying the distance space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cf7deb993906dcbc",
+  "metadata": {}
+}

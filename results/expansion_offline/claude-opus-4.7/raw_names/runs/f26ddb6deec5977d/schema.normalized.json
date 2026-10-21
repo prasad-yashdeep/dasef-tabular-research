@@ -1,0 +1,190 @@
+{
+  "dataset_name": "customer_churn_classification_nominal",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Standardized age using training mean and std; older customers tend to churn more.",
+      "value_range": [
+        -3.0,
+        6.5
+      ],
+      "feature_family": "normalized_demographics",
+      "expected_model_benefit": "Smooth continuous age signal centered at zero for linear margin.",
+      "leakage_risk": "low",
+      "formula": "(age - 38.0717) / 8.9988",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_norm",
+      "type": "formula",
+      "description": "Min-max normalized credit score within the observed range [350, 850].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_financial",
+      "expected_model_benefit": "Bounded smooth feature for linear projections.",
+      "leakage_risk": "low",
+      "formula": "clip((creditscore - 350.0) / 500.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "balance_to_salary_log",
+      "type": "formula",
+      "description": "Log-compressed balance over estimated salary ratio for smooth scale.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "ratio_financial",
+      "expected_model_benefit": "Compresses heavy-tailed ratio into a near-linear feature.",
+      "leakage_risk": "low",
+      "formula": "log1p(balance / (estimatedsalary + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zero_balance_flag",
+      "type": "formula",
+      "description": "Indicator that the account holds zero balance.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "financial_state",
+      "expected_model_benefit": "Discrete shift contributing to a separable linear term.",
+      "leakage_risk": "low",
+      "formula": "np.where(balance <= 0.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "inactive_senior_score",
+      "type": "formula",
+      "description": "Continuous interaction between inactivity and older age (age relative to mean).",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "interaction_behavior",
+      "expected_model_benefit": "Composite risk axis suitable for linear separator.",
+      "leakage_risk": "low",
+      "formula": "(1 - isactivemember) * np.maximum(age - 38.0717, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "product_extremity",
+      "type": "formula",
+      "description": "Distance from typical product count of 2; very low/high counts signal churn.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "product_behavior",
+      "expected_model_benefit": "Symmetric continuous severity score aligned with linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.abs(numofproducts - 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "germany_flag_weighted",
+      "type": "formula",
+      "description": "Germany geography indicator (known higher-churn region) blended with inactivity.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "geo_interaction",
+      "expected_model_benefit": "Geo-interaction term boosting linear separability.",
+      "leakage_risk": "low",
+      "formula": "germany + germany * (1 - isactivemember)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_per_age_norm",
+      "type": "formula",
+      "description": "Normalized tenure_age ratio scaled to [0,1] by max observed.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loyalty",
+      "expected_model_benefit": "Smooth loyalty proxy.",
+      "leakage_risk": "low",
+      "formula": "clip(tenure_age / 0.5556, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "balance_zscore",
+      "type": "formula",
+      "description": "Standardized balance using training mean and std.",
+      "value_range": [
+        -1.0,
+        4.0
+      ],
+      "feature_family": "normalized_financial",
+      "expected_model_benefit": "Linearized balance signal centered at zero.",
+      "leakage_risk": "low",
+      "formula": "(balance - 56663.099) / 62792.838",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_composite",
+      "type": "formula",
+      "description": "Weighted composite of activity, card ownership, and product count breadth.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "engagement_composite",
+      "expected_model_benefit": "Hand-crafted linear composite for SVM margin.",
+      "leakage_risk": "low",
+      "formula": "isactivemember * 2.0 + hascrcard * 1.0 + clip(numofproducts, 1.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stress_score",
+      "type": "judgment",
+      "description": "Semantic judgment of financial stress combining high balance with low salary and zero-product diversity; computed as weighted normalized signal.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "judgment_financial_risk",
+      "expected_model_benefit": "Provides a smooth severity axis for linear separation of stressed accounts.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_churn_propensity",
+      "type": "judgment",
+      "description": "Semantic composite reflecting demographic groups historically associated with attrition (older female customers in Germany), expressed as a continuous weighted score.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "judgment_demographic",
+      "expected_model_benefit": "Single interpretable axis aligning multiple weak demographic signals for linear SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ed2b44e7aac5c972",
+  "metadata": {}
+}

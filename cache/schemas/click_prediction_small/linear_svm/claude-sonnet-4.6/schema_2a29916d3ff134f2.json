@@ -1,0 +1,190 @@
+{
+  "dataset_name": "click_prediction_small",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_impression_normalized",
+      "type": "formula",
+      "description": "Log-transformed impression count normalized by training mean log impression, capturing exposure intensity on a smooth scale suitable for linear margins",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "exposure",
+      "expected_model_benefit": "Reduces skew in impression distribution, providing smooth continuous signal for SVM hyperplane separation",
+      "leakage_risk": "low",
+      "formula": "np.log1p(impression) / np.log1p(2.071261682242991)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "position_depth_ratio",
+      "type": "formula",
+      "description": "Ratio of ad position to search depth, measuring how prominently the ad appears relative to total depth of results shown",
+      "value_range": [
+        0.33,
+        3.0
+      ],
+      "feature_family": "placement",
+      "expected_model_benefit": "Captures relative prominence of ad placement; lower ratio indicates better visibility, useful linear feature for SVM",
+      "leakage_risk": "low",
+      "formula": "position / np.maximum(depth, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "top_position_flag",
+      "type": "formula",
+      "description": "Binary indicator for whether the ad appears in position 1, the most prominent placement",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "placement",
+      "expected_model_benefit": "Direct linear signal for top-position ads which typically have higher engagement rates",
+      "leakage_risk": "low",
+      "formula": "np.where(position == 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "shallow_depth_flag",
+      "type": "formula",
+      "description": "Binary indicator for search depth of 1, meaning only one result was shown, indicating high relevance context",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "placement",
+      "expected_model_benefit": "Captures high-relevance search contexts where fewer results are shown, useful binary feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.where(depth == 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "impression_log_sqrt_composite",
+      "type": "formula",
+      "description": "Composite of log and sqrt transformations of impression count, providing a smooth severity measure of ad exposure frequency",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "exposure",
+      "expected_model_benefit": "Blended transformation reduces extreme outlier influence while preserving monotonic ordering for linear separation",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(impression) + np.sqrt(impression)) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_id_normalized",
+      "type": "formula",
+      "description": "Ad ID normalized to [0,1] range using training min/max, serving as a proxy for ad recency or campaign ordering",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ad_identity",
+      "expected_model_benefit": "Provides smooth normalized ad identifier signal that may correlate with ad campaign characteristics",
+      "leakage_risk": "low",
+      "formula": "(ad_id - 1000806.0) / (22226685.0 - 1000806.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "advertiser_id_normalized",
+      "type": "formula",
+      "description": "Advertiser ID normalized to [0,1] range using training min/max, capturing advertiser ordering as a continuous feature",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ad_identity",
+      "expected_model_benefit": "Normalized advertiser identifier may encode systematic differences in advertiser quality or category for linear models",
+      "leakage_risk": "low",
+      "formula": "(advertiser_id - 82.0) / (39074.0 - 82.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "keyword_log_normalized",
+      "type": "formula",
+      "description": "Log-normalized keyword ID capturing keyword space position on a smooth scale, useful as a proxy for keyword category",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "content",
+      "expected_model_benefit": "Smooth continuous representation of keyword space position for linear SVM feature weighting",
+      "leakage_risk": "low",
+      "formula": "np.log1p(keyword_id) / np.log1p(1214033.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_id_alignment_score",
+      "type": "formula",
+      "description": "Normalized absolute difference between title and description IDs, measuring content component alignment as a coherence proxy",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "content",
+      "expected_model_benefit": "Content coherence signal; aligned title-description pairs may indicate higher quality ads with better engagement",
+      "leakage_risk": "low",
+      "formula": "1.0 - np.clip(np.abs(np.log1p(title_id) - np.log1p(description_id)) / np.log1p(3970109.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "user_id_log_normalized",
+      "type": "formula",
+      "description": "Log-normalized user ID providing smooth continuous representation of user space position as a proxy for user segment",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "user",
+      "expected_model_benefit": "Smooth user identifier encoding that may capture systematic behavioral differences across user segments for linear models",
+      "leakage_risk": "low",
+      "formula": "np.log1p(user_id) / np.log1p(23902732.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "placement_quality_score",
+      "type": "formula",
+      "description": "Weighted composite of position and depth signals: higher score for top positions in shallow searches, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "placement",
+      "expected_model_benefit": "Single composite placement quality metric combining position and depth into one linear-friendly continuous score",
+      "leakage_risk": "low",
+      "formula": "np.clip((1.0 / position) * 0.6 + (1.0 / depth) * 0.4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_content_diversity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of ad content diversity based on the spread between keyword, title, and description IDs relative to their respective ranges; higher values indicate more diverse content components which may signal broader targeting",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "content",
+      "expected_model_benefit": "Captures semantic diversity of ad content components as a continuous score useful for linear SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2a29916d3ff134f2",
+  "metadata": {}
+}

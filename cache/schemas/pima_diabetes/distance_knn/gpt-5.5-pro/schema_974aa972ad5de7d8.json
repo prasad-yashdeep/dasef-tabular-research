@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "plas_z_clipped",
+      "type": "formula",
+      "description": "Training-fold z-score of plasma glucose, clipped to limit extreme influence in distance calculations.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "scale_normalized_measurement",
+      "expected_model_benefit": "Places glucose on a comparable scale and caps outliers so KNN neighborhoods are less dominated by one raw unit.",
+      "leakage_risk": "low",
+      "formula": "np.clip((plas - 119.20434782608696) / 31.280456160646818, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mass_z_clipped",
+      "type": "formula",
+      "description": "Training-fold z-score of the body mass index measure, clipped for stable distance behavior.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "scale_normalized_measurement",
+      "expected_model_benefit": "Makes body size comparable with other coordinates and prevents extreme values from overwhelming neighbor distances.",
+      "leakage_risk": "low",
+      "formula": "np.clip((mass - 31.211304347826086) / 7.5253053119330096, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_preg_progression_z",
+      "type": "formula",
+      "description": "Combined standardized age and pregnancy-count axis using training-fold means and standard deviations.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalized_composite",
+      "expected_model_benefit": "Captures life-stage similarity in one normalized coordinate, improving local neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((age - 32.93913043478261) / 11.313160444537871) + ((preg - 3.8130434782608695) / 3.197118858927462)) / 1.4142135623730951, -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_insu_plas_ratio",
+      "type": "formula",
+      "description": "Clipped log insulin-to-glucose contrast with safeguards for zero glucose values.",
+      "value_range": [
+        -5.0,
+        3.0
+      ],
+      "feature_family": "ratio_similarity",
+      "expected_model_benefit": "Improves local geometry for rows with similar insulin response relative to glucose while reducing skew from large insulin values.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(insu, 0.0)) - np.log1p(np.maximum(plas, 1.0)), -5.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zero_biomarker_count",
+      "type": "formula",
+      "description": "Count of zero-coded non-pregnancy biomarker entries among glucose, blood pressure, skin fold, insulin, and body mass.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "measurement_completeness",
+      "expected_model_benefit": "Keeps records with many placeholder-like zeros closer to one another and farther from fully measured records.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas == 0.0, 1.0, 0.0) + np.where(pres == 0.0, 1.0, 0.0) + np.where(skin == 0.0, 1.0, 0.0) + np.where(insu == 0.0, 1.0, 0.0) + np.where(mass == 0.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "central_profile_distance",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from the row to the training-fold mean profile across all eight numeric measurements.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Adds a radial coordinate that lets KNN distinguish typical rows from outlying rows after scale normalization.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((((preg - 3.8130434782608695) / 3.197118858927462) ** 2 + ((plas - 119.20434782608696) / 31.280456160646818) ** 2 + ((pres - 68.06521739130434) / 18.528241867264995) ** 2 + ((skin - 18.291304347826088) / 15.715055452141877) ** 2 + ((insu - 70.76086956521739) / 103.45017384620036) ** 2 + ((mass - 31.211304347826086) / 7.5253053119330096) ** 2 + ((pedi - 0.4640739130434782) / 0.31212679797659615) ** 2 + ((age - 32.93913043478261) / 11.313160444537871) ** 2) / 8.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "central_profile_similarity",
+      "type": "formula",
+      "description": "Bounded inverse-distance similarity to the training-fold mean profile across all eight measurements.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_similarity",
+      "expected_model_benefit": "Gives central observations a compact similarity coordinate and reduces the influence of raw unit differences.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 / (1.0 + np.sqrt((((preg - 3.8130434782608695) / 3.197118858927462) ** 2 + ((plas - 119.20434782608696) / 31.280456160646818) ** 2 + ((pres - 68.06521739130434) / 18.528241867264995) ** 2 + ((skin - 18.291304347826088) / 15.715055452141877) ** 2 + ((insu - 70.76086956521739) / 103.45017384620036) ** 2 + ((mass - 31.211304347826086) / 7.5253053119330096) ** 2 + ((pedi - 0.4640739130434782) / 0.31212679797659615) ** 2 + ((age - 32.93913043478261) / 11.313160444537871) ** 2) / 8.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_metabolic_anchor_distance",
+      "type": "formula",
+      "description": "Scale-normalized distance to an unsupervised upper-value anchor set one training-fold standard deviation above the mean for pregnancy count, glucose, body mass, family-history proxy, and age.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a smooth prototype-distance coordinate for the upper metabolic region of the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((((plas - 150.48480398673377) / 31.280456160646818) ** 2 + ((mass - 38.73660965975909) / 7.5253053119330096) ** 2 + ((age - 44.25229087932048) / 11.313160444537871) ** 2 + ((pedi - 0.7762007110200744) / 0.31212679797659615) ** 2 + ((preg - 7.010162337188332) / 3.197118858927462) ** 2) / 5.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lower_metabolic_anchor_distance",
+      "type": "formula",
+      "description": "Scale-normalized distance to an unsupervised lower-value anchor set one training-fold standard deviation below the mean for pregnancy count, glucose, body mass, family-history proxy, and age.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Separates leaner, younger, lower-glucose neighborhoods from central and upper-value neighborhoods using only unsupervised anchors.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((((plas - 87.92389166544014) / 31.280456160646818) ** 2 + ((mass - 23.685999035893078) / 7.5253053119330096) ** 2 + ((age - 21.625969990244737) / 11.313160444537871) ** 2 + ((pedi - 0.15194711506688207) / 0.31212679797659615) ** 2 + ((preg - 0.6159246193334076) / 3.197118858927462) ** 2) / 5.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_metabolic_cluster_flag",
+      "type": "formula",
+      "description": "Indicator for rows in an upper-value unsupervised cluster: glucose and body mass both above one-standard-deviation thresholds, or age and pregnancy count both above one-standard-deviation thresholds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Adds a coarse neighborhood boundary for a dense high-value region that Euclidean distance can otherwise blur.",
+      "leakage_risk": "low",
+      "formula": "np.where(((plas > 150.48480398673377) & (mass > 38.73660965975909)) | ((age > 44.25229087932048) & (preg > 7.010162337188332)), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_pattern_coherence_score",
+      "type": "judgment",
+      "description": "A 0-to-1 semantic rating of how coherent the row's glucose, body mass, insulin, age, pregnancy count, and family-history proxy look as an adult metabolic profile; 1 means highly coherent and 0 means internally contradictory or physiologically unusual.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity",
+      "expected_model_benefit": "Adds an expert-shaped similarity dimension that can group rows with comparable metabolic narratives even when raw coordinates differ.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "measurement_reliability_score",
+      "type": "judgment",
+      "description": "A 0-to-1 semantic rating of measurement reliability considering zero-coded biomarker values and physiologic plausibility of pressure, skin fold, insulin, body mass, and glucose; 1 means reliable and 0 means severe artifact suspicion.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_quality",
+      "expected_model_benefit": "Helps KNN avoid making a row with many artifact-like entries close to a fully measured row solely because zeros shrink raw distances.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "974aa972ad5de7d8",
+  "metadata": {}
+}

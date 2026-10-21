@@ -1,0 +1,190 @@
+{
+  "dataset_name": "click_prediction_small",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "impression_log_norm",
+      "type": "formula",
+      "description": "Log-scaled exposure count normalized by training-fold minimum and maximum; compresses rare extreme counts while retaining exposure intensity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "exposure_frequency",
+      "expected_model_benefit": "Provides a smooth exposure-intensity coordinate for a linear SVM margin with reduced influence from very large counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(impression) - np.log1p(1.0)) / (np.log1p(5467.0) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "impression_tail_intensity",
+      "type": "formula",
+      "description": "Smooth high-exposure tail severity relative to the training-fold average impression count; values near zero indicate ordinary or below-average exposure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "exposure_frequency",
+      "expected_model_benefit": "Gives the margin a separate slope for very repeated exposures without requiring a nonlinear transform inside the model.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(impression) - np.log1p(2.071261682242991)) / (np.log1p(5467.0) - np.log1p(2.071261682242991)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "slot_visibility_score",
+      "type": "formula",
+      "description": "Weighted page-slot visibility estimate from position and depth, with top, shallow placements scored higher and lower, deeper placements scored lower.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "display_context",
+      "expected_model_benefit": "Combines display position and page depth into one approximate attention direction suitable for a linear weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - 0.35 * (position - 1.0) - 0.15 * (depth - 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "relative_slot_position_norm",
+      "type": "formula",
+      "description": "Normalized bottomness of the shown position within the available depth; zero corresponds to the first slot or a single-slot page and one corresponds to the bottom of a multi-slot page.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "display_context",
+      "expected_model_benefit": "Captures relative slot ordering so lower placements can be separated from top placements along a single axis.",
+      "leakage_risk": "low",
+      "formula": "np.clip((position - 1.0) / np.maximum(depth - 1.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_id_band_norm",
+      "type": "formula",
+      "description": "Ad identifier location within the training-fold numeric range, clipped to keep future out-of-range values bounded.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "entity_identity",
+      "expected_model_benefit": "Keeps ad namespace effects as bounded numeric variation rather than raw large identifiers.",
+      "leakage_risk": "low",
+      "formula": "np.clip((ad_id - 1000806.0) / (22226685.0 - 1000806.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "advertiser_id_band_norm",
+      "type": "formula",
+      "description": "Advertiser identifier location within the training-fold numeric range, representing broad campaign-owner namespace bands.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "entity_identity",
+      "expected_model_benefit": "Adds a bounded advertiser coordinate that a linear SVM can weight without instability from raw identifier scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((advertiser_id - 82.0) / (39074.0 - 82.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_advertiser_band_gap",
+      "type": "formula",
+      "description": "Absolute separation between normalized ad and advertiser identifier bands, measuring cross-entity namespace alignment.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "entity_alignment",
+      "expected_model_benefit": "Provides a simple cross-entity consistency coordinate for campaigns where ad and advertiser namespaces move together.",
+      "leakage_risk": "low",
+      "formula": "np.abs(np.clip((ad_id - 1000806.0) / (22226685.0 - 1000806.0), 0.0, 1.0) - np.clip((advertiser_id - 82.0) / (39074.0 - 82.0), 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "creative_completeness_score",
+      "type": "formula",
+      "description": "Share of keyword, title, and description identifiers that are nonzero, treating zero as a sparse metadata marker.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "creative_metadata",
+      "expected_model_benefit": "Lets the margin react to sparse versus complete creative metadata using a continuous score.",
+      "leakage_risk": "low",
+      "formula": "(np.where(keyword_id > 0.0, 1.0, 0.0) + np.where(title_id > 0.0, 1.0, 0.0) + np.where(description_id > 0.0, 1.0, 0.0)) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_id_log_centroid",
+      "type": "formula",
+      "description": "Average of log-normalized keyword, title, and description identifier magnitudes, using training-fold maxima for scaling.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "creative_metadata",
+      "expected_model_benefit": "Condenses multiple content identifiers into one bounded projection, reducing scale imbalance for SVM optimization.",
+      "leakage_risk": "low",
+      "formula": "(np.clip(np.log1p(keyword_id) / np.log1p(1214033.0), 0.0, 1.0) + np.clip(np.log1p(title_id) / np.log1p(3970109.0), 0.0, 1.0) + np.clip(np.log1p(description_id) / np.log1p(3149758.0), 0.0, 1.0)) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "user_id_log_norm",
+      "type": "formula",
+      "description": "Log-normalized user identifier magnitude; zero-coded users remain at the bottom of the scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "user_identity",
+      "expected_model_benefit": "Represents user identity granularity with compression of huge id values and a natural zero point for unknown users.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(user_id) / np.log1p(23902732.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "display_attention_judgment",
+      "type": "judgment",
+      "description": "A 0.0-to-1.0 assessor score of how much attention the displayed item is likely to receive from its row-level layout signals, especially depth, position, and exposure count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_display_assessment",
+      "expected_model_benefit": "Provides an additional attention prior that can align with formula slot features while remaining robust to unusual page configurations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "creative_trace_quality_judgment",
+      "type": "judgment",
+      "description": "A 0.0-to-1.0 assessor score reflecting whether keyword, title, and description identifiers look like a complete, coherent creative trace rather than sparse or placeholder metadata.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_creative_assessment",
+      "expected_model_benefit": "Adds a semantic quality score for metadata completeness and consistency, complementing exact zero checks and log scales.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8dfd10156e090b0e",
+  "metadata": {}
+}

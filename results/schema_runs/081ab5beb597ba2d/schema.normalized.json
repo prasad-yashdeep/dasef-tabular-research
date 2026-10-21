@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_credit_amount",
+      "type": "formula",
+      "description": "Min-max normalized credit amount to ensure equal weighting in distance calculations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents the large magnitude of credit_amount from dominating the Euclidean distance metric in KNN.",
+      "leakage_risk": "low",
+      "formula": "(credit_amount - 250.0) / 18174.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_duration",
+      "type": "formula",
+      "description": "Min-max normalized loan duration.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Standardizes the temporal dimension of the loan for balanced distance computation.",
+      "leakage_risk": "low",
+      "formula": "(duration - 4.0) / 68.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_age",
+      "type": "formula",
+      "description": "Min-max normalized applicant age.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Puts age on the same scale as other normalized continuous features, improving neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "(age - 19.0) / 56.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_per_month",
+      "type": "formula",
+      "description": "Log-transformed ratio of credit amount to duration, representing the monthly principal burden.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio_feature",
+      "expected_model_benefit": "Creates a smooth, scale-appropriate feature representing monthly financial commitment, useful for finding similar financial profiles.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount / np.maximum(duration, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_installment_commitment",
+      "type": "formula",
+      "description": "Min-max normalized installment commitment rate.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Scales the ordinal installment commitment to a [0,1] range, making it directly comparable to other normalized features in distance metrics.",
+      "leakage_risk": "low",
+      "formula": "(installment_commitment - 1.0) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_typical_applicant",
+      "type": "formula",
+      "description": "Euclidean distance to the unsupervised global mean of standardized numeric features (duration, credit_amount, age).",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a radial basis feature that helps KNN identify outliers versus typical applicants based on overall numeric profile.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((duration - 20.9) / 12.05)**2 + ((credit_amount - 3271.3) / 2821.3)**2 + ((age - 35.5) / 11.37)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_young_high_credit",
+      "type": "formula",
+      "description": "Indicator for applicants under 30 requesting more than 5000 in credit.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a distinct spatial cluster for a specific demographic-financial intersection, allowing KNN to form tighter local neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.where((age < 30) & (credit_amount > 5000), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_to_credit_ratio",
+      "type": "formula",
+      "description": "Ratio of log-transformed credit amount to age.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio_feature",
+      "expected_model_benefit": "Captures the relationship between life stage and requested credit magnitude, providing a normalized continuous coordinate for similarity search.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount) / np.maximum(age, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of financial stability based on checking_status, savings_status, and employment duration.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Projects multiple categorical financial indicators into a single continuous dimension, reducing categorical sparsity for distance calculations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "asset_quality_index",
+      "type": "judgment",
+      "description": "Semantic evaluation of the applicant's assets based on property_magnitude, housing, and savings_status.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Provides a unified numeric representation of wealth and collateral, improving the meaningfulness of Euclidean distances between applicants.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_stability_indicator",
+      "type": "judgment",
+      "description": "Semantic score representing social rootedness based on residence_since, housing, personal_status, and num_dependents.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Aggregates demographic and living situation categories into a continuous metric, aiding KNN in finding socially similar peers.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_risk_proxy",
+      "type": "judgment",
+      "description": "Semantic evaluation of past credit behavior based on credit_history, existing_credits, and other_payment_plans.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_embedding",
+      "expected_model_benefit": "Translates complex categorical credit histories into a linear scale, allowing KNN to group applicants with similar past financial behaviors.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0b8295f6cf04b38c",
+  "metadata": {}
+}

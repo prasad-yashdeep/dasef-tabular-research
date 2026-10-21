@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "duration_log_norm",
+      "type": "formula",
+      "description": "Log-scaled call duration normalized for linear margin contribution. Longer calls correlate with engagement.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "engagement_intensity",
+      "expected_model_benefit": "Smooth monotonic engagement signal for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(duration) / np.log1p(4199.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_pressure_score",
+      "type": "formula",
+      "description": "Inverse-scaled campaign contact count; high values indicate over-contact (fatigue).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "contact_fatigue",
+      "expected_model_benefit": "Bounded continuous severity of repeated contacts useful for SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(campaign - 1) / np.log1p(10), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "not_previously_contacted",
+      "type": "formula",
+      "description": "Binary indicator that client has never been contacted before (pdays==999 sentinel).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prior_contact",
+      "expected_model_benefit": "Crisp linear separator between fresh and prior-contact clients.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_contact_recency",
+      "type": "formula",
+      "description": "Recency strength of prior contact; higher when pdays is small. Zero when never contacted.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prior_contact",
+      "expected_model_benefit": "Continuous recency signal complementing the binary indicator.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 0.0, np.clip(1.0 - pdays / 30.0, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "previous_contacts_norm",
+      "type": "formula",
+      "description": "Normalized count of previous contacts before this campaign.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prior_contact",
+      "expected_model_benefit": "Bounded prior-engagement intensity for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip(previous / 6.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macro_stress_index",
+      "type": "formula",
+      "description": "Weighted composite of macroeconomic stress: high emp.var.rate, high euribor3m, high nr.employed indicate tighter conditions.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "macro_composite",
+      "expected_model_benefit": "Linear projection of correlated macro variables into a single SVM-friendly axis.",
+      "leakage_risk": "low",
+      "formula": "((emp.var.rate - 0.0899805762382648) / 1.57063998754873 + (euribor3m - 3.627963661379087) / 1.7341672829220742 + (nr.employed - 5167.113693752023) / 72.33695372345825) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "consumer_sentiment_score",
+      "type": "formula",
+      "description": "Combined consumer price and confidence signal; standardized average.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "macro_composite",
+      "expected_model_benefit": "Smooth normalized consumer index pair for linear margin.",
+      "leakage_risk": "low",
+      "formula": "((cons.price.idx - 93.57855940433798) / 0.5767702723107926 - (cons.conf.idx - (-40.45113305276788)) / 4.614954983136801) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_centered_norm",
+      "type": "formula",
+      "description": "Standardized age capturing life-stage deviation from mean.",
+      "value_range": [
+        -3.0,
+        6.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Centered continuous age suitable for SVM linear weighting.",
+      "leakage_risk": "low",
+      "formula": "(age - 40.0328585302687) / 10.383885479407919",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cellular_contact_flag",
+      "type": "formula",
+      "description": "Indicator for cellular vs telephone contact channel.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "contact_channel",
+      "expected_model_benefit": "Channel signal often correlated with response rate.",
+      "leakage_risk": "low",
+      "formula": "np.where(contact <= 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_per_campaign",
+      "type": "formula",
+      "description": "Average duration per campaign contact, log-scaled. Captures per-contact engagement quality.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "engagement_intensity",
+      "expected_model_benefit": "Ratio feature giving smooth per-contact engagement intensity.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(duration / np.maximum(campaign, 1)) / np.log1p(4199.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "client_receptivity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of client receptivity based on demographic and credit profile (education level, no default, owning housing, no loan). Higher means more likely receptive to financial offers.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile",
+      "expected_model_benefit": "Composite human-readable score combining stability indicators for linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_timing_quality_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of how favorable the contact timing is, considering month, day_of_week, and prior poutcome success indicators. Higher means more favorable timing context.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_timing",
+      "expected_model_benefit": "Captures non-formulaic timing context for linear projection.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "80dad10a08fc3ab6",
+  "metadata": {}
+}

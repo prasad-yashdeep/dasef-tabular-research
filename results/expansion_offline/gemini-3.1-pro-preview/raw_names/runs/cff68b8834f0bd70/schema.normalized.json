@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pol",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "f5_f6_ratio",
+      "type": "formula",
+      "description": "Ratio of f5 to f6, smoothed by adding 1 to the denominator to prevent division by zero. Useful for capturing relative magnitude between these two features.",
+      "value_range": [
+        0.06,
+        2.57
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a non-linear interaction term that can be linearly separated by SVMs, highlighting proportional differences.",
+      "leakage_risk": "low",
+      "formula": "f5 / (f6 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f7_f8_diff",
+      "type": "formula",
+      "description": "Direct difference between f7 and f8.",
+      "value_range": [
+        -124.0,
+        129.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Creates a linear projection of two related features, directly usable by linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": "f7 - f8",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f9_log",
+      "type": "formula",
+      "description": "Log-transformed value of f9 to compress its scale.",
+      "value_range": [
+        4.55,
+        5.16
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Smooths the distribution of f9, making it more robust to outliers and improving linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f9)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f13_f14_sum",
+      "type": "formula",
+      "description": "Sum of f13 and f14, representing a combined magnitude.",
+      "value_range": [
+        0.0,
+        262.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Aggregates related features into a single continuous measure, reducing dimensionality for the linear model.",
+      "leakage_risk": "low",
+      "formula": "f13 + f14",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f15_f16_max",
+      "type": "formula",
+      "description": "Maximum value between f15 and f16.",
+      "value_range": [
+        0.0,
+        150.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Captures the peak signal across two features, providing a strong continuous feature for margin boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(f15, f16)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f17_f18_diff_abs",
+      "type": "formula",
+      "description": "Absolute difference between f17 and f18.",
+      "value_range": [
+        0.0,
+        143.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Measures the magnitude of divergence between two features regardless of direction, useful for anomaly detection within linear models.",
+      "leakage_risk": "low",
+      "formula": "np.abs(f17 - f18)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f19_f20_ratio",
+      "type": "formula",
+      "description": "Ratio of f19 to f20, smoothed by adding 1 to the denominator.",
+      "value_range": [
+        0.0,
+        117.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Exposes proportional relationships that might be obscured by raw magnitudes, aiding linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "f19 / (f20 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f5_to_f9_mean",
+      "type": "formula",
+      "description": "Average of features f5 through f9.",
+      "value_range": [
+        66.2,
+        194.4
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a stable, low-variance composite feature that summarizes a block of related variables.",
+      "leakage_risk": "low",
+      "formula": "(f5 + f6 + f7 + f8 + f9) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f13_to_f18_mean",
+      "type": "formula",
+      "description": "Average of features f13 through f18.",
+      "value_range": [
+        0.0,
+        135.6
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a smoothed continuous severity measure across a block of features, ideal for linear SVM weights.",
+      "leakage_risk": "low",
+      "formula": "(f13 + f14 + f15 + f16 + f17 + f18) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_f5_f9_severity",
+      "type": "judgment",
+      "description": "Semantic assessment of the overall severity or intensity represented by the block of features f5 through f9.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Translates raw numerical blocks into a normalized semantic score, providing a smooth feature for linear margins.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f13_f18_anomaly_score",
+      "type": "judgment",
+      "description": "Semantic judgment of the anomaly level present in the values of features f13 through f18.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "anomaly",
+      "expected_model_benefit": "Captures non-linear anomalous patterns as a single continuous score, making them accessible to a linear model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f19_f33_activity_level",
+      "type": "judgment",
+      "description": "Semantic evaluation of the general activity or presence level across the sparse features f19 through f33.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "activity",
+      "expected_model_benefit": "Summarizes a large block of sparse features into a dense, continuous activity metric, improving SVM convergence and margin stability.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2804915db89670d7",
+  "metadata": {}
+}

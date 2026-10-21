@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_01",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "x001_centered_scale",
+      "type": "formula",
+      "description": "Clipped z-score of x001 using training-fold mean and scale; preserves direction while limiting outlier leverage.",
+      "value_range": [
+        -3.0,
+        5.0
+      ],
+      "feature_family": "normalized_magnitude",
+      "expected_model_benefit": "Adds a smooth centered axis so a linear SVM can weight broad x001 changes without raw-unit dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x001 - 39.964) / 10.389355321674199, -3.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_cardinality_code_density",
+      "type": "formula",
+      "description": "Average of x002 through x010 after scaling each low-cardinality code to its training-fold range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_composite",
+      "expected_model_benefit": "Compresses several compact codes into one continuous load measure, giving the margin a robust first-order summary.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x002 / 11.0 + x003 / 3.0 + x004 / 7.0 + x005 + x006 / 2.0 + x007 / 2.0 + x008 + x009 / 9.0 + x010 / 4.0) / 9.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_status_activation_score",
+      "type": "formula",
+      "description": "Mean activation of binary and ternary status fields x005, x006, x007, x008, and x015 after range scaling.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "status_composite",
+      "expected_model_benefit": "Creates a dense continuous summary from sparse small-range indicators, which is useful for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x005 + (x006 / 2.0) + (x007 / 2.0) + x008 + (x015 / 2.0)) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interaction_intensity_log_scale",
+      "type": "formula",
+      "description": "Log-scaled x011 magnitude normalized by the training-fold upper range to reduce heavy-tail influence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement_intensity",
+      "expected_model_benefit": "Transforms a highly skewed magnitude into a smooth bounded signal that a linear SVM can weight directly.",
+      "leakage_risk": "medium",
+      "formula": "np.clip(np.log1p(x011) / np.log1p(2316.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "repeat_count_log_scale",
+      "type": "formula",
+      "description": "Log-scaled x012 count normalized by the training-fold upper range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "count_intensity",
+      "expected_model_benefit": "Provides a smooth diminishing-return representation of repeated activity for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(x012) / np.log1p(28.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "intensity_per_repeat_ratio",
+      "type": "formula",
+      "description": "Ratio of log-scaled x011 magnitude to log-scaled x012 count, clipped for robustness.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "ratio_intensity",
+      "expected_model_benefit": "Adds a concentrated-versus-spread activity contrast in a single continuous dimension.",
+      "leakage_risk": "medium",
+      "formula": "np.clip(np.log1p(x011) / (np.log1p(x012) + 0.000001), 0.0, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_recency_signal",
+      "type": "formula",
+      "description": "Recency score from x013 with values at or above 990 treated as a placeholder state; smaller non-placeholder x013 gives higher score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "history_recency",
+      "expected_model_benefit": "Converts a sentinel-heavy column into a monotone bounded signal suitable for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(x013 >= 990, 0.0, 1.0 - np.clip(x013 / 990.0, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_history_depth",
+      "type": "formula",
+      "description": "Weighted depth of prior activity from x014 count and x015 code after range scaling.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "history_composite",
+      "expected_model_benefit": "Combines two small-range history fields into a stable continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.65 * (x014 / 4.0)) + (0.35 * (x015 / 2.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macro_easing_projection",
+      "type": "formula",
+      "description": "Weighted normalized projection over x016 through x020, higher for lower rate-like readings, softer price and employment-like readings, and stronger confidence-like readings.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "macro_projection",
+      "expected_model_benefit": "Supplies one interpretable linear macro axis from several correlated continuous columns.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.25 * ((1.4 - x016) / 4.8)) + (0.15 * ((94.767 - x017) / 2.566)) + (0.15 * ((x018 + 50.8) / 23.9)) + (0.25 * ((4.97 - x019) / 4.335)) + (0.20 * ((5228.1 - x020) / 264.5)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rate_employment_gap_projection",
+      "type": "formula",
+      "description": "Difference between standardized x019 and x020 to capture rate-like pressure relative to employment-like level.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "macro_contrast",
+      "expected_model_benefit": "Adds a contrast axis that can expose departures from the usual joint movement of two correlated macro fields.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x019 - 3.65239) / 1.7306751077445666) - ((x020 - 5167.897) / 72.81217295892223), -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_history_semantic_score",
+      "type": "judgment",
+      "description": "Numeric 0.0-1.0 assessment, using x011, x012, x013, x014, x015 and the fixed training-fold ranges, of whether the engagement and history pattern is coherent and strong: higher for sustained interaction, manageable repeat count, recent non-placeholder history, and meaningful prior activity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_engagement_history",
+      "expected_model_benefit": "Provides a compact expert-style ordering of several history fields that may be only partly captured by simple ratios, aiding a linear margin.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "economic_regime_semantic_score",
+      "type": "judgment",
+      "description": "Numeric 0.0-1.0 assessment, using x016 through x020 and fixed training-fold ranges, of whether the economic context is internally coherent and supportive: higher for low rate-like pressure, stable confidence-like readings, and non-extreme employment-like levels.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_macro_context",
+      "expected_model_benefit": "Adds a semantic macro summary that can reduce burden on the margin when combining several correlated economic columns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9cce813078e4fb6e",
+  "metadata": {}
+}

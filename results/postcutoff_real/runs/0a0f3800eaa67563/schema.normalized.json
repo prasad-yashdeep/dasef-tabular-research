@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_prediction_markets_20260517",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "price_range",
+      "type": "formula",
+      "description": "Measures the total price movement within the period by subtracting low from high.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "volatility",
+      "expected_model_benefit": "Allows tree models to split on market volatility directly without needing to construct the relationship across multiple nodes.",
+      "leakage_risk": "low",
+      "formula": "high - low",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "relative_open_position",
+      "type": "formula",
+      "description": "Calculates where the open price sits relative to the high-low range.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Provides a normalized measure of price position, helping trees identify trend direction and price momentum.",
+      "leakage_risk": "low",
+      "formula": "(open - low) / np.maximum(high - low, 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_per_trade",
+      "type": "formula",
+      "description": "Average volume per trade, indicating the typical size of transactions.",
+      "value_range": [
+        0.0,
+        833070.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Helps trees distinguish between retail (many small trades) and institutional (few large trades) activity.",
+      "leakage_risk": "low",
+      "formula": "volume / trade_count",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_volume",
+      "type": "formula",
+      "description": "Log-transformed volume to handle extreme outliers.",
+      "value_range": [
+        0.0,
+        14.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Reduces skewness in volume, allowing trees to make more balanced and robust splits across the distribution.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(volume)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_trade_count",
+      "type": "formula",
+      "description": "Log-transformed trade count to handle right-skewed distributions.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Reduces skewness in trade count, improving split efficiency and preventing a few extreme values from dominating splits.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(trade_count)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_extreme_open",
+      "type": "formula",
+      "description": "Indicator for open prices near the boundaries of 0 or 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Provides a direct boolean split for markets that are highly confident in one outcome, which often exhibit different dynamics.",
+      "leakage_risk": "low",
+      "formula": "np.where((open < 0.1) | (open > 0.9), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_volume_low_trades",
+      "type": "formula",
+      "description": "Indicator for markets with above-average volume but below-average trade count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "market_microstructure",
+      "expected_model_benefit": "Directly flags potential whale activity or block trades, providing a strong categorical split for tree models.",
+      "leakage_risk": "low",
+      "formula": "np.where((volume > 3734.0) & (trade_count < 10.0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "platform_1_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for platform 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Allows trees to isolate platform-specific behaviors without relying on ordinal splits of categorical IDs.",
+      "leakage_risk": "low",
+      "formula": "np.where(platform_id == 1.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "platform_2_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for platform 2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Allows trees to isolate platform-specific behaviors without relying on ordinal splits of categorical IDs.",
+      "leakage_risk": "low",
+      "formula": "np.where(platform_id == 2.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_activity_level",
+      "type": "judgment",
+      "description": "Semantic assessment of market activity level based on volume and trade count, categorized into ordinal buckets (0=inactive, 1=low, 2=medium, 3=high).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Provides a clean ordinal feature for trees to split on overall market engagement, abstracting away raw volume noise.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_direction_momentum",
+      "type": "judgment",
+      "description": "Semantic assessment of implied price momentum based on the relationship between open, high, and low prices, scored from 0 to 10.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Captures complex non-linear price dynamics that might require multiple tree splits to approximate using raw features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_profile",
+      "type": "judgment",
+      "description": "Semantic assessment of market liquidity based on the combination of volume, trade count, and price range, scored from 0 to 5.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "market_microstructure",
+      "expected_model_benefit": "Provides a holistic view of market depth, helping trees identify markets prone to slippage or manipulation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "697b0e1885ac971b",
+  "metadata": {}
+}

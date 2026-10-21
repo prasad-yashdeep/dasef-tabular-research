@@ -1,0 +1,148 @@
+{
+  "dataset_name": "phishingwebsites",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "v1",
+  "features": [
+    {
+      "name": "url_identity_obfuscation_score",
+      "type": "formula",
+      "description": "Normalized severity of URL identity hiding cues: numeric IP host, shortening service, at sign, double slash redirecting, prefix or suffix dash, and https token misuse. Higher values indicate more obfuscation cues in the row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "url_identity",
+      "expected_model_benefit": "Dense average of several sparse URL flags gives a margin model a stable linear axis instead of many isolated binary jumps.",
+      "leakage_risk": "low",
+      "formula": "(np.where(((having_ip_address == -1) | (having_ip_address == '-1')), 1.0, 0.0) + np.where(((shortining_service == -1) | (shortining_service == '-1')), 1.0, 0.0) + np.where(((having_at_symbol == -1) | (having_at_symbol == '-1')), 1.0, 0.0) + np.where(((double_slash_redirecting == -1) | (double_slash_redirecting == '-1')), 1.0, 0.0) + np.where(((prefix_suffix == -1) | (prefix_suffix == '-1')), 1.0, 0.0) + np.where(((https_token == -1) | (https_token == '-1')), 1.0, 0.0)) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "url_shape_complexity_score",
+      "type": "formula",
+      "description": "Weighted shape severity for long or ambiguous URL length, complex subdomain pattern, abnormal URL relation, and redirect count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "url_structure",
+      "expected_model_benefit": "Captures gradual structural complexity with weights that can align with a linear separator.",
+      "leakage_risk": "low",
+      "formula": "0.35 * np.where(((url_length == -1) | (url_length == '-1')), 1.0, np.where(((url_length == 0) | (url_length == '0')), 0.5, 0.0)) + 0.25 * np.where(((having_sub_domain == -1) | (having_sub_domain == '-1')), 1.0, np.where(((having_sub_domain == 0) | (having_sub_domain == '0')), 0.5, 0.0)) + 0.20 * np.where(((abnormal_url == -1) | (abnormal_url == '-1')), 1.0, 0.0) + 0.20 * np.where(((redirect == 1) | (redirect == '1')), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "security_claim_mismatch_score",
+      "type": "formula",
+      "description": "Interaction score that rises when weak SSL state appears together with HTTPS-token misuse, abnormal URL relation, or double-slash redirecting.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "security_consistency",
+      "expected_model_benefit": "Adds a fixed nonlinear cross-cue projection while keeping the resulting value smooth and normalized for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.where(((sslfinal_state == -1) | (sslfinal_state == '-1')), 1.0, np.where(((sslfinal_state == 0) | (sslfinal_state == '0')), 0.5, 0.0)) * ((np.where(((https_token == -1) | (https_token == '-1')), 1.0, 0.0) + np.where(((abnormal_url == -1) | (abnormal_url == '-1')), 1.0, 0.0) + np.where(((double_slash_redirecting == -1) | (double_slash_redirecting == '-1')), 1.0, 0.0)) / 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "domain_maturity_deficit_score",
+      "type": "formula",
+      "description": "Weighted deficit score for certificate state, short registration length, young domain age, missing DNS record, and subdomain complexity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "domain_maturity",
+      "expected_model_benefit": "Condenses several domain trust signals into one calibrated axis that reduces collinearity among related inputs.",
+      "leakage_risk": "low",
+      "formula": "0.30 * np.where(((sslfinal_state == -1) | (sslfinal_state == '-1')), 1.0, np.where(((sslfinal_state == 0) | (sslfinal_state == '0')), 0.5, 0.0)) + 0.25 * np.where(((domain_registeration_length == -1) | (domain_registeration_length == '-1')), 1.0, 0.0) + 0.20 * np.where(((age_of_domain == -1) | (age_of_domain == '-1')), 1.0, 0.0) + 0.15 * np.where(((dnsrecord == -1) | (dnsrecord == '-1')), 1.0, 0.0) + 0.10 * np.where(((having_sub_domain == -1) | (having_sub_domain == '-1')), 1.0, np.where(((having_sub_domain == 0) | (having_sub_domain == '0')), 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_link_anomaly_score",
+      "type": "formula",
+      "description": "Severity of suspicious page references using request URL, anchor URL, links in tags, server form handler, and favicon source cues.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "content_links",
+      "expected_model_benefit": "Combines link-distribution signals into a continuous score suited to a linear coefficient.",
+      "leakage_risk": "low",
+      "formula": "0.25 * np.where(((request_url == -1) | (request_url == '-1')), 1.0, 0.0) + 0.25 * np.where(((url_of_anchor == -1) | (url_of_anchor == '-1')), 1.0, np.where(((url_of_anchor == 0) | (url_of_anchor == '0')), 0.5, 0.0)) + 0.20 * np.where(((links_in_tags == -1) | (links_in_tags == '-1')), 1.0, np.where(((links_in_tags == 0) | (links_in_tags == '0')), 0.5, 0.0)) + 0.20 * np.where(((sfh == -1) | (sfh == '-1')), 1.0, np.where(((sfh == 0) | (sfh == '0')), 0.5, 0.0)) + 0.10 * np.where(((favicon == -1) | (favicon == '-1')), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credential_capture_surface_score",
+      "type": "formula",
+      "description": "Composite measure of credential or form-capture surface from form handler, email submission, iframe, popup window, request URL, and anchor URL fields.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credential_capture",
+      "expected_model_benefit": "Projects several form and embedding cues onto a single severity direction that can improve margin stability.",
+      "leakage_risk": "low",
+      "formula": "0.30 * np.where(((sfh == -1) | (sfh == '-1')), 1.0, np.where(((sfh == 0) | (sfh == '0')), 0.5, 0.0)) + 0.20 * np.where(((submitting_to_email == -1) | (submitting_to_email == '-1')), 1.0, 0.0) + 0.15 * np.where(((iframe == -1) | (iframe == '-1')), 1.0, 0.0) + 0.15 * np.where(((popupwidnow == -1) | (popupwidnow == '-1')), 1.0, 0.0) + 0.10 * np.where(((request_url == -1) | (request_url == '-1')), 1.0, 0.0) + 0.10 * np.where(((url_of_anchor == -1) | (url_of_anchor == '-1')), 1.0, np.where(((url_of_anchor == 0) | (url_of_anchor == '0')), 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "browser_interference_score",
+      "type": "formula",
+      "description": "Severity of browser interaction interference from mouseover status changes, right click blocking, popup window behavior, and iframe use.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "browser_behavior",
+      "expected_model_benefit": "Averaging sparse script-behavior flags gives a smoother input than separate low-frequency indicators.",
+      "leakage_risk": "low",
+      "formula": "(np.where(((on_mouseover == -1) | (on_mouseover == '-1')), 1.0, 0.0) + np.where(((rightclick == -1) | (rightclick == '-1')), 1.0, 0.0) + np.where(((popupwidnow == -1) | (popupwidnow == '-1')), 1.0, 0.0) + np.where(((iframe == -1) | (iframe == '-1')), 1.0, 0.0)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "external_reputation_deficit_score",
+      "type": "formula",
+      "description": "External visibility and reputation deficit using web traffic, page rank, search index, inbound-link, and statistical report fields.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "external_reputation",
+      "expected_model_benefit": "Provides a broad popularity and reputation projection with smooth partial credit for middle states.",
+      "leakage_risk": "low",
+      "formula": "0.25 * np.where(((web_traffic == -1) | (web_traffic == '-1')), 1.0, np.where(((web_traffic == 0) | (web_traffic == '0')), 0.5, 0.0)) + 0.20 * np.where(((page_rank == -1) | (page_rank == '-1')), 1.0, 0.0) + 0.20 * np.where(((google_index == -1) | (google_index == '-1')), 1.0, 0.0) + 0.15 * np.where(((links_pointing_to_page == -1) | (links_pointing_to_page == '-1')), 1.0, np.where(((links_pointing_to_page == 0) | (links_pointing_to_page == '0')), 0.5, 0.0)) + 0.20 * np.where(((statistical_report == -1) | (statistical_report == '-1')), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_abuse_signal_density",
+      "type": "formula",
+      "description": "Density of high-impact abuse indicators drawn from right-click blocking, redirects, iframes, nonstandard ports, double-slash redirecting, and email submission.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "abuse_density",
+      "expected_model_benefit": "Gives the SVM a compact sparse-alert count that is less noisy than any single flag.",
+      "leakage_risk": "low",
+      "formula": "(np.where(((rightclick == -1) | (rightclick == '-1')), 1.0, 0.0) + np.where(((redirect == 1) | (redirect == '1')), 1.0, 0.0) + np.where(((iframe == -1) | (iframe == '-1')), 1.0, 0.0) + np.where(((port == -1) | (port == '-1')), 1.0, 0.0) + np.where(((double_slash_redirecting == -1) | (double_slash_redirecting == '-1')), 1.0, 0.0) + np.where(((submitting_to_email == -1) | (submitting_to_email == '-1')), 1.0, 0.0)) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0bf54b30c4a8f277",
+  "metadata": {
+    "salvaged_from_partial_raw": "cache/schemas/phishingwebsites/linear_svm/gpt-5.5-pro/schema_0bf54b30c4a8f277.raw.json",
+    "n_salvaged_features": 9
+  }
+}

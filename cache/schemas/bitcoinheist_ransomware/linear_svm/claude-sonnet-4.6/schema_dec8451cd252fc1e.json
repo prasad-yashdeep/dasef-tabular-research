@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bitcoinheist_ransomware",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_income_normalized",
+      "type": "formula",
+      "description": "Log-transformed income normalized by training mean and std to create a smooth continuous score centered around zero, useful for linear margins",
+      "value_range": [
+        -3.0,
+        8.0
+      ],
+      "feature_family": "income_scaling",
+      "expected_model_benefit": "Reduces skewness of income distribution, enabling linear SVM to find better separating hyperplanes in income space",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(income) - np.log1p(1768135009.44)) / (np.log1p(1768135009.44 + 20682394866.24) - np.log1p(1768135009.44))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loop_ratio",
+      "type": "formula",
+      "description": "Ratio of looped transactions to total count, measuring the proportion of circular transaction patterns which may indicate ransomware behavior",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transaction_pattern",
+      "expected_model_benefit": "Captures circular transaction behavior as a normalized ratio, directly interpretable by linear SVM as a continuous severity measure",
+      "leakage_risk": "low",
+      "formula": "looped / np.maximum(count, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_count_normalized",
+      "type": "formula",
+      "description": "Log-transformed transaction count normalized to [0,1] range using training min/max of log values",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transaction_volume",
+      "expected_model_benefit": "Smooth normalized transaction volume score suitable for linear SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(count) - np.log1p(1.0)) / (np.log1p(13334.0) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weight_per_neighbor",
+      "type": "formula",
+      "description": "Transaction weight divided by number of neighbors, measuring average weight concentration per connected address",
+      "value_range": [
+        0.0,
+        200.0
+      ],
+      "feature_family": "network_density",
+      "expected_model_benefit": "Captures weight concentration in the transaction network, useful for detecting anomalous fund flows per connection",
+      "leakage_risk": "low",
+      "formula": "weight / np.maximum(neighbors, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_weight_score",
+      "type": "formula",
+      "description": "Log-transformed weight clipped and normalized to handle extreme values and near-zero weights",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transaction_weight",
+      "expected_model_benefit": "Normalized weight score reduces influence of extreme outliers while preserving ordering, improving linear SVM convergence",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(weight) / np.log1p(197.35), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "length_normalized",
+      "type": "formula",
+      "description": "Transaction chain length normalized by maximum observed length to create a [0,1] severity score",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "chain_length",
+      "expected_model_benefit": "Normalized chain length provides a smooth continuous feature for linear SVM to detect unusually long transaction chains",
+      "leakage_risk": "low",
+      "formula": "length / 144.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "day_cyclical_sin",
+      "type": "formula",
+      "description": "Sine transformation of day-of-year to capture cyclical temporal patterns in a continuous smooth feature",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "temporal_pattern",
+      "expected_model_benefit": "Encodes seasonal/cyclical temporal patterns as a smooth continuous value, enabling linear SVM to detect time-based behavioral patterns",
+      "leakage_risk": "low",
+      "formula": "np.sin(2.0 * 3.14159265 * day / 365.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_per_transaction",
+      "type": "formula",
+      "description": "Log of income divided by transaction count, measuring average income per transaction as a normalized efficiency score",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "income_efficiency",
+      "expected_model_benefit": "Captures income concentration per transaction, useful for detecting high-value concentrated fund flows characteristic of ransomware",
+      "leakage_risk": "low",
+      "formula": "np.log1p(income / np.maximum(count, 1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "neighbor_count_ratio",
+      "type": "formula",
+      "description": "Log ratio of neighbors to count, measuring network connectivity relative to transaction volume",
+      "value_range": [
+        -10.0,
+        5.0
+      ],
+      "feature_family": "network_connectivity",
+      "expected_model_benefit": "Captures the relationship between network breadth and transaction volume, useful for detecting sparse high-volume or dense low-volume patterns",
+      "leakage_risk": "low",
+      "formula": "np.log1p(neighbors) - np.log1p(count)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_anomaly_score",
+      "type": "formula",
+      "description": "Weighted composite of normalized loop ratio, log weight, and length features to create an aggregate anomaly severity score",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Single composite feature approximating a linear projection of multiple behavioral signals, directly useful as a margin feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.4 * (looped / np.maximum(count, 1)) + 0.3 * np.clip(np.log1p(weight) / np.log1p(197.35), 0.0, 1.0) + 0.3 * (length / 144.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transaction_density_score",
+      "type": "judgment",
+      "description": "Semantic assessment of transaction density combining count, neighbors, and looped values to score how densely interconnected and active the transaction pattern is on a 0-10 scale",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "behavioral_density",
+      "expected_model_benefit": "Provides a human-interpretable density score that captures complex interaction patterns between network topology and transaction volume for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "temporal_activity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of temporal activity pattern based on day-of-year, scoring how unusual or concentrated the timing of transactions is relative to typical annual patterns, on a 0-10 scale",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "temporal_pattern",
+      "expected_model_benefit": "Captures temporal anomalies in transaction timing that may indicate coordinated ransomware campaigns, providing a smooth continuous score for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "dec8451cd252fc1e",
+  "metadata": {}
+}

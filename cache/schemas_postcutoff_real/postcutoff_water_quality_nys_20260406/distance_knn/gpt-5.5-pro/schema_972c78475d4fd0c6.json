@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_water_quality_nys_20260406",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "physchem_center_scaled_distance",
+      "type": "formula",
+      "description": "Root-mean-square z distance from the training-fold center for pH, conductivity, dissolved oxygen, flow, and turbidity, clipped for stable neighbor search.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "scaled_distance",
+      "expected_model_benefit": "Balances water chemistry and hydraulic state on a single normalized axis so KNN neighborhoods are not dominated by raw units.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((((ph - 7.832631578947367) / 1.3183915323935376) ** 2) + (((cond - 2.778808125631579) / 0.19040192204999568) ** 2) + (((do - 8.007368421052632) / 1.8965990118194065) ** 2) + (((flow - 0.311842105263158) / 0.26268707883152825) ** 2) + (((turb - 0.702455628868421) / 0.4576544414301047) ** 2)) / 5.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "thermal_season_scaled_distance",
+      "type": "formula",
+      "description": "Root-mean-square z distance from the training-fold center for week of year, air temperature, water temperature, and recent average temperatures.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "scaled_distance",
+      "expected_model_benefit": "Groups rows with similar seasonal timing and thermal regime even when individual temperature columns have different scales.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((((woy - 27.342105263157894) / 4.895090536174046) ** 2) + (((a_t - 23.902631578947368) / 5.479074395615283) ** 2) + (((w_t - 19.650000000000006) / 3.772668328357195) ** 2) + (((avg_temp_0_to_5d - 20.64303119) / 3.6690809508710096) ** 2) + (((avg_temp_10d - 19.71719054631579) / 3.2660960894007975) ** 2)) / 5.0), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_weather_scaled_distance",
+      "type": "formula",
+      "description": "Log-scaled recent rainfall and solar anomaly distance using 1-day, 3-day, 5-day, and 10-day weather summaries.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "scaled_distance",
+      "expected_model_benefit": "Places rainfall and sunlight histories on comparable scales, improving local geometry for short-term weather effects.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((((np.log1p(precip_1d) - np.log1p(0.2994526315789474)) / np.log1p(0.42037041982220374)) ** 2) + (((np.log1p(precip_3d) - np.log1p(0.0982578947368421)) / np.log1p(0.21490854313255525)) ** 2) + (((np.log1p(precip_5d) - np.log1p(0.3348789473684211)) / np.log1p(0.7770874116508776)) ** 2) + (((np.log1p(precip_10d) - np.log1p(1.3843)) / np.log1p(1.3930781553244258)) ** 2) + (((avg_solar_1d - 0.7023464637105263) / 0.27859555723472995) ** 2) + (((avg_solar_3d - 0.6868285196052633) / 0.2672186329840445) ** 2)) / 6.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "warm_wet_runoff_prototype_distance",
+      "type": "formula",
+      "description": "Distance to an unsupervised warm, wet, turbid runoff prototype built from training-fold means and spreads.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Gives KNN a smooth distance to a common runoff-like state rather than relying on several correlated raw columns.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((((w_t - 23.4226683283572) / 3.772668328357195) ** 2) + (((flow - 0.5745291847946863) / 0.26268707883152825) ** 2) + (((turb - 1.1601100702985257) / 0.4576544414301047) ** 2) + (((np.log1p(precip_10d) - np.log1p(2.777378155324426)) / np.log1p(1.3930781553244258)) ** 2) + (((avg_solar_3d - 0.4196098866212188) / 0.2672186329840445) ** 2)) / 5.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "clear_baseflow_prototype_distance",
+      "type": "formula",
+      "description": "Distance to an unsupervised clear, low-flow, sunny baseflow prototype using hydrology, turbidity, recent precipitation, solar exposure, and dissolved oxygen.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Separates clear baseflow-like rows from high-runoff rows with a compact distance useful for nearest-neighbor ranking.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((((flow - 0.04915502663162975) / 0.26268707883152825) ** 2) + (((turb - 0.2448011874383163) / 0.4576544414301047) ** 2) + (((np.log1p(precip_10d) - np.log1p(0.0254)) / np.log1p(1.3930781553244258)) ** 2) + (((avg_solar_3d - 0.9540471525893078) / 0.2672186329840445) ** 2) + (((do - 9.903967432872039) / 1.8965990118194065) ** 2)) / 5.0), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "warm_flush_cluster_flag",
+      "type": "formula",
+      "description": "Binary indicator for rows at or above training-fold means for water temperature, flow, turbidity, and 10-day precipitation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a discrete neighborhood anchor for warm flush conditions, helping KNN respect a nonlinear regime boundary.",
+      "leakage_risk": "low",
+      "formula": "np.where((w_t >= 19.650000000000006) & (flow >= 0.311842105263158) & (turb >= 0.702455628868421) & (precip_10d >= 1.3843), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "animal_source_pressure_similarity",
+      "type": "formula",
+      "description": "Clipped 0-1 similarity to a livestock pressure setting using presence and density indicators for general livestock, cattle, horses, and poultry.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "source_similarity",
+      "expected_model_benefit": "Compresses several animal-source indicators into one scale-aligned axis for neighborhoods with similar agricultural pressure.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.25 * anylivestock_pa) + (0.20 * np.log1p(anylivestock_density) / np.log1p(3.04)) + (0.20 * cattle_pa) + (0.15 * np.log1p(cattle_density) / np.log1p(2.9)) + (0.10 * livestock_horse_pa) + (0.10 * livestock_poultry_pa), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "developed_waste_pressure_similarity",
+      "type": "formula",
+      "description": "Clipped 0-1 similarity to a developed wastewater and settlement pressure setting using wastewater, septic, trailer, camp, and stormwater indicators.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "source_similarity",
+      "expected_model_benefit": "Aligns rows with similar wastewater, septic, trailer, camp, and settlement pressure while reducing unit imbalance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.25 * wastewater_pa) + (0.15 * np.log1p(wastewater_density) / np.log1p(0.231)) + (0.20 * ((septic_adj_sepden_m2 - 59.5) / (251.0 - 59.5))) + (0.15 * trailer_pa) + (0.10 * camp_pa) + (0.15 * stormwateroutfalls_pa), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "road_outfall_connectivity_similarity",
+      "type": "formula",
+      "description": "Clipped 0-1 similarity to direct road, ditch, and stormwater connectivity using proximity and presence fields.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "connectivity_similarity",
+      "expected_model_benefit": "Highlights rows where overland or pipe-linked transport may be short, improving distance structure for connectivity.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.35 * (1.0 - np.clip(roadsinterx_min / 4.227942404, 0.0, 1.0))) + (0.25 * stormwateroutfalls_pa) + (0.20 * outfall_ditch) + (0.20 * rdparallel), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "natural_retention_context_similarity",
+      "type": "formula",
+      "description": "Clipped 0-1 similarity to a vegetated or wetland-buffered context using aquatic vegetation, forest or wetland cover, waterbody presence, organic matter, and clay.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "buffer_similarity",
+      "expected_model_benefit": "Adds a natural-buffer context axis so rows with similar retention or dilution setting can be close in distance space.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.20 * perc_SAV) + (0.10 * ((SAV_pa + 1.0) / 2.0)) + (0.20 * ((idw_forwet - 11.47738863) / (72.57420514 - 11.47738863))) + (0.20 * ((buffer_60m_idw_forwet - 20.03297523) / (81.926242 - 20.03297523))) + (0.15 * waterbodiesinterx_pa) + (0.10 * org_matter) + (0.05 * clay), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hydrologic_event_semantic_score",
+      "type": "judgment",
+      "description": "Analyst-assigned ordinal score from 0 to 4 summarizing whether the row resembles dry stable conditions, rainfall recovery, or active runoff using only precipitation, flow, turbidity, solar, and temperature fields.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_hydrology",
+      "expected_model_benefit": "Adds a compact human-reviewed hydro-meteorological state axis when formulas underrepresent mixed event timing.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "source_overlap_semantic_score",
+      "type": "judgment",
+      "description": "Analyst-assigned ordinal score from 0 to 4 capturing how many independent source pathways appear plausible in the row, considering livestock, wastewater, septic, trailers, camps, roads, outfalls, and nearby waterbody context.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_source_context",
+      "expected_model_benefit": "Groups rows with similar multi-pathway pressure narratives when individual binary and distance fields disagree.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "972c78475d4fd0c6",
+  "metadata": {}
+}

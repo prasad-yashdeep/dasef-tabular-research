@@ -1,0 +1,190 @@
+{
+  "dataset_name": "compass",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_decile_score",
+      "type": "formula",
+      "description": "COMPAS recidivism decile score normalized to [0,1] range for smooth linear margin separation",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Direct linear projection of COMPAS risk assessment onto SVM margin",
+      "leakage_risk": "low",
+      "formula": "decile_score.1 / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_violence_score",
+      "type": "formula",
+      "description": "COMPAS violence decile score normalized to [0,1] range",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Captures violent recidivism risk as continuous feature for linear separation",
+      "leakage_risk": "low",
+      "formula": "v_decile_score / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_risk_score",
+      "type": "formula",
+      "description": "Weighted composite of recidivism and violence decile scores, with recidivism weighted higher",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Single smooth composite risk signal combining both COMPAS dimensions for linear SVM",
+      "leakage_risk": "low",
+      "formula": "(0.6 * decile_score.1 + 0.4 * v_decile_score) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_priors_normalized",
+      "type": "formula",
+      "description": "Log-transformed prior offense count normalized by training set max, reducing skew for linear models",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "criminal_history",
+      "expected_model_benefit": "Smoothed prior offense signal with reduced outlier influence for linear SVM margin",
+      "leakage_risk": "low",
+      "formula": "np.log1p(priors_count) / np.log1p(43.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "juvenile_offense_severity",
+      "type": "formula",
+      "description": "Weighted sum of juvenile offense counts with felonies weighted highest, normalized by training max",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "criminal_history",
+      "expected_model_benefit": "Captures juvenile criminal history severity as continuous feature for linear separation",
+      "leakage_risk": "low",
+      "formula": "np.clip((3.0 * juv_fel_count + 2.0 * juv_misd_count + 1.0 * juv_other_count) / 60.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_risk_inverse",
+      "type": "formula",
+      "description": "Inverse age-based risk score where younger individuals have higher scores, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Captures age-related recidivism pattern as smooth continuous feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "1.0 - np.clip((age - 18.0) / (77.0 - 18.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "charge_severity_score",
+      "type": "formula",
+      "description": "Numeric encoding of charge degree severity mapped to continuous scale, higher values indicate more severe charges",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "charge_info",
+      "expected_model_benefit": "Continuous charge severity signal for linear SVM margin computation",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - (c_charge_degree / 10.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "risk_age_interaction",
+      "type": "formula",
+      "description": "Interaction between normalized COMPAS score and inverse age risk, capturing young high-risk individuals",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures nonlinear interaction between age and risk score as linear feature for SVM",
+      "leakage_risk": "low",
+      "formula": "(decile_score.1 / 9.0) * (1.0 - np.clip((age - 18.0) / (77.0 - 18.0), 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "priors_age_ratio",
+      "type": "formula",
+      "description": "Ratio of log prior counts to age, capturing offense rate relative to life experience",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Normalized offense rate per year of life as smooth linear feature",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(priors_count) / np.log1p(age), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "score_text_ordinal",
+      "type": "formula",
+      "description": "Ordinal encoding of COMPAS score text category (Low=0, Medium=0.5, High=1) as continuous feature",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Smooth ordinal risk category encoding for linear SVM boundary",
+      "leakage_risk": "low",
+      "formula": "score_text / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_criminal_history_score",
+      "type": "formula",
+      "description": "Combined criminal history score integrating priors and juvenile offenses with log smoothing",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "criminal_history",
+      "expected_model_benefit": "Comprehensive criminal history signal as single normalized feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(priors_count) / np.log1p(43.0)) * 0.7 + ((juv_fel_count + juv_misd_count + juv_other_count) / 33.0) * 0.3, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "risk_score_divergence",
+      "type": "judgment",
+      "description": "Semantic assessment of divergence between recidivism and violence risk scores; high divergence may indicate specialized risk profile. Score 0 means scores are aligned, 1 means maximum divergence between the two COMPAS dimensions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_score",
+      "expected_model_benefit": "Captures cases where recidivism and violence risk profiles diverge, providing additional discriminative signal for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cdd305e6edd52ab5",
+  "metadata": {}
+}

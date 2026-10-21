@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "age_life_stage_bucket",
+      "type": "formula",
+      "description": "Ordinal age bands: 0 for under 25, 1 for 25-34, 2 for 35-49, 3 for 50-64, 4 for 65 or older.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "age",
+      "expected_model_benefit": "Provides ready-made life-stage thresholds, reducing the need for several raw-age splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 25, 0, np.where(age < 35, 1, np.where(age < 50, 2, np.where(age < 65, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_attainment_bucket",
+      "type": "formula",
+      "description": "Ordinal education_num bands: 0 for less than high school, 1 for high-school through associate range, 2 for bachelor through professional-school range, 3 for doctoral level.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Creates coarse attainment cut points that align with credential jumps and are easy for trees to branch on.",
+      "leakage_risk": "low",
+      "formula": "np.where(education_num < 9, 0, np.where(education_num < 13, 1, np.where(education_num < 16, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bachelor_level_or_higher_indicator",
+      "type": "formula",
+      "description": "Binary flag for bachelor-level education or higher, using education_num 13 and above.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Exposes a common credential cutoff as a single binary split.",
+      "leakage_risk": "low",
+      "formula": "np.where(education_num >= 13, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weekly_hours_intensity_bucket",
+      "type": "formula",
+      "description": "Ordinal weekly workload bands: 0 for under 35, 1 for 35-40, 2 for 41-50, 3 for 51-60, 4 for over 60.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "work_hours",
+      "expected_model_benefit": "Separates part-time, standard, extended, and extreme weekly workload patterns for direct branching.",
+      "leakage_risk": "low",
+      "formula": "np.where(hours_per_week < 35, 0, np.where(hours_per_week <= 40, 1, np.where(hours_per_week <= 50, 2, np.where(hours_per_week <= 60, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overtime_indicator",
+      "type": "formula",
+      "description": "Binary flag for rows with more than 40 hours_per_week.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "work_hours",
+      "expected_model_benefit": "Highlights the common 40-hour cutoff, often useful beyond raw hour magnitude.",
+      "leakage_risk": "low",
+      "formula": "np.where(hours_per_week > 40, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credentialed_full_time_indicator",
+      "type": "formula",
+      "description": "Binary interaction flag for bachelor-level or higher education with at least 40 weekly hours.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education_work_hours_interaction",
+      "expected_model_benefit": "Captures a nonlinear credential-by-workload condition in one split instead of requiring two sequential splits.",
+      "leakage_risk": "low",
+      "formula": "np.where((education_num >= 13) & (hours_per_week >= 40), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_activity_type",
+      "type": "formula",
+      "description": "Categorical capital-activity code: 0 no capital movement, 1 gain only, 2 loss only, 3 gain and loss both present.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "capital",
+      "expected_model_benefit": "Separates no capital event, gain only, loss only, and mixed activity without relying on two separate sparse numeric fields.",
+      "leakage_risk": "low",
+      "formula": "np.where((capital_gain > 0) & (capital_loss > 0), 3, np.where(capital_gain > 0, 1, np.where(capital_loss > 0, 2, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_capital_log_signed",
+      "type": "formula",
+      "description": "Signed log transform of capital_gain minus capital_loss, preserving direction while compressing large magnitudes.",
+      "value_range": [
+        -8.38,
+        11.513
+      ],
+      "feature_family": "capital",
+      "expected_model_benefit": "Compresses highly skewed capital amounts while preserving direction, making threshold searches less dominated by outliers.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(capital_gain - capital_loss, 0)) - np.log1p(np.maximum(capital_loss - capital_gain, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spouse_present_marriage_indicator",
+      "type": "formula",
+      "description": "Binary flag for spouse-present marriage states in the Adult codebook, grouping marital_status codes 1 and 2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "household_structure",
+      "expected_model_benefit": "Groups spouse-present marital states into one direct split despite unordered category coding.",
+      "leakage_risk": "low",
+      "formula": "np.where((marital_status == 1) | (marital_status == 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "professional_managerial_technical_indicator",
+      "type": "formula",
+      "description": "Binary flag for professional, managerial, or technical occupations in the Adult codebook, grouping occupation codes 3, 9, and 12.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "occupation_grouping",
+      "expected_model_benefit": "Combines related high-skill occupation codes so a tree can split on the group without discovering several isolated code branches.",
+      "leakage_risk": "low",
+      "formula": "np.where((occupation == 3) | (occupation == 9) | (occupation == 12), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_responsibility_score",
+      "type": "judgment",
+      "description": "Integer 0-5 semantic score from marital_status, relationship, and age. Suggested anchors: 0 own-child or other-relative youth pattern, 1 non-family or unmarried adult, 2 formerly married without spouse, 3 married with spouse absent or uncertain household role, 4 spouse-present adult, 5 spouse or householder pattern age 30 and above.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "household_semantics",
+      "expected_model_benefit": "Adds an ordered household-role summary from unordered relationship and marital categories for compact tree splits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "occupational_advancement_score",
+      "type": "judgment",
+      "description": "Integer 0-5 semantic score from occupation, workclass, and education_num. Suggested anchors: 0 without-pay, never-worked, or private-house-service context; 1 low-specialization service or manual roles; 2 production, transport, craft, or admin roles; 3 sales, protective, or technical roles; 4 professional specialty or self-employment; 5 executive, managerial, or professional context with college-level education.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "employment_semantics",
+      "expected_model_benefit": "Adds an ordered employment-context summary so trees can use broad skill and stability patterns directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e7ddc46878fa1db9",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Ordinal age bucket capturing life stage: 0=<25, 1=25-34, 2=35-44, 3=45-54, 4=55-64, 5=65+.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Trees can split on coarse life-stage groups that correlate with earning potential.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 25, 0, np.where(age < 35, 1, np.where(age < 45, 2, np.where(age < 55, 3, np.where(age < 65, 4, 5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_bucket",
+      "type": "formula",
+      "description": "Working hours bucket: 0=part-time(<35), 1=standard(35-40), 2=overtime(41-50), 3=heavy(51-60), 4=extreme(>60).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Captures nonlinear effect of work intensity that tree splits exploit cleanly.",
+      "leakage_risk": "low",
+      "formula": "np.where(hours_per_week < 35, 0, np.where(hours_per_week <= 40, 1, np.where(hours_per_week <= 50, 2, np.where(hours_per_week <= 60, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_capital_gain",
+      "type": "formula",
+      "description": "Boolean indicator that the row reports any capital gain.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Capital gain is highly skewed with most zeros; a binary flag gives a clean split.",
+      "leakage_risk": "low",
+      "formula": "np.where(capital_gain > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_capital_loss",
+      "type": "formula",
+      "description": "Boolean indicator that the row reports any capital loss.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Sparse but informative; a flag gives trees a clean split on nonzero loss.",
+      "leakage_risk": "low",
+      "formula": "np.where(capital_loss > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_capital_flow",
+      "type": "formula",
+      "description": "Net capital activity: capital_gain minus capital_loss, on log1p-signed scale for tail compression.",
+      "value_range": [
+        -10.0,
+        12.0
+      ],
+      "feature_family": "interaction_numeric",
+      "expected_model_benefit": "Combines two sparse columns into one signed magnitude useful for threshold splits.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(capital_gain, 0)) - np.log1p(np.maximum(capital_loss, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_capital_gain_flag",
+      "type": "formula",
+      "description": "Indicator that capital_gain exceeds a high threshold (>=5000), a known strong wealth signal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold_indicator",
+      "expected_model_benefit": "Sharp threshold above which earnings prior shifts strongly; tree-friendly.",
+      "leakage_risk": "low",
+      "formula": "np.where(capital_gain >= 5000, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_level_group",
+      "type": "formula",
+      "description": "Coarse education ordinal grouping based on education_num: 0=<HS, 1=HS-grad, 2=some-college/assoc, 3=bachelors, 4=advanced.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Aggregates fine-grained education codes into stable ordinal tiers for cleaner splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(education_num < 9, 0, np.where(education_num == 9, 1, np.where(education_num <= 12, 2, np.where(education_num == 13, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_education_interaction",
+      "type": "formula",
+      "description": "Product of age and education_num capturing combined experience-and-credentials effect.",
+      "value_range": [
+        17.0,
+        1440.0
+      ],
+      "feature_family": "interaction_numeric",
+      "expected_model_benefit": "Interactions between age and education are nonlinear; an explicit product helps shallow trees.",
+      "leakage_risk": "low",
+      "formula": "age * education_num",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_x_education",
+      "type": "formula",
+      "description": "Interaction of working hours and education_num: proxy for skilled labor intensity.",
+      "value_range": [
+        1.0,
+        1584.0
+      ],
+      "feature_family": "interaction_numeric",
+      "expected_model_benefit": "Captures that high education plus long hours combine multiplicatively for earnings.",
+      "leakage_risk": "low",
+      "formula": "hours_per_week * education_num",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_prime_working_age",
+      "type": "formula",
+      "description": "Boolean flag for prime earning years (age between 30 and 55 inclusive).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Encodes a known peak-earning window for a single clean tree split.",
+      "leakage_risk": "low",
+      "formula": "np.where((age >= 30) & (age <= 55), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_stability_score",
+      "type": "judgment",
+      "description": "Semantic ordinal judgment of likely household/economic stability combining marital_status, relationship, and age. Higher = more stable established household. 0=very young/unattached, 1=young single, 2=mid single or separated, 3=established couple/family, 4=long-term partnered with mature age.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Tree models gain a compact ordinal that summarizes interacting demographic signals without needing deep splits across multiple columns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "occupation_skill_tier",
+      "type": "judgment",
+      "description": "Semantic tier of occupation skill/compensation potential based on the occupation code interpretation. 0=low-skill manual/service, 1=semi-skilled trades/clerical, 2=skilled technical/sales, 3=professional/managerial/specialty. Assigned from row's occupation and workclass codes.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a domain-informed ordinal grouping over occupation categories that gives trees a strong single-feature split for earning potential.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "1823ea0ba2101f72",
+  "metadata": {}
+}

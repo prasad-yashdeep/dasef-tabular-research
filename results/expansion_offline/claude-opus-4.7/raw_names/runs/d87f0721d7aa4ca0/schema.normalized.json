@@ -1,0 +1,190 @@
+{
+  "dataset_name": "employee_turnover_at_techco",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "tenure_normalized",
+      "type": "formula",
+      "description": "Tenure normalized to [0,1] based on observed training range, smooth feature for linear margin.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides a scaled tenure axis aiding linear separation along employment duration.",
+      "leakage_risk": "low",
+      "formula": "np.clip((time - 1.0) / 38.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "early_tenure_severity",
+      "type": "formula",
+      "description": "Smooth decreasing severity indicating short tenure; higher when employee is newer.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Captures recency-of-hire risk in a smooth monotonic way suitable for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - (time - 1.0) / 38.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_aptitude_score",
+      "type": "formula",
+      "description": "Weighted z-like composite of logical, verbal and training scores using training-fold means and stds.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Linear projection of cognitive metrics, ideal for SVM hyperplane orientation.",
+      "leakage_risk": "low",
+      "formula": "((logical_score - 4.388) / 3.89 + (verbal_score - 4.595) / 4.45 + (training_score - 4.495) / 0.432) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "logical_verbal_gap",
+      "type": "formula",
+      "description": "Absolute standardized gap between logical and verbal scores indicating skill imbalance.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ratio_gap",
+      "expected_model_benefit": "Linear feature highlighting cognitive imbalance asymmetry.",
+      "leakage_risk": "low",
+      "formula": "np.abs((logical_score - 4.388) / 3.89 - (verbal_score - 4.595) / 4.45)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "literacy_normalized",
+      "type": "formula",
+      "description": "Average literacy mapped to [0,1] using training observed bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth literacy axis for linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip((avg_literacy - 49.35454) / (96.93176 - 49.35454), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_severity",
+      "type": "formula",
+      "description": "Log-scaled commute distance providing diminishing-returns severity.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Smooth nonlinear-but-monotonic distance signal that remains useful in linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(distance)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "language_similarity_ratio",
+      "type": "formula",
+      "description": "Similar language percentage scaled to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio_gap",
+      "expected_model_benefit": "Bounded social-fit indicator amenable to linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip(similar_language / 100.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_maturity",
+      "type": "formula",
+      "description": "Location age scaled to [0,1] over training range; proxies site establishment level.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth bounded location maturity feature for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip((location_age - 2.0) / 26.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_language_friction",
+      "type": "formula",
+      "description": "Composite friction: high distance combined with low language similarity.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Weighted composite isolating contextual friction useful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(distance) + (1.0 - np.clip(similar_language / 100.0, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "skill_deficit_severity",
+      "type": "formula",
+      "description": "Severity score increasing when cognitive composite falls below training mean.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "One-sided severity for SVM hinge-like response on low-aptitude side.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0.0, -((logical_score - 4.388) / 3.89 + (verbal_score - 4.595) / 4.45 + (training_score - 4.495) / 0.432) / 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "newcomer_at_immature_site",
+      "type": "formula",
+      "description": "Interaction of low tenure and low location age normalized to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures compound risk from low tenure and immature location with smooth scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - (time - 1.0) / 38.0, 0.0, 1.0) * np.clip(1.0 - (location_age - 2.0) / 26.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_fit_judgment",
+      "type": "judgment",
+      "description": "Holistic ordinal judgment of employee-context fit considering tenure stability, cognitive alignment, commute burden, and cultural similarity; assigned from row signals without supervision. Lower values indicate poorer fit.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a smooth holistic semantic score complementing deterministic features for linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ee456349157f0d8f",
+  "metadata": {}
+}

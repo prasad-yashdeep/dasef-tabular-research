@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "credit_amount_log_scaled",
+      "type": "formula",
+      "description": "Log-scaled requested credit size using training-fold min and max amount.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "amount_scale",
+      "expected_model_benefit": "Smooths skewed monetary scale and keeps large requests comparable for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(credit_amount) - np.log1p(250.0)) / (np.log1p(15945.0) - np.log1p(250.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_scaled",
+      "type": "formula",
+      "description": "Normalized loan term using training-fold duration limits.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "term_scale",
+      "expected_model_benefit": "Captures term length on a bounded axis so the SVM can weight longer commitments smoothly.",
+      "leakage_risk": "low",
+      "formula": "np.clip((duration - 4.0) / (60.0 - 4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "amount_duration_intensity_log_scaled",
+      "type": "formula",
+      "description": "Log-scaled requested amount per month, bounded by ratio limits implied by training-fold amount and duration limits.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio_scale",
+      "expected_model_benefit": "Adds an amount-per-period view that distinguishes short expensive borrowing from longer moderate borrowing.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(credit_amount / np.maximum(duration, 1.0)) - np.log1p(4.1666667)) / (np.log1p(3986.25) - np.log1p(4.1666667)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_share_scaled",
+      "type": "formula",
+      "description": "Installment commitment normalized from its 1 to 4 ordinal scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "payment_burden",
+      "expected_model_benefit": "Represents repayment share as a smooth burden axis rather than raw levels.",
+      "leakage_risk": "low",
+      "formula": "np.clip((installment_commitment - 1.0) / (4.0 - 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "repayment_pressure_composite",
+      "type": "formula",
+      "description": "Weighted burden index blending term, installment share, and log amount.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Pre-combines size, term, and installment intensity into a near-linear strain direction.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.40 * np.clip((duration - 4.0) / (60.0 - 4.0), 0.0, 1.0) + 0.35 * np.clip((installment_commitment - 1.0) / (4.0 - 1.0), 0.0, 1.0) + 0.25 * np.clip((np.log1p(credit_amount) - np.log1p(250.0)) / (np.log1p(15945.0) - np.log1p(250.0)), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "checking_liquidity_gap_score",
+      "type": "formula",
+      "description": "Cash-account shortfall score from checking_status; higher values indicate weaker immediate liquidity.",
+      "value_range": [
+        0.15,
+        1.0
+      ],
+      "feature_family": "cash_buffer",
+      "expected_model_benefit": "Converts account-status buckets into an ordinal cash-buffer axis, reducing sparse dummy dependence.",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == '<0', 1.0, np.where(checking_status == '0<=X<200', 0.65, np.where(checking_status == '>=200', 0.15, 0.35)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "savings_gap_score",
+      "type": "formula",
+      "description": "Reserve shortfall score from savings_status; higher values indicate thinner savings cushion.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "reserve_buffer",
+      "expected_model_benefit": "Gives the margin a monotone reserve signal from savings buckets.",
+      "leakage_risk": "low",
+      "formula": "np.where(savings_status == '>=1000', 0.10, np.where(savings_status == '500<=X<1000', 0.35, np.where(savings_status == '100<=X<500', 0.65, np.where(savings_status == '<100', 1.0, 0.45))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_instability_score",
+      "type": "formula",
+      "description": "Work-tenure instability score from employment; higher values indicate less stable employment history.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "employment_stability",
+      "expected_model_benefit": "Supplies an ordered work-continuity axis more compact than separate category indicators.",
+      "leakage_risk": "low",
+      "formula": "np.where(employment == 'unemployed', 1.0, np.where(employment == '<1', 0.80, np.where(employment == '1<=X<4', 0.50, np.where(employment == '4<=X<7', 0.25, 0.10))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_concern_score",
+      "type": "formula",
+      "description": "Ordinal concern score from credit_history; higher values mark delays or thin/fully settled records, lower values mark established paid records.",
+      "value_range": [
+        0.15,
+        0.85
+      ],
+      "feature_family": "prior_credit_record",
+      "expected_model_benefit": "Transforms prior record states into a compact concern direction useful with limited rows.",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_history == 'critical/other existing credit', 0.15, np.where(credit_history == 'existing paid', 0.25, np.where(credit_history == 'all paid', 0.60, np.where(credit_history == 'no credits/all paid', 0.70, 0.85))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "asset_housing_support_score",
+      "type": "formula",
+      "description": "Combined support score from property_magnitude and housing; higher values indicate stronger asset backing and more stable housing.",
+      "value_range": [
+        0.21,
+        0.955
+      ],
+      "feature_family": "asset_support",
+      "expected_model_benefit": "Adds a normalized support axis that can offset pure burden features in a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.70 * np.where(property_magnitude == 'real estate', 1.0, np.where(property_magnitude == 'life insurance', 0.75, np.where(property_magnitude == 'car', 0.55, 0.15))) + 0.30 * np.where(housing == 'own', 0.85, np.where(housing == 'rent', 0.45, 0.35)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "purpose_discretion_judgment",
+      "type": "judgment",
+      "description": "Semantic 0 to 1 score using only purpose: 0 means essential or productive use such as repairs, retraining, education, or business; 1 means more discretionary consumption such as radio/tv or a new car; intermediate values cover mixed asset purchases.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_purpose",
+      "expected_model_benefit": "Introduces a common-sense ordering of purposes that one-hot encodings may represent inefficiently with only 300 rows.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "obligation_support_complexity_judgment",
+      "type": "judgment",
+      "description": "Semantic 0 to 1 assessment from existing_credits, other_payment_plans, other_parties, num_dependents, job, and housing: 0 means simple obligations with clear support and stable work context; 1 means many simultaneous obligations, weak support, or capacity concerns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_obligation_support",
+      "expected_model_benefit": "Provides an approximate linear projection of interacting burden and support cues without fitting any supervised mapping.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8561aeb82ba4b61e",
+  "metadata": {}
+}

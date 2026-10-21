@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_prediction_markets_20260517",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_price_range",
+      "type": "formula",
+      "description": "Measures the volatility of the market relative to its opening price, providing a scale-normalized distance metric for KNN.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "volatility",
+      "expected_model_benefit": "Improves neighborhood geometry by grouping markets with similar relative volatility profiles.",
+      "leakage_risk": "low",
+      "formula": "(high - low) / np.maximum(open, 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_position_in_range",
+      "type": "formula",
+      "description": "Calculates where the opening price sits within the high-low range, normalizing the price action to a standard scale.",
+      "value_range": [
+        -1000.0,
+        1000.0
+      ],
+      "feature_family": "price_action",
+      "expected_model_benefit": "Allows KNN to compute meaningful distances between markets based on intra-range price positioning regardless of absolute price.",
+      "leakage_risk": "low",
+      "formula": "(open - low) / np.maximum(high - low, 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_volume_per_trade",
+      "type": "formula",
+      "description": "Computes the logarithmic volume per trade, acting as a normalized proxy for average trade size.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Helps the distance metric differentiate between retail-driven (many small trades) and whale-driven (few large trades) markets.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(volume) / np.maximum(trade_count, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_volume_normalized",
+      "type": "formula",
+      "description": "Min-max normalized logarithmic volume to ensure volume differences do not dominate the KNN distance calculation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Prevents the volume feature from disproportionately skewing Euclidean or Manhattan distances.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(volume) / 13.63",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_volatility_prototype_dist",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype representing a high-volatility, high-volume market state.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a direct spatial feature that clusters highly active and volatile markets together.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((high - low)**2 + (np.log1p(volume)/13.63)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_activity_prototype_dist",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype representing a dormant market (zero volume, minimal trades).",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Creates a continuous similarity score to low-activity states, improving neighborhood resolution for illiquid markets.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((np.log1p(volume))**2 + (np.log1p(trade_count))**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "platform_market_interaction",
+      "type": "formula",
+      "description": "A normalized interaction term between platform ID and logarithmic market ID.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "metadata",
+      "expected_model_benefit": "Embeds platform and market chronology into a bounded continuous space suitable for distance calculations.",
+      "leakage_risk": "low",
+      "formula": "(platform_id / 3.0) * (np.log1p(market_id) / 17.6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_trend_proxy",
+      "type": "formula",
+      "description": "A binary indicator mapped to -1 or 1 representing whether the open price is above or below the midpoint of the high-low range.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "price_action",
+      "expected_model_benefit": "Provides a standardized categorical distance penalty for markets with opposing intra-range skews.",
+      "leakage_risk": "low",
+      "formula": "np.where(open > (high + low) / 2.0, 1.0, -1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "trade_density_score",
+      "type": "formula",
+      "description": "Ratio of logarithmic trade count to the price range, indicating how densely traded a specific price band is.",
+      "value_range": [
+        0.0,
+        8000.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Highlights markets with high friction or strong consensus, grouping them effectively in the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(trade_count) / np.maximum(high - low, 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_liquidity_cluster",
+      "type": "judgment",
+      "description": "Categorizes the market into liquidity clusters (e.g., 0 for illiquid, 1 for moderate, 2 for highly liquid) based on volume and trade count profiles.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "clustering",
+      "expected_model_benefit": "Aids KNN in grouping similar liquidity regimes by providing a discrete, ordinal cluster indicator.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_extremity_index",
+      "type": "judgment",
+      "description": "Assesses whether the open price is at an extreme (near 0 or 1) versus the middle (near 0.5), providing a normalized distance metric to the boundaries.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_action",
+      "expected_model_benefit": "Improves similarity matching by grouping markets that are near resolution (extreme prices) versus highly uncertain markets (middle prices).",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "platform_behavior_similarity",
+      "type": "judgment",
+      "description": "Evaluates how closely the market's price and volume dynamics match the typical behavior of its respective platform.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity",
+      "expected_model_benefit": "Serves as a similarity score for neighborhood weighting, allowing the model to penalize anomalous markets within a platform.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "3b449105402dbbe1",
+  "metadata": {}
+}

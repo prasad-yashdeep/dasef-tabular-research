@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_scaled",
+      "type": "formula",
+      "description": "Z-score normalized age using training set mean and standard deviation.",
+      "value_range": [
+        -1.64,
+        3.87
+      ],
+      "feature_family": "continuous_scaling",
+      "expected_model_benefit": "Provides a smooth, zero-centered continuous feature ideal for linear SVM margins, preventing the age scale from dominating the regularization penalty.",
+      "leakage_risk": "low",
+      "formula": "(age - 38.709) / 13.289",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_scaled",
+      "type": "formula",
+      "description": "Z-score normalized education_num using training set mean and standard deviation.",
+      "value_range": [
+        -3.56,
+        2.28
+      ],
+      "feature_family": "continuous_scaling",
+      "expected_model_benefit": "Standardizes the education level to a zero-centered scale, allowing the linear model to weigh education equally against other continuous features.",
+      "leakage_risk": "low",
+      "formula": "(education_num - 10.143) / 2.570",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_scaled",
+      "type": "formula",
+      "description": "Z-score normalized hours_per_week using training set mean and standard deviation.",
+      "value_range": [
+        -3.35,
+        4.87
+      ],
+      "feature_family": "continuous_scaling",
+      "expected_model_benefit": "Normalizes working hours to improve gradient descent convergence and margin calculation in linear SVMs.",
+      "leakage_risk": "low",
+      "formula": "(hours_per_week - 40.939) / 11.930",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_net_log",
+      "type": "formula",
+      "description": "Log-transformed net capital gain (gain minus loss, floored at zero) to handle extreme right-skewness.",
+      "value_range": [
+        0.0,
+        11.52
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Compresses the massive range of capital gains into a smooth, roughly linear scale, preventing large outliers from distorting the SVM decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(capital_gain - capital_loss, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_loss_log",
+      "type": "formula",
+      "description": "Log-transformed capital loss to handle skewness and provide a continuous severity measure.",
+      "value_range": [
+        0.0,
+        8.38
+      ],
+      "feature_family": "log_transform",
+      "expected_model_benefit": "Reduces the impact of extreme capital loss values, providing a more stable continuous feature for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_loss)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_education_interaction",
+      "type": "formula",
+      "description": "Min-max normalized interaction term between age and education_num.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the combined effect of age and education in a single linear feature, allowing the linear SVM to approximate non-linear interactions.",
+      "leakage_risk": "low",
+      "formula": "((age - 17.0) / 73.0) * ((education_num - 1.0) / 15.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_education_interaction",
+      "type": "formula",
+      "description": "Min-max normalized interaction term between hours_per_week and education_num.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Provides a composite feature representing the combination of high education and long working hours, useful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "((hours_per_week - 1.0) / 98.0) * ((education_num - 1.0) / 15.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_full_time_adult",
+      "type": "formula",
+      "description": "Binary indicator for individuals aged 25 or older working at least 40 hours per week.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "logical_indicator",
+      "expected_model_benefit": "Creates a sharp linear decision boundary feature for a common demographic segment, aiding the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.where((age >= 25) & (hours_per_week >= 40), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of overall financial stability based on age, education level, and capital gains/losses.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Provides a holistic, continuous severity measure of financial health that a linear model can easily weight.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "career_advancement_potential",
+      "type": "judgment",
+      "description": "Semantic evaluation of potential for career growth based on occupation type, education level, and age.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Encodes complex categorical relationships (occupation, education) into a single continuous score suitable for linear projection.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_life_balance_indicator",
+      "type": "judgment",
+      "description": "Semantic assessment of work-life balance based on hours_per_week, marital_status, and relationship status.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Translates categorical family structures and continuous working hours into a unified linear feature.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_representation_index",
+      "type": "judgment",
+      "description": "Semantic index assessing demographic representation based on race, sex, and native_country.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Condenses multiple demographic categorical variables into a continuous index, reducing dimensionality for the linear SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "50ab5c15474a4034",
+  "metadata": {}
+}

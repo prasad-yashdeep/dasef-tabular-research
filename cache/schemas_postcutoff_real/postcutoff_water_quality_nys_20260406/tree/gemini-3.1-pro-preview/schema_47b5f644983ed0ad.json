@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_water_quality_nys_20260406",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recent_heavy_rainfall_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for significant recent rainfall (over 0.5 inches in the last 3 days), which tree models can use as a primary split for runoff events.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "meteorological",
+      "expected_model_benefit": "Provides a clean, binary threshold for tree models to isolate high-runoff conditions that often transport contaminants.",
+      "leakage_risk": "low",
+      "formula": "np.where(precip_3d > 0.5, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "livestock_proximity_risk",
+      "type": "formula",
+      "description": "Binary feature indicating the presence of livestock within a close proximity (less than 2 units distance).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "land_use",
+      "expected_model_benefit": "Allows tree models to immediately partition samples where direct agricultural animal runoff is highly probable.",
+      "leakage_risk": "low",
+      "formula": "np.where((anylivestock_pa > 0) & (anylivestock_min < 2.0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "water_temp_do_interaction",
+      "type": "formula",
+      "description": "Ratio of water temperature to dissolved oxygen, capturing conditions of warm, stagnant water.",
+      "value_range": [
+        1.0,
+        8.5
+      ],
+      "feature_family": "water_chemistry",
+      "expected_model_benefit": "Creates a nonlinear interaction feature that highlights environments conducive to bacterial survival, saving the tree from having to approximate this ratio through multiple splits.",
+      "leakage_risk": "low",
+      "formula": "w_t / np.maximum(do, 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "human_source_pollution_risk",
+      "type": "formula",
+      "description": "Interaction between septic density and proximity to wastewater infrastructure, amplifying the risk score when wastewater is nearby.",
+      "value_range": [
+        5.9,
+        251.0
+      ],
+      "feature_family": "infrastructure",
+      "expected_model_benefit": "Combines two human-derived pollution metrics into a single continuous risk gradient for efficient tree splitting.",
+      "leakage_risk": "low",
+      "formula": "septic_adj_sepden_m2 * np.where(wastewater_min < 5.0, 1.0, 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "turbidity_flow_index",
+      "type": "formula",
+      "description": "Product of turbidity and flow, representing the total volume of suspended solids moving through the system.",
+      "value_range": [
+        0.0,
+        2.17
+      ],
+      "feature_family": "hydrology",
+      "expected_model_benefit": "Provides a direct measure of active sediment transport, which is strongly correlated with particle-bound contaminants.",
+      "leakage_risk": "low",
+      "formula": "turb * flow",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "solar_temp_growth_potential",
+      "type": "formula",
+      "description": "Product of 10-day average temperature and 10-day average solar radiation, estimating the recent energy available for biological growth.",
+      "value_range": [
+        2.9,
+        25.0
+      ],
+      "feature_family": "meteorological",
+      "expected_model_benefit": "Synthesizes long-term weather patterns into a single growth-conducive index, reducing the depth required for the tree to model weather interactions.",
+      "leakage_risk": "low",
+      "formula": "avg_temp_10d * avg_solar_10d",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "agricultural_runoff_potential",
+      "type": "judgment",
+      "description": "Semantic assessment of the likelihood of agricultural runoff reaching the waterbody, based on the interplay between pasture/crop land cover (idw_X81, idw_X82), soil types, and recent precipitation patterns.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "land_use",
+      "expected_model_benefit": "Captures complex, multi-variable spatial relationships that are difficult to express in simple arithmetic formulas, providing a high-level risk bucket for the model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "urban_runoff_impact",
+      "type": "formula",
+      "description": "Impervious cover weighted by the proximity to stormwater outfalls, doubling the impact score if outfalls are very close.",
+      "value_range": [
+        0.003,
+        39.5
+      ],
+      "feature_family": "infrastructure",
+      "expected_model_benefit": "Highlights urbanized areas with direct drainage pathways, allowing the tree to easily separate urban-driven contamination events.",
+      "leakage_risk": "low",
+      "formula": "impcvr_idw_mean * np.where(stormwateroutfalls_min < 2.0, 2.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "wetland_forest_buffer_protection",
+      "type": "formula",
+      "description": "Ratio of protective land cover (forest/wetland) to developed land cover within the 60m buffer zone.",
+      "value_range": [
+        0.2,
+        35.0
+      ],
+      "feature_family": "land_use",
+      "expected_model_benefit": "Quantifies the natural filtration capacity of the immediate riparian zone, serving as a strong mitigating feature against runoff.",
+      "leakage_risk": "low",
+      "formula": "buffer_60m_idw_forwet / np.maximum(buffer_60m_idw_X21 + buffer_60m_idw_X22, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sustained_precipitation_ratio",
+      "type": "formula",
+      "description": "Ratio of 5-day precipitation to 30-day precipitation, identifying sudden wet periods relative to the baseline.",
+      "value_range": [
+        0.0,
+        38.0
+      ],
+      "feature_family": "meteorological",
+      "expected_model_benefit": "Normalizes rainfall events against recent historical baselines, helping the model distinguish between chronic wetness and acute storm flushes.",
+      "leakage_risk": "low",
+      "formula": "precip_5d / np.maximum(precip_30d, 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bacterial_marker_presence",
+      "type": "formula",
+      "description": "Logical OR (maximum) of human (HF183) and ruminant (Rum2Bac) specific bacterial marker presence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "biological",
+      "expected_model_benefit": "Consolidates sparse biological marker data into a single, highly predictive boolean flag for tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(HF183_pa, Rum2Bac_pa)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stagnation_risk_score",
+      "type": "judgment",
+      "description": "Semantic evaluation of water stagnation risk, integrating low flow, low dissolved oxygen, high temperatures, and physical channel characteristics like collapsed bottoms or ditch structures.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "hydrology",
+      "expected_model_benefit": "Provides an ordinal scale of stagnation severity, grouping multiple physical and chemical indicators into a single monotonic feature ideal for tree thresholds.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "47b5f644983ed0ad",
+  "metadata": {}
+}

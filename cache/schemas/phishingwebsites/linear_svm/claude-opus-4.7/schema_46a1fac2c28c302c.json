@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phishingwebsites",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "url_structural_risk_score",
+      "type": "formula",
+      "description": "Weighted sum of URL-level structural risk indicators (negated so higher means more suspicious). Captures lexical/URL anatomy signals useful for a linear margin.",
+      "value_range": [
+        -7.0,
+        7.0
+      ],
+      "feature_family": "url_structure",
+      "expected_model_benefit": "Provides a smooth additive composite of URL anomalies that aligns with linear SVM margin direction.",
+      "leakage_risk": "low",
+      "formula": "(-1.0) * (having_IP_Address + URL_Length + Shortining_Service + having_At_Symbol + double_slash_redirecting + Prefix_Suffix + having_Sub_Domain)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ssl_domain_trust_score",
+      "type": "formula",
+      "description": "Composite trust score from SSL state, domain registration length, favicon legitimacy, port usage, HTTPS token, and DNS record presence.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "domain_trust",
+      "expected_model_benefit": "Smooth continuous trust composite for linear projection.",
+      "leakage_risk": "low",
+      "formula": "SSLfinal_State + Domain_registeration_length + Favicon + port + HTTPS_token + DNSRecord",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_integrity_score",
+      "type": "formula",
+      "description": "Composite of page-content integrity signals: request URL, anchors, link tags, SFH, submitting to email, and abnormal URL.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "content_integrity",
+      "expected_model_benefit": "Linear composite of in-page integrity cues benefits SVM hyperplane separation.",
+      "leakage_risk": "low",
+      "formula": "Request_URL + URL_of_Anchor + Links_in_tags + SFH + Submitting_to_email + Abnormal_URL",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "behavioral_obfuscation_score",
+      "type": "formula",
+      "description": "Composite of dynamic/behavioral obfuscation indicators: redirect, on_mouseover, right click disabled, popup window, iframe.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "behavioral",
+      "expected_model_benefit": "Aggregates browser-behavior risk signals into a single smooth axis for linear margin.",
+      "leakage_risk": "low",
+      "formula": "(-1.0) * Redirect + on_mouseover + RightClick + popUpWidnow + Iframe",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "reputation_score",
+      "type": "formula",
+      "description": "External reputation composite: domain age, web traffic, page rank, Google indexing, inbound links, statistical report.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "reputation",
+      "expected_model_benefit": "Reputation axis is a strong linear discriminator for legitimacy assessment.",
+      "leakage_risk": "low",
+      "formula": "age_of_domain + web_traffic + Page_Rank + Google_Index + Links_pointing_to_page + Statistical_report",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "global_risk_composite",
+      "type": "formula",
+      "description": "Normalized average of all 30 indicator columns, scaled to [-1,1]. Acts as a global linear score across all features.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "global_composite",
+      "expected_model_benefit": "Single normalized summary axis ideal for linear SVM bias direction.",
+      "leakage_risk": "low",
+      "formula": "(having_IP_Address + URL_Length + Shortining_Service + having_At_Symbol + double_slash_redirecting + Prefix_Suffix + having_Sub_Domain + SSLfinal_State + Domain_registeration_length + Favicon + port + HTTPS_token + Request_URL + URL_of_Anchor + Links_in_tags + SFH + Submitting_to_email + Abnormal_URL + Redirect + on_mouseover + RightClick + popUpWidnow + Iframe + age_of_domain + DNSRecord + web_traffic + Page_Rank + Google_Index + Links_pointing_to_page + Statistical_report) / 30.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "negative_indicator_density",
+      "type": "formula",
+      "description": "Fraction of indicator columns taking the value -1 (suspicious). Smooth severity measure in [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Density-based severity scales linearly with risk and supports SVM margins.",
+      "leakage_risk": "low",
+      "formula": "(np.where(having_IP_Address == -1, 1, 0) + np.where(URL_Length == -1, 1, 0) + np.where(Shortining_Service == -1, 1, 0) + np.where(having_At_Symbol == -1, 1, 0) + np.where(double_slash_redirecting == -1, 1, 0) + np.where(Prefix_Suffix == -1, 1, 0) + np.where(having_Sub_Domain == -1, 1, 0) + np.where(SSLfinal_State == -1, 1, 0) + np.where(Domain_registeration_length == -1, 1, 0) + np.where(Favicon == -1, 1, 0) + np.where(port == -1, 1, 0) + np.where(HTTPS_token == -1, 1, 0) + np.where(Request_URL == -1, 1, 0) + np.where(URL_of_Anchor == -1, 1, 0) + np.where(Links_in_tags == -1, 1, 0) + np.where(SFH == -1, 1, 0) + np.where(Submitting_to_email == -1, 1, 0) + np.where(Abnormal_URL == -1, 1, 0) + np.where(on_mouseover == -1, 1, 0) + np.where(RightClick == -1, 1, 0) + np.where(popUpWidnow == -1, 1, 0) + np.where(Iframe == -1, 1, 0) + np.where(age_of_domain == -1, 1, 0) + np.where(DNSRecord == -1, 1, 0) + np.where(web_traffic == -1, 1, 0) + np.where(Page_Rank == -1, 1, 0) + np.where(Google_Index == -1, 1, 0) + np.where(Links_pointing_to_page == -1, 1, 0) + np.where(Statistical_report == -1, 1, 0)) / 29.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positive_indicator_density",
+      "type": "formula",
+      "description": "Fraction of indicator columns taking value +1 (legitimate signal). Smooth measure in [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Counter-axis to negative density; supports linear separability.",
+      "leakage_risk": "low",
+      "formula": "(np.where(having_IP_Address == 1, 1, 0) + np.where(URL_Length == 1, 1, 0) + np.where(Shortining_Service == 1, 1, 0) + np.where(having_At_Symbol == 1, 1, 0) + np.where(double_slash_redirecting == 1, 1, 0) + np.where(Prefix_Suffix == 1, 1, 0) + np.where(having_Sub_Domain == 1, 1, 0) + np.where(SSLfinal_State == 1, 1, 0) + np.where(Domain_registeration_length == 1, 1, 0) + np.where(Favicon == 1, 1, 0) + np.where(port == 1, 1, 0) + np.where(HTTPS_token == 1, 1, 0) + np.where(Request_URL == 1, 1, 0) + np.where(URL_of_Anchor == 1, 1, 0) + np.where(Links_in_tags == 1, 1, 0) + np.where(SFH == 1, 1, 0) + np.where(Submitting_to_email == 1, 1, 0) + np.where(Abnormal_URL == 1, 1, 0) + np.where(on_mouseover == 1, 1, 0) + np.where(RightClick == 1, 1, 0) + np.where(popUpWidnow == 1, 1, 0) + np.where(Iframe == 1, 1, 0) + np.where(age_of_domain == 1, 1, 0) + np.where(DNSRecord == 1, 1, 0) + np.where(web_traffic == 1, 1, 0) + np.where(Page_Rank == 1, 1, 0) + np.where(Google_Index == 1, 1, 0) + np.where(Links_pointing_to_page == 1, 1, 0) + np.where(Statistical_report == 1, 1, 0)) / 29.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ssl_anchor_interaction",
+      "type": "formula",
+      "description": "Interaction between SSL final state and URL-of-anchor quality, capturing combined trust evidence.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Pairwise product creates a useful non-collinear axis for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "(SSLfinal_State * URL_of_Anchor) / 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "domain_reputation_ratio",
+      "type": "formula",
+      "description": "Smooth ratio of positive reputation evidence over total reputation evidence magnitude (with smoothing).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "reputation",
+      "expected_model_benefit": "Bounded smooth ratio improves SVM stability versus raw sums.",
+      "leakage_risk": "low",
+      "formula": "(np.where(age_of_domain == 1, 1, 0) + np.where(web_traffic == 1, 1, 0) + np.where(Page_Rank == 1, 1, 0) + np.where(Google_Index == 1, 1, 0) + np.where(DNSRecord == 1, 1, 0) + 1.0) / (np.abs(age_of_domain) + np.abs(web_traffic) + np.abs(Page_Rank) + np.abs(Google_Index) + np.abs(DNSRecord) + 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "url_anomaly_severity",
+      "type": "judgment",
+      "description": "Semantic severity assessment of URL-level deceptiveness combining IP-in-URL, length anomalies, shortening, @ symbol, double-slash redirect, and prefix/suffix usage. Computed as a normalized count of how many URL anomalies are present in the suspicious state, scaled to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "url_structure",
+      "expected_model_benefit": "Captures human-judgment notion of URL deceptiveness as a smooth severity score that supports a linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "user_interaction_suspicion",
+      "type": "judgment",
+      "description": "Semantic judgment of suspicious user-interaction tampering: disabled right-click, mouseover changes, popups, iframes, and redirects. Higher values indicate more behavioral red flags.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "behavioral",
+      "expected_model_benefit": "Compact behavioral suspicion axis aligned to linear separation boundaries.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "46a1fac2c28c302c",
+  "metadata": {}
+}

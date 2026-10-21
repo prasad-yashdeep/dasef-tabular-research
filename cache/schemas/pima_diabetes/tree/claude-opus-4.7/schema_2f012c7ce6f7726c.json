@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "glucose_high_flag",
+      "type": "formula",
+      "description": "Indicator that plasma glucose exceeds clinical impaired-glucose threshold (140 mg/dL).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold_indicator",
+      "expected_model_benefit": "Provides a clean split point matching established glucose tolerance cutoff.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas >= 140, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_bucket",
+      "type": "formula",
+      "description": "Ordinal glucose bucket: 0=missing/zero, 1=normal(<100), 2=prediabetic(100-125), 3=diabetic(126-159), 4=severe(>=160).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Compact ordinal encoding of clinically meaningful glucose ranges for tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas <= 0, 0, np.where(plas < 100, 1, np.where(plas < 126, 2, np.where(plas < 160, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_category",
+      "type": "formula",
+      "description": "WHO BMI category: 0=missing, 1=underweight(<18.5), 2=normal(18.5-24.9), 3=overweight(25-29.9), 4=obese(30-34.9), 5=severely obese(>=35).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Standard BMI categorization aligned with clinical risk strata.",
+      "leakage_risk": "low",
+      "formula": "np.where(mass <= 0, 0, np.where(mass < 18.5, 1, np.where(mass < 25, 2, np.where(mass < 30, 3, np.where(mass < 35, 4, 5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Age bucket: 1=young(<30), 2=middle(30-44), 3=mature(45-59), 4=senior(>=60).",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Captures nonlinear age-related risk progression with simple split points.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 30, 1, np.where(age < 45, 2, np.where(age < 60, 3, 4)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bp_abnormal_flag",
+      "type": "formula",
+      "description": "Indicator that diastolic blood pressure is hypertensive (>=90) or implausibly low/missing (<=40).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold_indicator",
+      "expected_model_benefit": "Captures abnormal BP regions in a single binary split.",
+      "leakage_risk": "low",
+      "formula": "np.where((pres >= 90) | (pres <= 40), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "missing_measurements_count",
+      "type": "formula",
+      "description": "Count of physiological measurements recorded as zero (likely missing) among glucose, BP, skin, insulin, BMI.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "missingness",
+      "expected_model_benefit": "Signals data quality and may correlate with measurement context.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas <= 0, 1, 0) + np.where(pres <= 0, 1, 0) + np.where(skin <= 0, 1, 0) + np.where(insu <= 0, 1, 0) + np.where(mass <= 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_glucose_ratio",
+      "type": "formula",
+      "description": "Ratio of serum insulin to plasma glucose, a proxy for insulin response efficiency.",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "interaction_ratio",
+      "expected_model_benefit": "Combines two related signals into a metabolic ratio that trees can split on.",
+      "leakage_risk": "low",
+      "formula": "insu / (plas + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_age_interaction",
+      "type": "formula",
+      "description": "Product of BMI and age capturing compounded metabolic risk with aging.",
+      "value_range": [
+        0.0,
+        4000.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Encodes nonlinear interaction between obesity and age for split-based models.",
+      "leakage_risk": "low",
+      "formula": "mass * age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_risk_composite_flag",
+      "type": "formula",
+      "description": "Indicator combining elevated glucose (>=140), obesity (BMI>=30), and age>=35 simultaneously.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_indicator",
+      "expected_model_benefit": "Provides a single decisive split for clinically high-risk combinations.",
+      "leakage_risk": "low",
+      "formula": "np.where((plas >= 140) & (mass >= 30) & (age >= 35), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_strength_bucket",
+      "type": "formula",
+      "description": "Ordinal pedigree function strength: 1=low(<0.3), 2=moderate(0.3-0.6), 3=high(0.6-1.0), 4=very high(>=1.0).",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Discretizes hereditary risk into split-friendly bins.",
+      "leakage_risk": "low",
+      "formula": "np.where(pedi < 0.3, 1, np.where(pedi < 0.6, 2, np.where(pedi < 1.0, 3, 4)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pregnancy_intensity_per_age",
+      "type": "formula",
+      "description": "Pregnancies normalized by reproductive years (age minus 15), capturing parity intensity.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "normalized_ratio",
+      "expected_model_benefit": "Adjusts pregnancy count by exposure window for fairer comparison across ages.",
+      "leakage_risk": "low",
+      "formula": "preg / np.maximum(age - 15.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_syndrome_judgment",
+      "type": "judgment",
+      "description": "Semantic ordinal score of metabolic syndrome plausibility from row values: 0=insufficient data (multiple zeros), 1=low (most markers normal), 2=moderate (one or two markers elevated among glucose, BMI, BP), 3=high (three or more markers elevated). Evaluated by inspecting whether plas, mass, pres, and insu jointly indicate metabolic dysregulation, not via formula.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a holistic clinical-judgment summary that complements raw threshold features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2f012c7ce6f7726c",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pol",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_f5_normalized",
+      "type": "formula",
+      "description": "Log-transformed f5 normalized to approximate unit scale, smoothing the wide range for linear margin computation.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "scaled_transform",
+      "expected_model_benefit": "Linear SVM benefits from smooth bounded transformations of skewed inputs.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f5) / np.log1p(200.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f6_excess_over_baseline",
+      "type": "formula",
+      "description": "Excess of f6 above its observed minimum baseline (77), capturing severity above floor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaled_severity",
+      "expected_model_benefit": "Provides a normalized continuous score useful for SVM hyperplane separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((f6 - 77.0) / 123.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f7_f8_ratio",
+      "type": "formula",
+      "description": "Ratio of f7 to f8, capturing relative magnitude between two correlated baseline-like features.",
+      "value_range": [
+        0.5,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratios reveal proportional structure that linear models capture directly.",
+      "leakage_risk": "low",
+      "formula": "f7 / (f8 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f9_deviation_from_floor",
+      "type": "formula",
+      "description": "Deviation of f9 from its near-constant floor of 94, normalized by observed range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Captures rare elevations in a tight-distribution feature for SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((f9 - 94.0) / 78.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "early_block_sum",
+      "type": "formula",
+      "description": "Sum of features f13-f18 representing early-block aggregate activity, log-scaled for smoothness.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Linear composite aggregates correlated columns producing a strong SVM projection axis.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f13 + f14 + f15 + f16 + f17 + f18)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mid_block_sum",
+      "type": "formula",
+      "description": "Sum of features f19-f24 representing mid-block aggregate activity, log-scaled.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Smooth aggregate of mid-range columns suitable for linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f19 + f20 + f21 + f22 + f23 + f24)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tail_block_sum",
+      "type": "formula",
+      "description": "Sum of features f25-f33 representing tail-block sparse activity, log-scaled.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Aggregates very sparse columns into a meaningful continuous signal.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f25 + f26 + f27 + f28 + f29 + f30 + f31 + f32 + f33)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "early_to_tail_ratio",
+      "type": "formula",
+      "description": "Ratio of early-block activity to tail-block activity capturing distribution shift across columns.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Encodes structural shape useful for linear discrimination.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f13 + f14 + f15 + f16 + f17 + f18) / (np.log1p(f25 + f26 + f27 + f28 + f29 + f30 + f31 + f32 + f33) + 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_column_count",
+      "type": "formula",
+      "description": "Count of nonzero entries among the variable activity columns f13-f33.",
+      "value_range": [
+        0.0,
+        21.0
+      ],
+      "feature_family": "sparsity",
+      "expected_model_benefit": "Sparsity counts are a linear signal often correlated with row complexity.",
+      "leakage_risk": "low",
+      "formula": "(f13>0)*1.0 + (f14>0)*1.0 + (f15>0)*1.0 + (f16>0)*1.0 + (f17>0)*1.0 + (f18>0)*1.0 + (f19>0)*1.0 + (f20>0)*1.0 + (f21>0)*1.0 + (f22>0)*1.0 + (f23>0)*1.0 + (f24>0)*1.0 + (f25>0)*1.0 + (f26>0)*1.0 + (f27>0)*1.0 + (f28>0)*1.0 + (f29>0)*1.0 + (f30>0)*1.0 + (f31>0)*1.0 + (f32>0)*1.0 + (f33>0)*1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "peak_activity_magnitude",
+      "type": "formula",
+      "description": "Maximum value across the variable activity columns f13-f33, log-scaled.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "extremum",
+      "expected_model_benefit": "Peak magnitude provides a smooth severity index for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(f13,f14),f15),f16),f17),f18),f19),f20),f21),f22),np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(np.maximum(f23,f24),f25),f26),f27),f28),f29),f30),f31),f32),f33)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "header_block_composite",
+      "type": "formula",
+      "description": "Weighted composite of header-like features f5-f9 producing a smooth approximate linear projection.",
+      "value_range": [
+        -5.0,
+        10.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Approximates a useful linear axis blending top variable features.",
+      "leakage_risk": "low",
+      "formula": "(f5 - 76.354) / 34.874 + (f6 - 94.378) / 20.673 + (f7 - 83.861) / 16.253 + (f8 - 75.424) / 13.399 + (f9 - 95.950) / 8.582",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "row_activity_profile_quality",
+      "type": "judgment",
+      "description": "Semantic assessment of how 'concentrated' versus 'diffuse' the activity profile across f13-f33 appears: low values indicate diffuse spread, high values indicate concentration in a few columns. Computed as ratio of peak magnitude squared to sum of squares of all activity columns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "shape_judgment",
+      "expected_model_benefit": "Provides a normalized concentration index that linear SVM can use as a discriminating dimension.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9dec6bfcce3bda67",
+  "metadata": {}
+}

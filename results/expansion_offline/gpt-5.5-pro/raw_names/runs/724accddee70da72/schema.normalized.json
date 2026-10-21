@@ -1,0 +1,190 @@
+{
+  "dataset_name": "house_8l",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "p3_log_unit_scale",
+      "type": "formula",
+      "description": "Log-compressed unit scaling of the count-like P3 field using the observed training-fold range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Gives the linear margin a bounded, monotone view of order-of-magnitude changes in P3 while limiting dominance by the largest counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(np.maximum(P3, 0.0)) - 0.6931471805599453) / 12.616661809497935, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p6p4_sqrt_unit_share",
+      "type": "formula",
+      "description": "Square-root expansion of P6p4 after scaling by its training-fold maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sparse_share_transform",
+      "expected_model_benefit": "Spreads small nonzero P6p4 values so the SVM margin can use variation in a sparse proportion field.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip(P6p4 / 0.891656, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p19p2_sqrt_unit_share",
+      "type": "formula",
+      "description": "Square-root transform of the bounded P19p2 proportion.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sparse_share_transform",
+      "expected_model_benefit": "Improves sensitivity to moderate P19p2 differences while keeping the feature bounded for a stable linear weight.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip(P19p2, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h5p2_sqrt_unit_share",
+      "type": "formula",
+      "description": "Square-root transform of the bounded H5p2 proportion.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sparse_share_transform",
+      "expected_model_benefit": "Provides a smooth nonlinear projection that emphasizes lower-range H5p2 movement without creating extreme values.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip(H5p2, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p11p3_clipped_z_score",
+      "type": "formula",
+      "description": "Centered and scaled P11p3 using training-fold mean and spread, clipped to reduce outlier influence.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "centered_projection",
+      "expected_model_benefit": "Lets the linear SVM place a direct weight on P11p3 departures from its usual level.",
+      "leakage_risk": "low",
+      "formula": "np.clip((P11p3 - 0.4847314117044624) / 0.0601735027960949, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p16p2_clipped_z_score",
+      "type": "formula",
+      "description": "Centered and scaled P16p2 using training-fold mean and spread, clipped to a robust range.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "centered_projection",
+      "expected_model_benefit": "Captures direction and severity of P16p2 deviation in a form well matched to linear margin weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip((P16p2 - 0.716844362253109) / 0.08640994293495116, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h15p1_unit_scale",
+      "type": "formula",
+      "description": "Unit-scaled H15p1 using its observed training-fold maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unit_scaling",
+      "expected_model_benefit": "Converts H15p1 to a bounded severity-style measure so its coefficient is comparable with proportion features.",
+      "leakage_risk": "low",
+      "formula": "np.clip(H15p1 / 9.444444, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h40p4_clipped_z_score",
+      "type": "formula",
+      "description": "Centered and scaled H40p4 using training-fold mean and spread, clipped for robustness.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "centered_projection",
+      "expected_model_benefit": "Adds a signed continuous projection for H40p4 so a linear separator can react to above-usual or below-usual values.",
+      "leakage_risk": "low",
+      "formula": "np.clip((H40p4 - 0.49139021770299934) / 0.33487804653124703, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h15_per_p3_log_ratio",
+      "type": "formula",
+      "description": "Bounded ratio of unit-scaled H15p1 to log-scaled P3, with a small stabilizer for very small P3.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "bounded_ratio",
+      "expected_model_benefit": "Adds an interpretable relative-intensity projection so the margin can use disproportionate H15p1 for the row's P3 scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.clip(H15p1 / 9.444444, 0.0, 1.0) / (np.clip((np.log1p(np.maximum(P3, 0.0)) - 0.6931471805599453) / 12.616661809497935, 0.0, 1.0) + 0.05), 0.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cross_share_contrast_score",
+      "type": "formula",
+      "description": "Average absolute contrast among selected P and H proportion-like fields, clipped to a unit interval.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "contrast_composite",
+      "expected_model_benefit": "Condenses multi-field disagreement into a bounded score, giving the linear SVM a compact proxy for profile imbalance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs(P16p2 - P11p3) + np.abs(H40p4 - H5p2) + np.abs(P19p2 - P6p4)) / 3.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "row_profile_extremeness_judgment",
+      "type": "judgment",
+      "description": "A 0-1 semantic score, assigned from the eight input values and fixed training-fold ranges, for how unusual the full row pattern appears; 0 is very routine and 1 is highly atypical.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile_assessment",
+      "expected_model_benefit": "Provides an anomaly-style covariate signal that can capture multi-field irregularity beyond explicit pairwise formulas.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_population_coherence_judgment",
+      "type": "judgment",
+      "description": "A 0-1 semantic score of whether the P-prefixed and H-prefixed measurements tell a consistent story for the same row; 0 means strongly conflicting and 1 means strongly coherent.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_consistency_assessment",
+      "expected_model_benefit": "Adds a compact holistic consistency signal for broad row structure, useful when the margin benefits from coherent multi-field context.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ce038c5eb40fc657",
+  "metadata": {}
+}

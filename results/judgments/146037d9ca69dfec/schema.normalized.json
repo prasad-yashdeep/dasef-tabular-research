@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "nsw_vic_price_ratio",
+      "type": "formula",
+      "description": "Ratio of New South Wales electricity price to Victoria electricity price, smoothed to avoid division by zero.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a relative price measure that helps a linear model capture regional price disparities.",
+      "leakage_risk": "low",
+      "formula": "nswprice / (vicprice + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_vic_demand_diff",
+      "type": "formula",
+      "description": "Difference between New South Wales demand and Victoria demand.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Allows the linear SVM to directly weight the regional demand imbalance.",
+      "leakage_risk": "low",
+      "formula": "nswdemand - vicdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_demand",
+      "type": "formula",
+      "description": "Sum of New South Wales and Victoria electricity demand.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures the overall system load, which is a strong driver of market dynamics.",
+      "leakage_risk": "low",
+      "formula": "nswdemand + vicdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_interaction_nsw",
+      "type": "formula",
+      "description": "Interaction term between New South Wales price and demand.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Exposes the non-linear relationship between price and demand in NSW to the linear model.",
+      "leakage_risk": "low",
+      "formula": "nswprice * nswdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_interaction_vic",
+      "type": "formula",
+      "description": "Interaction term between Victoria price and demand.",
+      "value_range": [
+        0.0,
+        0.25
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Exposes the non-linear relationship between price and demand in VIC to the linear model.",
+      "leakage_risk": "low",
+      "formula": "vicprice * vicdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of energy transfer to total system demand.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes the transfer volume against the total load, providing a scale-invariant measure of grid reliance.",
+      "leakage_risk": "low",
+      "formula": "transfer / (nswdemand + vicdemand + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_peak_period",
+      "type": "formula",
+      "description": "Indicator for the second half of the day (period > 0.5), typically corresponding to higher activity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a clear linear separation boundary for time-of-day effects.",
+      "leakage_risk": "low",
+      "formula": "np.where(period > 0.5, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_spread",
+      "type": "formula",
+      "description": "Absolute difference between New South Wales and Victoria prices.",
+      "value_range": [
+        -0.25,
+        1.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Directly feeds the price spread into the linear model, which is crucial for understanding market direction.",
+      "leakage_risk": "low",
+      "formula": "nswprice - vicprice",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_transfer_interaction",
+      "type": "formula",
+      "description": "Interaction between total system demand and energy transfer.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Helps the SVM capture scenarios where high demand coincides with high transfer volumes.",
+      "leakage_risk": "low",
+      "formula": "(nswdemand + vicdemand) * transfer",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_price_squared",
+      "type": "formula",
+      "description": "Squared New South Wales price.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "polynomial",
+      "expected_model_benefit": "Allows the linear SVM to approximate quadratic responses to extreme price spikes.",
+      "leakage_risk": "low",
+      "formula": "nswprice ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of the transfer value from its midpoint (0.5).",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Captures the magnitude of transfer imbalance regardless of direction, useful for margin-based models.",
+      "leakage_risk": "low",
+      "formula": "np.abs(transfer - 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_stress_index",
+      "type": "judgment",
+      "description": "Semantic assessment of overall market stress based on combined high prices, high demand, and transfer constraints.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides a holistic, expert-like evaluation of grid conditions that raw linear combinations might miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d190cc20a160fa63",
+  "metadata": {}
+}

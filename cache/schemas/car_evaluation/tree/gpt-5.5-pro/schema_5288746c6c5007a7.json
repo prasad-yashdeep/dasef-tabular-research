@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "cost_code_sum",
+      "type": "formula",
+      "description": "Sum of encoded buying and maintenance tiers for a compact cost-code axis.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Enables simple threshold splits on combined purchase and upkeep settings.",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_code_max",
+      "type": "formula",
+      "description": "Maximum encoded tier across buying and maintenance, emphasizing the upper-range cost code.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Gives a tree a single split point for rows where either cost component is in the upper range.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(buying, maint)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_code_imbalance",
+      "type": "formula",
+      "description": "Absolute gap between buying and maintenance encoded tiers.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Captures asymmetric purchase and upkeep profiles that may need separate splits.",
+      "leakage_risk": "low",
+      "formula": "np.abs(buying - maint)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "space_code_sum",
+      "type": "formula",
+      "description": "Sum of doors, seating capacity, and luggage encoded tiers as a coarse space axis.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "space",
+      "expected_model_benefit": "Allows threshold splits for compact versus roomy configurations.",
+      "leakage_risk": "low",
+      "formula": "doors + persons + lug_boot",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_code_sum",
+      "type": "formula",
+      "description": "Sum of seating capacity, luggage, and safety encoded tiers as a practical-use axis.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "utility",
+      "expected_model_benefit": "Provides a one-dimensional split for combined usability cues.",
+      "leakage_risk": "low",
+      "formula": "persons + lug_boot + safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weakest_utility_code",
+      "type": "formula",
+      "description": "Smallest encoded tier among seating capacity, luggage, and safety, representing the limiting practical-use cue.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "utility",
+      "expected_model_benefit": "Lets a tree isolate rows with any weak practical component using one threshold.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(np.minimum(persons, lug_boot), safety)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_safety_interaction",
+      "type": "formula",
+      "description": "Product of seating-capacity and safety codes.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Exposes nonlinear synergy between capacity and safety that a shallow tree can split directly.",
+      "leakage_risk": "low",
+      "formula": "persons * safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_safety_floor_flag",
+      "type": "formula",
+      "description": "Indicator for the lowest encoded seating-capacity or safety tier.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety_capacity",
+      "expected_model_benefit": "Creates a clean binary split for a likely hard constraint.",
+      "leakage_risk": "low",
+      "formula": "np.where((persons == 0) | (safety == 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_utility_balance_code",
+      "type": "formula",
+      "description": "Difference between practical-use code sum and cost-code sum.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "cost_utility_interaction",
+      "expected_model_benefit": "Helps a tree separate rows where utility codes outweigh cost codes or the reverse.",
+      "leakage_risk": "low",
+      "formula": "(persons + lug_boot + safety) - (buying + maint)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_cost_code_low_utility_code_flag",
+      "type": "formula",
+      "description": "Indicator for upper-range buying and maintenance code sum together with lower-range seating, luggage, and safety code sum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cost_utility_interaction",
+      "expected_model_benefit": "Adds a ready extreme-pattern split for a cross-feature interaction.",
+      "leakage_risk": "low",
+      "formula": "np.where(((buying + maint) >= 5) & ((persons + lug_boot + safety) <= 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_value_balance_rating",
+      "type": "judgment",
+      "description": "Integer ordinal rating from 0 to 4 of row-level value balance, judged from buying, maintenance, doors, seating capacity, luggage, and safety codes using only feature meanings and training-fold code ranges; higher means the tradeoff appears more favorable.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_value",
+      "expected_model_benefit": "Provides a compact semantic bucket that a tree can split on when several formula thresholds jointly matter.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "semantic_practicality_concern_rating",
+      "type": "judgment",
+      "description": "Integer ordinal rating from 0 to 4 of practical concern, judged from weak-looking capacity, luggage, door, or safety cues relative to cost codes and training-fold code ranges; higher means greater concern.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_practicality",
+      "expected_model_benefit": "Supplies an interpretable caution scale, letting a tree separate broad practical profiles before finer formula splits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    }
+  ],
+  "prompt_hash": "5288746c6c5007a7",
+  "metadata": {}
+}

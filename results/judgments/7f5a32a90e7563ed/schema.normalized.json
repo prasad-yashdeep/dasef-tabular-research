@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_std_zone_bucket",
+      "type": "formula",
+      "description": "Three-zone ordinal bucket for V1 using training-fold mean +/- one standard deviation: 0 below lower cut, 1 middle zone, 2 above upper cut.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Provides a direct low/mid/high split candidate so shallow trees can isolate extreme V1 regions without learning two separate numeric cuts.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 < -0.048213, 0, np.where(V1 > 1.702111, 2, 1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_std_zone_bucket",
+      "type": "formula",
+      "description": "Three-zone ordinal bucket for V2 using training-fold mean +/- one standard deviation: 0 below lower cut, 1 middle zone, 2 above upper cut.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Supports early branching on high or low V2 regimes while preserving a simple middle-region grouping.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 < 0.385378, 0, np.where(V2 > 2.112829, 2, 1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_std_zone_bucket",
+      "type": "formula",
+      "description": "Three-zone ordinal bucket for V3 using training-fold mean +/- one standard deviation: 0 below lower cut, 1 middle zone, 2 above upper cut.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Offers a compact V3 regime code that can be split directly and combined with other bucketed measurements.",
+      "leakage_risk": "low",
+      "formula": "np.where(V3 < -0.175696, 0, np.where(V3 > 1.654266, 2, 1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v5_low_tail_indicator",
+      "type": "formula",
+      "description": "Binary flag for V5 falling more than one training-fold standard deviation below its mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold_indicator",
+      "expected_model_benefit": "Lets trees quickly separate rows with unusually depressed fifth measurement values.",
+      "leakage_risk": "low",
+      "formula": "np.where(V5 < -0.503717, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_joint_high_indicator",
+      "type": "formula",
+      "description": "Binary interaction flag for simultaneous upper-zone values in V1 and V2 based on training-fold mean plus one standard deviation cuts.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Captures co-occurrence in the first two measurements, reducing the depth needed for an equivalent pair of splits.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 > 1.702111) & (V2 > 2.112829), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_std_zone_count",
+      "type": "formula",
+      "description": "Count of V1-V5 measurements that exceed their training-fold mean plus one standard deviation.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "count_summary",
+      "expected_model_benefit": "Compresses multi-column upper-tail information into an ordinal feature with natural tree split points.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 > 1.702111, 1, 0) + np.where(V2 > 2.112829, 1, 0) + np.where(V3 > 1.654266, 1, 0) + np.where(V4 > 1.216409, 1, 0) + np.where(V5 > 0.668295, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_std_zone_count",
+      "type": "formula",
+      "description": "Count of V1-V5 measurements that fall below their training-fold mean minus one standard deviation.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "count_summary",
+      "expected_model_benefit": "Gives trees a simple ordinal measure of how broadly low-valued the row profile is across all five measurements.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 < -0.048213, 1, 0) + np.where(V2 < 0.385378, 1, 0) + np.where(V3 < -0.175696, 1, 0) + np.where(V4 < -0.394993, 1, 0) + np.where(V5 < -0.503717, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "front_back_contrast",
+      "type": "formula",
+      "description": "Signed contrast between the first two measurements and the last two measurements.",
+      "value_range": [
+        -8.164,
+        10.231
+      ],
+      "feature_family": "contrast",
+      "expected_model_benefit": "Highlights broad profile tilt, allowing direct splits on whether early positions dominate late positions or the reverse.",
+      "leakage_risk": "low",
+      "formula": "(V1 + V2) - (V4 + V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "center_edge_contrast",
+      "type": "formula",
+      "description": "Difference between V3 and the average of the two endpoint measurements V1 and V5.",
+      "value_range": [
+        -4.387,
+        4.603
+      ],
+      "feature_family": "shape_contrast",
+      "expected_model_benefit": "Exposes center-versus-edge structure that would otherwise require combining three raw measurements.",
+      "leakage_risk": "low",
+      "formula": "V3 - ((V1 + V5) / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_roughness",
+      "type": "formula",
+      "description": "Total adjacent absolute variation across the ordered five-measurement trace.",
+      "value_range": [
+        0.0,
+        18.947
+      ],
+      "feature_family": "shape_variation",
+      "expected_model_benefit": "Enables a single split to distinguish smooth profiles from jagged profiles with multiple sharp changes.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V2 - V1) + np.abs(V3 - V2) + np.abs(V4 - V3) + np.abs(V5 - V4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "qualitative_trace_shape_score",
+      "type": "judgment",
+      "description": "Ordinal evaluator score from the five-measurement trace only: 0 nearly flat, 1 mostly rising, 2 mostly falling, 3 one clear interior crest or trough, 4 multiple turns or irregular profile.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_ordinal_shape",
+      "expected_model_benefit": "Adds a compact semantic shape code that trees can branch on directly when numeric slopes express the pattern only across multiple variables.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "qualitative_extreme_balance_score",
+      "type": "judgment",
+      "description": "Ordinal evaluator score from V1-V5 only: 0 extremes concentrated at V4-V5, 1 mildly concentrated at V4-V5, 2 balanced across positions, 3 mildly concentrated at V1-V2, 4 strongly concentrated at V1-V2.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_ordinal_balance",
+      "expected_model_benefit": "Supplies a semantic summary of where large magnitudes appear, giving trees an easy coarse grouping for profile balance.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "58d2ce516bc0821e",
+  "metadata": {}
+}

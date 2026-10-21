@@ -1,0 +1,190 @@
+{
+  "dataset_name": "law_school_admission_bianry",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "lsat_z_score",
+      "type": "formula",
+      "description": "Standardized LSAT score centered on training mean and scaled by training std, useful as a linear projection.",
+      "value_range": [
+        -5.0,
+        3.0
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Provides a smooth normalized continuous input ideal for SVM margin computation.",
+      "leakage_risk": "low",
+      "formula": "(lsat - 36.8186) / 5.3451",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_avg",
+      "type": "formula",
+      "description": "Average of the two decile rankings, providing a smoother academic standing measure.",
+      "value_range": [
+        1.0,
+        10.0
+      ],
+      "feature_family": "aggregate",
+      "expected_model_benefit": "Reduces noise in decile signals and produces a single linear-friendly academic ranking.",
+      "leakage_risk": "low",
+      "formula": "(decile1 + decile3) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_progression",
+      "type": "formula",
+      "description": "Change between later and earlier decile rankings indicating academic trajectory.",
+      "value_range": [
+        -9.0,
+        9.0
+      ],
+      "feature_family": "trend",
+      "expected_model_benefit": "Captures linear directional signal about improvement or decline in standing.",
+      "leakage_risk": "low",
+      "formula": "decile3 - decile1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lsat_per_decile",
+      "type": "formula",
+      "description": "Ratio of LSAT score to mean decile ranking capturing efficiency of test performance vs class rank.",
+      "value_range": [
+        1.5,
+        48.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Composite ratio yields a stable linear discriminator.",
+      "leakage_risk": "low",
+      "formula": "lsat / np.maximum((decile1 + decile3) / 2.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "academic_composite",
+      "type": "formula",
+      "description": "Weighted composite of standardized LSAT, decile, and undergraduate GPA representing overall academic strength.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Aligns multiple correlated academic indicators into a single linear-margin-friendly axis.",
+      "leakage_risk": "low",
+      "formula": "0.4 * ((lsat - 36.8186) / 5.3451) + 0.3 * ((decile1 + decile3) / 2.0 - 5.657) / 2.8 + 0.3 * (ugpa - 3.2265) / 0.4136",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fam_inc_normalized",
+      "type": "formula",
+      "description": "Family income scaled to [0,1] range for smooth socioeconomic signal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Bounded normalized feature suitable for linear SVM weighting.",
+      "leakage_risk": "low",
+      "formula": "(fam_inc - 1.0) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_centered",
+      "type": "formula",
+      "description": "Age centered on training mean and scaled by std for smooth deviation measure.",
+      "value_range": [
+        -12.0,
+        2.0
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Provides centered numeric input avoiding scale dominance in linear models.",
+      "leakage_risk": "low",
+      "formula": "(age - 59.0846) / 5.257",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ugpa_lsat_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between standardized GPA and LSAT capturing joint academic strength.",
+      "value_range": [
+        -15.0,
+        15.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Adds a nonlinear interaction term as a linear feature improving SVM separability.",
+      "leakage_risk": "low",
+      "formula": "((lsat - 36.8186) / 5.3451) * ((ugpa - 3.2265) / 0.4136)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fulltime_indicator",
+      "type": "formula",
+      "description": "Binary indicator of full-time status (1 if fulltime category is 1).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Clean binary signal directly usable in linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(fulltime == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cluster_tier_score",
+      "type": "judgment",
+      "description": "Ordinal semantic ranking of school cluster tiers mapped to a smooth severity score where lower cluster numbers indicate different program tiers (1->0.8, 2->0.6, 3->0.5, 4->0.4, 5->0.3, 6->0.2).",
+      "value_range": [
+        0.2,
+        0.8
+      ],
+      "feature_family": "semantic_encoding",
+      "expected_model_benefit": "Translates categorical cluster into smooth ordered numeric feature for linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_consistency",
+      "type": "formula",
+      "description": "Inverse absolute deviation between two deciles indicating consistency of academic performance.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "consistency",
+      "expected_model_benefit": "Smooth bounded score rewarding stable academic profiles, helpful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "1.0 / (1.0 + np.abs(decile3 - decile1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_advantage_judgment",
+      "type": "judgment",
+      "description": "Semantic composite reflecting demographic and socioeconomic context combining gender, race, and family income into a smooth normalized score representing structural opportunity context.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Captures non-formulaic interpretable demographic context as a linear feature aiding margin calibration.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "12ea426d93e6f5d4",
+  "metadata": {}
+}

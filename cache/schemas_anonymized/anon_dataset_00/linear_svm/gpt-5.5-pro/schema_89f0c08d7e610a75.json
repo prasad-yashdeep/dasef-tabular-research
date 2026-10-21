@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_00",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "age_z_clipped",
+      "type": "formula",
+      "description": "Age standardized with training-fold mean and scale, then clipped to reduce leverage from extremes.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Gives the linear SVM a bounded, comparable age axis for stable margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x001 - 39.1166666667) / 13.4865014819, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x005_ordered_level_z_clipped",
+      "type": "formula",
+      "description": "Ordered x005 level standardized with training-fold mean and scale, then clipped.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Turns x005 into a smooth comparable coordinate, reducing sensitivity to raw ordinal units.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x005 - 10.1873333333) / 2.5227444491, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_z_clipped",
+      "type": "formula",
+      "description": "Weekly effort x013 standardized with training-fold mean and scale, then clipped.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalized_numeric",
+      "expected_model_benefit": "Provides a centered workload axis that works well with dot-product margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x013 - 40.8626666667) / 11.8616949136, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overtime_severity",
+      "type": "formula",
+      "description": "Amount by which x013 exceeds 40, scaled by a 40-unit week and clipped.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "hinge_severity",
+      "expected_model_benefit": "Separates extra-hours severity from ordinary full-time variation with a bounded linear slope.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x013 - 40.0) / 40.0, 0.0, 1.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_age_ratio_scaled",
+      "type": "formula",
+      "description": "Scaled ratio of weekly effort x013 to age x001, with a denominator floor for stability.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures unusually high effort relative to age as a smooth bounded ratio.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x013 / np.maximum(x001, 1.0)) / 2.0, 0.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x011_log_intensity",
+      "type": "formula",
+      "description": "Log-scaled intensity of sparse amount field x011, anchored so 0 maps to 0 and the observed upper anchor maps to 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "skew_log_transform",
+      "expected_model_benefit": "Compresses large sparse spikes into a near-linear bounded signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(x011, 0.0)) / np.log1p(99999.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x012_log_intensity",
+      "type": "formula",
+      "description": "Log-scaled intensity of sparse amount field x012, anchored so 0 maps to 0 and the observed upper anchor maps to 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "skew_log_transform",
+      "expected_model_benefit": "Keeps rare large x012 values informative without letting raw magnitude dominate.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(x012, 0.0)) / np.log1p(2824.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x011_x012_log_balance",
+      "type": "formula",
+      "description": "Signed difference between the bounded log intensities of x011 and x012.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "signed_contrast",
+      "expected_model_benefit": "Creates a directional contrast between two sparse amount axes for a single linear weight pattern.",
+      "leakage_risk": "low",
+      "formula": "(np.clip(np.log1p(np.maximum(x011, 0.0)) / np.log1p(99999.0), 0.0, 1.0)) - (np.clip(np.log1p(np.maximum(x012, 0.0)) / np.log1p(2824.0), 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_hours_age_composite",
+      "type": "formula",
+      "description": "Weighted 0-to-1 composite of ordered x005 level, weekly effort x013, and proximity of x001 to a mature working-age center.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Offers an approximate linear projection of three related numeric dimensions into one stable margin coordinate.",
+      "leakage_risk": "low",
+      "formula": "0.45 * np.clip((x005 - 1.0) / 15.0, 0.0, 1.0) + 0.35 * np.clip((x013 - 3.0) / 96.0, 0.0, 1.0) + 0.20 * (1.0 - np.clip(np.abs(x001 - 45.0) / 45.0, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x014_endpoint_code_flag",
+      "type": "formula",
+      "description": "Flags endpoint code value 39 in x014, a compact indicator for a high-frequency endpoint-coded category pattern.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_code_indicator",
+      "expected_model_benefit": "Approximates a one-hot cue for an important coded field without expanding the schema.",
+      "leakage_risk": "low",
+      "formula": "np.where(x014 == 39, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "coded_work_role_strength_judgment",
+      "type": "judgment",
+      "description": "Semantic 0-to-1 assessment of the work-role pattern using x002, x006, x007, x008, x005, and x013. A low value indicates a weak or unsettled role pattern; a high value indicates a steady, specialized, high-effort role pattern.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Supplies a compact nonlinear summary of interacting coded work and household fields that raw linear coordinates may miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_capacity_judgment",
+      "type": "judgment",
+      "description": "Semantic 0-to-1 assessment of overall resource capacity from x001, x005, x011, x012, and x013. A low value reflects weak ordered level, low effort, and little or adverse amount activity; a high value reflects stronger ordered level, sustained effort, and strong x011 relative to x012.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a bounded expert-style composite of advancement, effort, and sparse amount evidence for a single SVM weight.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "89f0c08d7e610a75",
+  "metadata": {}
+}

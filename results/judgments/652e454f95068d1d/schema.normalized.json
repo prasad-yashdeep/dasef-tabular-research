@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Age centered and scaled to roughly unit range for smooth linear projection.",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides a smooth continuous age signal suitable for linear margin computation.",
+      "leakage_risk": "low",
+      "formula": "(age - 38.587) / 13.24",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_num_normalized",
+      "type": "formula",
+      "description": "Years of education standardized.",
+      "value_range": [
+        -4.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Linear education signal strongly correlated with income.",
+      "leakage_risk": "low",
+      "formula": "(education_num - 10.139) / 2.555",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_per_week_normalized",
+      "type": "formula",
+      "description": "Weekly working hours standardized.",
+      "value_range": [
+        -4.0,
+        5.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth continuous work-intensity signal for linear models.",
+      "leakage_risk": "low",
+      "formula": "(hours_per_week - 40.869) / 11.847",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_gain",
+      "type": "formula",
+      "description": "Log-transformed capital gain to compress heavy tail.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Linearizes the strongly skewed capital_gain variable for SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_gain)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_loss",
+      "type": "formula",
+      "description": "Log-transformed capital loss.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Compresses tail of capital_loss into a usable linear feature.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_loss)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_net_log_signed",
+      "type": "formula",
+      "description": "Signed log of net capital position (gain minus loss).",
+      "value_range": [
+        -9.0,
+        12.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Single smooth capital signal capturing direction and magnitude.",
+      "leakage_risk": "low",
+      "formula": "np.where(capital_gain >= capital_loss, np.log1p(capital_gain - capital_loss), -np.log1p(capital_loss - capital_gain))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_education_interaction",
+      "type": "formula",
+      "description": "Interaction of standardized hours and education for compounding effect.",
+      "value_range": [
+        -20.0,
+        20.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures joint effect of high education and long hours in a linear-friendly product.",
+      "leakage_risk": "low",
+      "formula": "((education_num - 10.139) / 2.555) * ((hours_per_week - 40.869) / 11.847)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_education_interaction",
+      "type": "formula",
+      "description": "Interaction of standardized age and education.",
+      "value_range": [
+        -12.0,
+        12.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures experience-times-credential joint signal for the linear hyperplane.",
+      "leakage_risk": "low",
+      "formula": "((age - 38.587) / 13.24) * ((education_num - 10.139) / 2.555)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prime_working_age_score",
+      "type": "formula",
+      "description": "Smooth bump centered at age 45 indicating peak earning years.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Provides a non-linearized continuous severity score the linear model can use directly.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - np.abs(age - 45.0) / 25.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overtime_intensity",
+      "type": "formula",
+      "description": "Hours worked beyond 40 per week, clipped.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Highlights overtime workers via a one-sided continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(hours_per_week - 40.0, 0.0, 60.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "socioeconomic_stability_score",
+      "type": "judgment",
+      "description": "Semantic composite score (0-1) approximating household/employment stability based on marital_status, relationship, and workclass code patterns. Higher values indicate married-civilian, established-relationship, private/self-employed stable profiles.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Encodes domain knowledge that stable household and employment configurations correlate with higher earnings into a smooth linear-friendly score.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "human_capital_score",
+      "type": "judgment",
+      "description": "Semantic 0-1 score combining education credential level, occupation skill tier, and age-experience plateau into an interpretable human-capital index.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Gives the linear SVM a single dense interpretable axis encoding skill/credential richness.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "91fed50ed69374dc",
+  "metadata": {}
+}

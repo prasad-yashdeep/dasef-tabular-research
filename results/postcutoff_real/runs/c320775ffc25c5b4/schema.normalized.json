@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_tracker_radar_20260316",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_sites_normalized",
+      "type": "formula",
+      "description": "Scale-normalized logarithmic transformation of the number of sites, mapping the domain to a [0, 1] range to improve distance metric stability.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Prevents large site counts from dominating Euclidean distance calculations in KNN.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(sites) / 11.145",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fp_score_ratio",
+      "type": "formula",
+      "description": "Scale-normalized fingerprinting score relative to the theoretical maximum of 3.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Provides a bounded, normalized similarity dimension for fingerprinting behavior.",
+      "leakage_risk": "low",
+      "formula": "fingerprinting_score / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_prevalence_ratio",
+      "type": "formula",
+      "description": "Ratio of total cookie prevalence to overall prevalence, clipped to [0, 1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures the relative intensity of cookie usage independent of overall popularity, creating a scale-invariant feature for neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(total_cookie_prevalence / np.maximum(prevalence, 1e-6), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_script_ratio",
+      "type": "formula",
+      "description": "Proportion of resources that are scripts, clipped to [0, 1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Normalizes resource composition, allowing KNN to group entities with similar architectural profiles regardless of total size.",
+      "leakage_risk": "low",
+      "formula": "np.clip(script_count / np.maximum(resource_count, 1), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_diversity_score",
+      "type": "formula",
+      "description": "Ratio of distinct APIs to total API calls, representing the diversity of API usage.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Provides a bounded metric of API usage complexity, improving distance calculations between entities with vastly different call volumes.",
+      "leakage_risk": "low",
+      "formula": "np.clip(distinct_api_count / np.maximum(total_api_calls, 1), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_max_cookie_ttl_days",
+      "type": "formula",
+      "description": "Logarithmic transformation of the maximum cookie time-to-live in days.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Compresses extreme outliers in cookie expiration times, ensuring stable distance metrics.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(max_cookie_ttl_days)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_risk_api_density",
+      "type": "formula",
+      "description": "Proportion of distinct APIs that belong to potentially sensitive categories (canvas, audio, navigator, screen).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Creates a normalized density metric for sensitive API usage, grouping entities with similar behavioral risk profiles.",
+      "leakage_risk": "low",
+      "formula": "np.clip((canvas_api_count + audio_api_count + navigator_api_count + screen_api_count) / np.maximum(distinct_api_count, 1), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_fp_per_api",
+      "type": "formula",
+      "description": "Average weighted fingerprinting score per API call, clipped to a maximum of 100.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes fingerprinting intensity by activity volume, providing a stable feature for distance computation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(weighted_fp_score / np.maximum(total_api_calls, 1), 0.0, 100.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "privacy_owner_cluster",
+      "type": "formula",
+      "description": "Additive indicator of organizational transparency, combining ownership and privacy policy presence.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Acts as a discrete cluster indicator, helping KNN segment the space into distinct transparency tiers.",
+      "leakage_risk": "low",
+      "formula": "has_owner + has_privacy_policy",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prototype_dist_high_fp",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype representing maximum fingerprinting behavior (score=3, max_resource=3).",
+      "value_range": [
+        0.0,
+        4.25
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Transforms raw scores into a geometric distance from a behavioral extreme, directly aligning with KNN's spatial assumptions.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((fingerprinting_score - 3.0)**2 + (max_resource_fingerprinting - 3.0)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prototype_dist_heavy_usage",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype representing heavy network presence (log_sites=11.145, log_resources=9.936).",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a unified spatial metric for network footprint, improving neighborhood resolution for high-volume entities.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((np.log1p(sites) - 11.145)**2 + (np.log1p(resource_count) - 9.936)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_tracker_profile_similarity",
+      "type": "judgment",
+      "description": "Semantic assessment of the entity's API usage profile and resource distribution compared to typical unsupervised tracking clusters, yielding a similarity score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures complex, non-linear relationships in API usage that deterministic formulas might miss, providing a rich similarity dimension for KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "5f1e6be8cd69a83a",
+  "metadata": {}
+}

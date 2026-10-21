@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mv",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "x1_scaled",
+      "type": "formula",
+      "description": "Standardized version of x1 to provide a smooth normalized score for linear SVM margins.",
+      "value_range": [
+        -1.74,
+        1.74
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Improves convergence and margin scaling for linear models by centering and scaling the feature.",
+      "leakage_risk": "low",
+      "formula": "x1 / 2.8822",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x2_scaled",
+      "type": "formula",
+      "description": "Standardized version of x2 using training set mean and standard deviation.",
+      "value_range": [
+        -1.73,
+        1.74
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Ensures x2 contributes proportionally to the SVM decision boundary without dominating due to its scale.",
+      "leakage_risk": "low",
+      "formula": "(x2 + 12.5037) / 1.4439",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x6_scaled",
+      "type": "formula",
+      "description": "Standardized version of x6 to align its variance with other numeric features.",
+      "value_range": [
+        -2.42,
+        2.16
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Prevents the relatively large variance of x6 from disproportionately influencing the linear projection.",
+      "leakage_risk": "low",
+      "formula": "(x6 + 11.0463) / 10.8934",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_scaled",
+      "type": "formula",
+      "description": "Standardized version of x9 to bring its large magnitude into a normalized range.",
+      "value_range": [
+        -1.75,
+        1.73
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Crucial for SVMs to handle features with naturally large magnitudes like x9 smoothly.",
+      "leakage_risk": "low",
+      "formula": "(x9 - 300.7663) / 115.2045",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_x10_ratio_centered",
+      "type": "formula",
+      "description": "The ratio of x9 to x10, centered around its approximate mean to provide a continuous severity measure.",
+      "value_range": [
+        -0.19,
+        0.23
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the relative interaction between x9 and x10 in a single linear-friendly dimension.",
+      "leakage_risk": "low",
+      "formula": "(x9 / x10) - 0.273",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x2_x4_composite",
+      "type": "formula",
+      "description": "A weighted composite of standardized x2 and x4 to capture their combined linear projection.",
+      "value_range": [
+        -2.76,
+        4.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a pre-computed linear combination that can help the SVM find a more robust margin.",
+      "leakage_risk": "low",
+      "formula": "(x2 + 12.5037) / 1.4439 + (x4 + 4.3843) / 3.0364",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x5_cross",
+      "type": "formula",
+      "description": "Cross-product of standardized x1 and x5 to introduce a non-linear interaction as a linear feature.",
+      "value_range": [
+        -3.01,
+        3.01
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear SVM to leverage the multiplicative interaction between x1 and x5.",
+      "leakage_risk": "low",
+      "formula": "(x1 / 2.8822) * (x5 / 0.5781)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x7_yes_indicator",
+      "type": "formula",
+      "description": "Bipolar indicator for x7 being 'yes', mapped to 1.0 and -1.0.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Bipolar encoding is optimal for SVM margins, centering the categorical effect around zero.",
+      "leakage_risk": "low",
+      "formula": "np.where(x7 == 'yes', 1.0, -1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x8_large_indicator",
+      "type": "formula",
+      "description": "Bipolar indicator for x8 being 'large', mapped to 1.0 and -1.0.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Provides a symmetric, zero-centered feature for the SVM to weight the 'large' category.",
+      "leakage_risk": "low",
+      "formula": "np.where(x8 == 'large', 1.0, -1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_brown_indicator",
+      "type": "formula",
+      "description": "Bipolar indicator for the most frequent category 'brown' in x3.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Highlights the dominant category in x3 using a margin-friendly bipolar scale.",
+      "leakage_risk": "low",
+      "formula": "np.where(x3 == 'brown', 1.0, -1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_anomaly_score",
+      "type": "judgment",
+      "description": "Evaluates how anomalous the combination of categorical variables (x3, x7, x8) is relative to the typical profile observed in the training data.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a continuous severity measure of categorical rarity, which can be linearly weighted by the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_magnitude_index",
+      "type": "judgment",
+      "description": "Assesses the overall magnitude and extremity of the numeric features (x1, x2, x4, x6) considering their typical ranges and standard deviations.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Summarizes multiple numeric dimensions into a single continuous index, simplifying the linear projection space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0f720596681265c9",
+  "metadata": {}
+}

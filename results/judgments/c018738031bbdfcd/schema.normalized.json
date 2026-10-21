@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "recency_minmax_scaled",
+      "type": "formula",
+      "description": "Min-max scaled V1 using the training-fold 0 to 72 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Keeps the recency dimension on the same numeric scale as other geometry features for KNN distance calculations.",
+      "leakage_risk": "low",
+      "formula": "V1 / 72.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_minmax_scaled",
+      "type": "formula",
+      "description": "Min-max scaled V2 using the training-fold 1 to 44 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Prevents event-count magnitude from dominating or vanishing in Euclidean neighbor search.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 1.0) / 43.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_log_minmax_scaled",
+      "type": "formula",
+      "description": "Log min-max scaled V3 using the training-fold 250 to 11000 range to compress large volume differences.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Makes high-volume rows comparable without letting extreme values dominate local distances.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(V3) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "span_minmax_scaled",
+      "type": "formula",
+      "description": "Min-max scaled V4 using the training-fold 2 to 98 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Places the observation-span dimension on a distance-friendly scale for neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "(V4 - 2.0) / 96.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_rate_log_scaled",
+      "type": "formula",
+      "description": "Log-scaled event density V2 per V4, normalized by training-fold feasible extrema.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "rate_similarity",
+      "expected_model_benefit": "Groups rows with similar activity intensity even when their raw counts and spans differ.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(V2 / V4) - np.log1p(1.0 / 98.0)) / (np.log1p(44.0 / 2.0) - np.log1p(1.0 / 98.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_fraction_clipped",
+      "type": "formula",
+      "description": "Clipped ratio V1 divided by V4, indicating how large the recency interval is relative to the recorded span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "relative_time_similarity",
+      "expected_model_benefit": "Separates rows with similar raw V1 values that occur in very different span contexts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / np.maximum(V4, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mean_zspace_distance_scaled",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance to the unsupervised training-fold mean vector over V1, V2, V3, and V4.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_prototype_distance",
+      "expected_model_benefit": "Adds a radial core-versus-edge coordinate that can improve neighbor ordering in sparse regions.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((V1 - 9.245535714285714) / 8.051590219959847) ** 2 + ((V2 - 5.741071428571429) / 5.407081229597849) ** 2 + ((V3 - 1435.267857142857) / 1351.7703073994624) ** 2 + ((V4 - 34.879464285714285) / 23.75335930525278) ** 2) / 13.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_high_activity_prototype_distance",
+      "type": "formula",
+      "description": "Normalized distance to an unsupervised corner prototype with V1 near its minimum and V2, V3, and V4 near their maxima.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_prototype_distance",
+      "expected_model_benefit": "Supplies a compact similarity coordinate for high-activity recent-history neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((V1 / 72.0) ** 2 + ((V2 - 44.0) / 43.0) ** 2 + ((np.log1p(V3) - np.log1p(11000.0)) / (np.log1p(11000.0) - np.log1p(250.0))) ** 2 + ((V4 - 98.0) / 96.0) ** 2) / 2.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lapsed_sparse_prototype_distance",
+      "type": "formula",
+      "description": "Normalized distance to an unsupervised corner prototype with high V1, low V2 and V3, and high V4.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_prototype_distance",
+      "expected_model_benefit": "Creates a distance cue for sparse long-span profiles that may otherwise be close to unrelated rows.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((V1 - 72.0) / 72.0) ** 2 + ((V2 - 1.0) / 43.0) ** 2 + ((np.log1p(V3) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0))) ** 2 + ((V4 - 98.0) / 96.0) ** 2) / 2.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_frequent_indicator",
+      "type": "formula",
+      "description": "Binary flag for rows with V1 no greater than its training-fold mean and V2 at least its training-fold mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_cluster_indicator",
+      "expected_model_benefit": "Provides a crisp local neighborhood marker that can help separate dense recent-and-frequent regions.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 <= 9.245535714285714) & (V2 >= 5.741071428571429), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "history_stage_semantic_score",
+      "type": "judgment",
+      "description": "A 0-to-1 semantic assessment of donation-history stage from sparse or short-span history near 0 to repeated, sustained, recent activity near 1, considering V1, V2, V3, and V4 jointly.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity_score",
+      "expected_model_benefit": "Can move rows with similar lifecycle meaning closer even when individual raw coordinates differ.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "geometry_outlier_semantic_score",
+      "type": "judgment",
+      "description": "A 0-to-1 semantic assessment of atypical row geometry relative to the training-fold numeric ranges and expected measurement relationships among V1, V2, V3, and V4.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_outlier_score",
+      "expected_model_benefit": "Gives KNN an explicit boundary-versus-core cue so unusual profiles do not rely only on raw coordinate distances.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "72eea510fe8e3a9c",
+  "metadata": {}
+}

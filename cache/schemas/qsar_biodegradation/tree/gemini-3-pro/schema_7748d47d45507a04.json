@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "tree",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of V1 to V2, capturing the relative proportion of these two continuous features.",
+      "value_range": [
+        0.2,
+        8.1
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Allows tree models to split on the relative magnitude of V1 and V2 rather than just their absolute values.",
+      "leakage_risk": "low",
+      "formula": "V1 / (V2 + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v8_high_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for whether V8 is above its mean value of 37.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold",
+      "expected_model_benefit": "Provides a direct binary split for tree models based on a significant threshold in V8.",
+      "leakage_risk": "low",
+      "formula": "np.where(V8 > 37.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_abs_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of V12 from its mean value of -0.19.",
+      "value_range": [
+        0.0,
+        5.1
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Helps tree models identify extreme values in V12 regardless of direction.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V12 + 0.19)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v30_log_transform",
+      "type": "formula",
+      "description": "Logarithmic transformation of V30 to handle potential right-skewness.",
+      "value_range": [
+        0.0,
+        4.3
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces the impact of extreme outliers in V30, making splits more robust.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V30)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v5_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between count features V3 and V5.",
+      "value_range": [
+        0.0,
+        432.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures synergistic effects between V3 and V5 that a tree might otherwise need multiple splits to approximate.",
+      "leakage_risk": "low",
+      "formula": "V3 * V5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v15_v39_diff",
+      "type": "formula",
+      "description": "Difference between continuous features V15 and V39.",
+      "value_range": [
+        -10.6,
+        7.8
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Provides a direct measure of the gap between V15 and V39, useful if their relative difference is predictive.",
+      "leakage_risk": "low",
+      "formula": "V15 - V39",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v16_v23_max",
+      "type": "formula",
+      "description": "Maximum value between count features V16 and V23.",
+      "value_range": [
+        0.0,
+        147.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Highlights the dominant feature between V16 and V23 for each instance.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V16, V23)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v31_bucketed",
+      "type": "formula",
+      "description": "Ordinal bucketing of V31 into three categories based on thresholds 1.0 and 3.0.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Groups continuous values into discrete ordinal bins, simplifying the decision boundary for tree models.",
+      "leakage_risk": "low",
+      "formula": "np.where(V31 < 1.0, 0, np.where(V31 < 3.0, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v36_v37_sum",
+      "type": "formula",
+      "description": "Sum of continuous features V36 and V37.",
+      "value_range": [
+        3.7,
+        16.6
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Combines the additive effect of V36 and V37 into a single feature.",
+      "leakage_risk": "low",
+      "formula": "V36 + V37",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v41_is_zero",
+      "type": "formula",
+      "description": "Boolean indicator for whether V41 is exactly zero.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Explicitly flags the absence of the property measured by V41, which is often a strong signal in tree models.",
+      "leakage_risk": "low",
+      "formula": "np.where(V41 == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_complexity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall molecular complexity based on the combination of count features like V3, V5, V6, and V7.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, non-linear evaluation of complexity that deterministic formulas might miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hydrophobicity_estimate_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of hydrophobicity based on continuous features like V1, V2, and V12.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Encodes domain-specific intuition about chemical properties into a continuous score.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "7748d47d45507a04",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recency_zscore",
+      "type": "formula",
+      "description": "Standardized recency (months since last donation) to ensure equal weighting in distance calculations.",
+      "value_range": [
+        -1.5,
+        2.5
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents the recency feature from dominating or being ignored in Euclidean distance computations due to its native scale.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 9.12) / 6.97",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_zscore",
+      "type": "formula",
+      "description": "Standardized frequency (total number of donations) for balanced neighborhood geometry.",
+      "value_range": [
+        -1.0,
+        7.5
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Aligns the variance of the frequency feature with other dimensions, improving the quality of nearest neighbor retrieval.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 5.77) / 5.54",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_zscore",
+      "type": "formula",
+      "description": "Standardized time (months since first donation) to normalize the tenure dimension.",
+      "value_range": [
+        -1.5,
+        3.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Ensures the donor's tenure contributes proportionally to the overall distance metric.",
+      "leakage_risk": "low",
+      "formula": "(V4 - 35.25) / 24.10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_frequency_rate",
+      "type": "formula",
+      "description": "Ratio of total donations to total months since first donation, representing the historical donation rate.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Creates a dense, scale-invariant similarity metric that groups donors with similar behavioral cadences regardless of their absolute tenure.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_to_tenure_ratio",
+      "type": "formula",
+      "description": "Ratio of months since last donation to total months since first donation.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Highlights donors who have been inactive for a large portion of their known tenure, creating a distinct geometric cluster for lapsed behavior.",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loyalty_index",
+      "type": "formula",
+      "description": "A composite index contrasting normalized frequency against normalized recency.",
+      "value_range": [
+        -3.0,
+        8.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Projects donors onto a 1D manifold representing overall loyalty, simplifying distance calculations for highly engaged vs. disengaged individuals.",
+      "leakage_risk": "low",
+      "formula": "(V2 / 5.77) - (V1 / 9.12)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_tenure",
+      "type": "formula",
+      "description": "Log-transformed months since first donation to compress the long tail of the tenure distribution.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Reduces the geometric distortion caused by extreme outliers in the tenure dimension, leading to more robust neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dist_frequent_donor",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype of a highly frequent, long-term donor (low recency, high frequency, high tenure).",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a localized geometric feature that explicitly measures similarity to a specific, well-defined behavioral archetype.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 2.0)/6.97)**2 + ((V2 - 20.0)/5.54)**2 + ((V4 - 50.0)/24.10)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dist_new_donor",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype of a brand new donor (low recency, low frequency, low tenure).",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Helps the KNN model easily identify and group new individuals by providing a direct distance metric to the origin of the donor lifecycle.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 2.0)/6.97)**2 + ((V2 - 1.0)/5.54)**2 + ((V4 - 2.0)/24.10)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dist_lapsed_donor",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised prototype of a historically active but currently lapsed donor (high recency, low frequency, high tenure).",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Creates a spatial gradient radiating from the lapsed archetype, improving the resolution of the distance metric in that region of the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 20.0)/6.97)**2 + ((V2 - 2.0)/5.54)**2 + ((V4 - 40.0)/24.10)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_first_time_donor",
+      "type": "formula",
+      "description": "Binary indicator for individuals who have only donated exactly once.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Acts as a hard geometric boundary in the feature space, ensuring first-time donors are tightly clustered together.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 == 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_donor_engagement_level",
+      "type": "judgment",
+      "description": "Semantic assessment of the donor's overall engagement and reliability based on their recency, frequency, and tenure, mapped to a continuous scale.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Translates complex, non-linear behavioral patterns into a smooth numerical scale, providing a high-level similarity dimension for neighborhood retrieval.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "3341515dc3e2ce10",
+  "metadata": {}
+}

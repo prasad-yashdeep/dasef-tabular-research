@@ -1,0 +1,190 @@
+{
+  "dataset_name": "employee_turnover_at_techco",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "tenure_saturation_score",
+      "type": "formula",
+      "description": "Log-scaled position of time within the observed training-fold range; 0 corresponds to the shortest observed value and 1 to the longest observed value.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "experience_normalization",
+      "expected_model_benefit": "Supplies a bounded, saturating experience axis that is well scaled for a linear SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(time) - 0.6931471805599453) / 2.995732273553991, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_maturity_score",
+      "type": "formula",
+      "description": "Log-scaled maturity of the work location based on location_age within the observed training-fold range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "experience_normalization",
+      "expected_model_benefit": "Adds location maturity as a bounded contextual axis without relying on raw units.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(location_age) - 1.0986122886681096) / 2.268683541318364, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_burden_score",
+      "type": "formula",
+      "description": "Square-root normalized distance, with higher values indicating greater travel or relocation burden.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "geographic_context",
+      "expected_model_benefit": "Provides a smooth distance severity measure and reduces leverage of extreme distances.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.clip(distance / 3.200019, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "language_affinity_score",
+      "type": "formula",
+      "description": "Normalized language similarity on a 0-to-1 scale, where larger values indicate closer language alignment.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cultural_context",
+      "expected_model_benefit": "Provides a direct affinity axis that can combine through the margin with other context features.",
+      "leakage_risk": "low",
+      "formula": "np.clip(similar_language / 100.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "literacy_environment_zscore",
+      "type": "formula",
+      "description": "Clipped standard score of avg_literacy using unsupervised training-fold mean and spread.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "regional_context",
+      "expected_model_benefit": "Centers neighborhood literacy against fold reference values, improving scale comparability with assessment features.",
+      "leakage_risk": "low",
+      "formula": "np.clip((avg_literacy - 75.45114436187711) / 9.226533433275808, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "training_score_zscore",
+      "type": "formula",
+      "description": "Clipped standard score of training_score using unsupervised training-fold mean and spread.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "skill_assessment",
+      "expected_model_benefit": "Turns training_score into a clipped standardized margin input, limiting outlier influence.",
+      "leakage_risk": "low",
+      "formula": "np.clip((training_score - 4.494845041509434) / 0.43187894874944854, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_strength_zscore",
+      "type": "formula",
+      "description": "Clipped average of standardized logical_score and verbal_score, summarizing overall cognitive assessment level.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "skill_assessment",
+      "expected_model_benefit": "Summarizes logical and verbal ability as one approximately standardized projection for the margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.5 * (((logical_score - 4.388001935171746) / 3.8899484954853727) + ((verbal_score - 4.595355587808418) / 4.4506842107374105)), -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_asymmetry_score",
+      "type": "formula",
+      "description": "Normalized absolute gap between standardized logical_score and verbal_score; higher values indicate a more uneven cognitive profile.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "skill_assessment",
+      "expected_model_benefit": "Adds mismatch information the linear model would not get from separate additive score terms.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(((logical_score - 4.388001935171746) / 3.8899484954853727) - ((verbal_score - 4.595355587808418) / 4.4506842107374105)) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "preparedness_composite_score",
+      "type": "formula",
+      "description": "Weighted 0-to-1 composite of training_score, logical_score, verbal_score, avg_literacy, and log-scaled time.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Creates an interpretable overall preparedness projection aligned to normalized feature scales.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.35 * np.clip((training_score - 2.71665) / 2.394029, 0.0, 1.0) + 0.20 * np.clip((logical_score + 5.0) / 17.0, 0.0, 1.0) + 0.20 * np.clip((verbal_score + 7.0) / 24.0, 0.0, 1.0) + 0.15 * np.clip((avg_literacy - 49.35454) / 47.57722, 0.0, 1.0) + 0.10 * np.clip((np.log1p(time) - 0.6931471805599453) / 2.995732273553991, 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "context_friction_index",
+      "type": "formula",
+      "description": "Weighted 0-to-1 index increasing with distance, lower language similarity, lower literacy environment, and less mature location age.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Provides a single smooth contextual strain direction combining distance, language, literacy, and location maturity.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.35 * np.sqrt(np.clip(distance / 3.200019, 0.0, 1.0)) + 0.30 * (1.0 - np.clip(similar_language / 100.0, 0.0, 1.0)) + 0.20 * (1.0 - np.clip((avg_literacy - 49.35454) / 47.57722, 0.0, 1.0)) + 0.15 * (1.0 - np.clip((np.log1p(location_age) - 1.0986122886681096) / 2.268683541318364, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adaptation_support_need_judgment",
+      "type": "judgment",
+      "description": "Semantic 0-to-1 rating using only the row values and fixed training-fold reference ranges: 0 means the profile appears easy to integrate into the work context, 1 means the profile shows strong adaptation burden.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_context_judgment",
+      "expected_model_benefit": "Can encode nuanced support-need assessment when row signals disagree, giving the margin a compact expert summary.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "skill_profile_coherence_judgment",
+      "type": "judgment",
+      "description": "Semantic 0-to-1 rating using only the row score fields and fixed training-fold reference ranges: 0 means weak or uneven skill indicators, 1 means consistently strong and coherent indicators.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_skill_judgment",
+      "expected_model_benefit": "Adds a human-readable consistency axis for cognitive and training indicators, useful as a smooth auxiliary margin input.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ee6b420b77b8d987",
+  "metadata": {}
+}

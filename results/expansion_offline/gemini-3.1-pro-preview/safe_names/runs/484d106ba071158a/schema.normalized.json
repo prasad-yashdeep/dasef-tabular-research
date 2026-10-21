@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bng_tic_tac_toe",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "center_is_x",
+      "type": "formula",
+      "description": "Indicator for whether the center square is occupied by 'x'.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "positional_indicator",
+      "expected_model_benefit": "Provides a direct linear margin for the strategic importance of the center square for 'x'.",
+      "leakage_risk": "low",
+      "formula": "np.where(middle_middle_square == 'x', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "center_is_o",
+      "type": "formula",
+      "description": "Indicator for whether the center square is occupied by 'o'.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "positional_indicator",
+      "expected_model_benefit": "Provides a direct linear margin for the strategic importance of the center square for 'o'.",
+      "leakage_risk": "low",
+      "formula": "np.where(middle_middle_square == 'o', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "num_x_corners",
+      "type": "formula",
+      "description": "Count of corner squares occupied by 'x'.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Aggregates corner control into a continuous severity measure, allowing the linear SVM to weight corner dominance.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_left_square == 'x', 1, 0) + np.where(top_right_square == 'x', 1, 0) + np.where(bottom_left_square == 'x', 1, 0) + np.where(bottom_right_square == 'x', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "num_o_corners",
+      "type": "formula",
+      "description": "Count of corner squares occupied by 'o'.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Aggregates corner control into a continuous severity measure, allowing the linear SVM to weight corner dominance.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_left_square == 'o', 1, 0) + np.where(top_right_square == 'o', 1, 0) + np.where(bottom_left_square == 'o', 1, 0) + np.where(bottom_right_square == 'o', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "num_x_edges",
+      "type": "formula",
+      "description": "Count of non-corner edge squares occupied by 'x'.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Provides a linear projection of edge control, which has different strategic value than corners or the center.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_middle_square == 'x', 1, 0) + np.where(middle_left_square == 'x', 1, 0) + np.where(middle_right_square == 'x', 1, 0) + np.where(bottom_middle_square == 'x', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "num_o_edges",
+      "type": "formula",
+      "description": "Count of non-corner edge squares occupied by 'o'.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Provides a linear projection of edge control, which has different strategic value than corners or the center.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_middle_square == 'o', 1, 0) + np.where(middle_left_square == 'o', 1, 0) + np.where(middle_right_square == 'o', 1, 0) + np.where(bottom_middle_square == 'o', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_x_count",
+      "type": "formula",
+      "description": "Total number of squares occupied by 'x' on the board.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "global_aggregation",
+      "expected_model_benefit": "Acts as a proxy for the stage of the game and overall board presence, useful as a baseline weight in linear models.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_left_square == 'x', 1, 0) + np.where(top_middle_square == 'x', 1, 0) + np.where(top_right_square == 'x', 1, 0) + np.where(middle_left_square == 'x', 1, 0) + np.where(middle_middle_square == 'x', 1, 0) + np.where(middle_right_square == 'x', 1, 0) + np.where(bottom_left_square == 'x', 1, 0) + np.where(bottom_middle_square == 'x', 1, 0) + np.where(bottom_right_square == 'x', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_o_count",
+      "type": "formula",
+      "description": "Total number of squares occupied by 'o' on the board.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "global_aggregation",
+      "expected_model_benefit": "Acts as a proxy for the stage of the game and overall board presence, useful as a baseline weight in linear models.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_left_square == 'o', 1, 0) + np.where(top_middle_square == 'o', 1, 0) + np.where(top_right_square == 'o', 1, 0) + np.where(middle_left_square == 'o', 1, 0) + np.where(middle_middle_square == 'o', 1, 0) + np.where(middle_right_square == 'o', 1, 0) + np.where(bottom_left_square == 'o', 1, 0) + np.where(bottom_middle_square == 'o', 1, 0) + np.where(bottom_right_square == 'o', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x_main_diagonal_score",
+      "type": "formula",
+      "description": "Count of 'x' marks on the main diagonal (top-left to bottom-right).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "line_completion",
+      "expected_model_benefit": "Directly measures progress towards a specific winning condition, providing a strong linear signal.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_left_square == 'x', 1, 0) + np.where(middle_middle_square == 'x', 1, 0) + np.where(bottom_right_square == 'x', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x_anti_diagonal_score",
+      "type": "formula",
+      "description": "Count of 'x' marks on the anti-diagonal (top-right to bottom-left).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "line_completion",
+      "expected_model_benefit": "Directly measures progress towards a specific winning condition, providing a strong linear signal.",
+      "leakage_risk": "low",
+      "formula": "np.where(top_right_square == 'x', 1, 0) + np.where(middle_middle_square == 'x', 1, 0) + np.where(bottom_left_square == 'x', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x_potential_lines_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of the number of potential winning lines (rows, columns, diagonals) that 'x' can still complete, considering the current board state.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "strategic_assessment",
+      "expected_model_benefit": "Captures complex non-linear interactions of board state into a single continuous severity measure suitable for linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "o_threat_level_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of the threat level posed by 'o', based on the number of lines where 'o' has two marks and the third is blank.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "strategic_assessment",
+      "expected_model_benefit": "Provides a high-level summary of opponent threat, allowing the linear model to adjust its decision boundary based on defensive necessity.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6905b9e4909f2f79",
+  "metadata": {}
+}

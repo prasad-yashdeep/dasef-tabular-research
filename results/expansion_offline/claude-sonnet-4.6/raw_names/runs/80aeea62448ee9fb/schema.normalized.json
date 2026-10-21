@@ -1,0 +1,190 @@
+{
+  "dataset_name": "optdigits",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_pixel_intensity",
+      "type": "formula",
+      "description": "Sum of all 64 pixel values normalized by maximum possible value (64*16=1024), representing overall ink density of the digit",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "global_statistics",
+      "expected_model_benefit": "Digits like 1 have low density while 8 and 0 have high density; provides a smooth linear discriminant",
+      "leakage_risk": "low",
+      "formula": "(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) / 1024.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "top_half_intensity_ratio",
+      "type": "formula",
+      "description": "Ratio of pixel intensity in top 4 rows (inputs 1-32) to total intensity, capturing vertical distribution of ink",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Digits like 7 have more top-heavy ink distribution; helps linear SVM separate digits by vertical ink placement",
+      "leakage_risk": "low",
+      "formula": "(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32) / np.maximum(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "left_half_intensity_ratio",
+      "type": "formula",
+      "description": "Ratio of pixel intensity in left 4 columns (odd-indexed within each row) to total intensity, capturing horizontal ink distribution",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Digits like 1 are right-leaning while others are more symmetric; helps SVM exploit horizontal asymmetry",
+      "leakage_risk": "low",
+      "formula": "(input1 + input2 + input3 + input4 + input9 + input10 + input11 + input12 + input17 + input18 + input19 + input20 + input25 + input26 + input27 + input28 + input33 + input34 + input35 + input36 + input41 + input42 + input43 + input44 + input49 + input50 + input51 + input52 + input57 + input58 + input59 + input60) / np.maximum(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "center_intensity_score",
+      "type": "formula",
+      "description": "Normalized intensity of the central 2x2 block (rows 3-4, cols 3-4 mapped to inputs 19,20,27,28) relative to total intensity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Digits like 0 have hollow centers while 8 has two loops; center density is a strong discriminant for linear SVM",
+      "leakage_risk": "low",
+      "formula": "(input19 + input20 + input27 + input28) / np.maximum(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_gradient_score",
+      "type": "formula",
+      "description": "Weighted vertical gradient: bottom rows weighted positively, top rows negatively, normalized to [-1,1] range to capture vertical ink flow direction",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "gradient_features",
+      "expected_model_benefit": "Captures whether ink is concentrated at top or bottom; useful linear projection for separating digits with descenders vs ascenders",
+      "leakage_risk": "low",
+      "formula": "((input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) - (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8)) / np.maximum(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "diagonal_asymmetry",
+      "type": "formula",
+      "description": "Difference between upper-right quadrant and lower-left quadrant intensity, normalized by total intensity, measuring diagonal ink asymmetry",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Digits like 7 and 1 have strong diagonal asymmetry; provides a smooth continuous feature for linear SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "((input5 + input6 + input7 + input8 + input13 + input14 + input15 + input16) - (input49 + input50 + input51 + input52 + input57 + input58 + input59 + input60)) / np.maximum(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "border_to_interior_ratio",
+      "type": "formula",
+      "description": "Ratio of border pixel intensity (outermost ring) to interior pixel intensity (inner 6x6 block), measuring how much ink is on the edges vs center",
+      "value_range": [
+        0.0,
+        16.0
+      ],
+      "feature_family": "structural_features",
+      "expected_model_benefit": "Digits like 0 have high border-to-interior ratio while filled digits like 8 have more interior ink; strong discriminant for linear SVM",
+      "leakage_risk": "low",
+      "formula": "(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input16 + input17 + input24 + input25 + input32 + input33 + input40 + input41 + input48 + input49 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) / np.maximum(input10 + input11 + input12 + input13 + input14 + input15 + input18 + input19 + input20 + input21 + input22 + input23 + input26 + input27 + input28 + input29 + input30 + input31 + input34 + input35 + input36 + input37 + input38 + input39 + input42 + input43 + input44 + input45 + input46 + input47 + input50 + input51 + input52 + input53 + input54 + input55, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pixel_variance_score",
+      "type": "formula",
+      "description": "Approximate variance of pixel intensities computed as mean of squared values minus square of mean, normalized by 256 (max variance), measuring texture complexity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "texture_features",
+      "expected_model_benefit": "High variance indicates complex digit structure; smooth continuous measure useful for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "np.clip(((input1**2 + input2**2 + input3**2 + input4**2 + input5**2 + input6**2 + input7**2 + input8**2 + input9**2 + input10**2 + input11**2 + input12**2 + input13**2 + input14**2 + input15**2 + input16**2 + input17**2 + input18**2 + input19**2 + input20**2 + input21**2 + input22**2 + input23**2 + input24**2 + input25**2 + input26**2 + input27**2 + input28**2 + input29**2 + input30**2 + input31**2 + input32**2 + input33**2 + input34**2 + input35**2 + input36**2 + input37**2 + input38**2 + input39**2 + input40**2 + input41**2 + input42**2 + input43**2 + input44**2 + input45**2 + input46**2 + input47**2 + input48**2 + input49**2 + input50**2 + input51**2 + input52**2 + input53**2 + input54**2 + input55**2 + input56**2 + input57**2 + input58**2 + input59**2 + input60**2 + input61**2 + input62**2 + input63**2 + input64**2) / 64.0 - ((input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) / 64.0)**2) / 256.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "horizontal_symmetry_score",
+      "type": "formula",
+      "description": "Measure of left-right symmetry by computing normalized absolute difference between left and right halves of each row, averaged across all rows",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "symmetry_features",
+      "expected_model_benefit": "Symmetric digits like 0, 8 score low while asymmetric digits like 7, 1 score high; powerful linear discriminant",
+      "leakage_risk": "low",
+      "formula": "(np.abs(input1 - input8) + np.abs(input2 - input7) + np.abs(input3 - input6) + np.abs(input4 - input5) + np.abs(input9 - input16) + np.abs(input10 - input15) + np.abs(input11 - input14) + np.abs(input12 - input13) + np.abs(input17 - input24) + np.abs(input18 - input23) + np.abs(input19 - input22) + np.abs(input20 - input21) + np.abs(input25 - input32) + np.abs(input26 - input31) + np.abs(input27 - input30) + np.abs(input28 - input29) + np.abs(input33 - input40) + np.abs(input34 - input39) + np.abs(input35 - input38) + np.abs(input36 - input37) + np.abs(input41 - input48) + np.abs(input42 - input47) + np.abs(input43 - input46) + np.abs(input44 - input45) + np.abs(input49 - input56) + np.abs(input50 - input55) + np.abs(input51 - input54) + np.abs(input52 - input53) + np.abs(input57 - input64) + np.abs(input58 - input63) + np.abs(input59 - input62) + np.abs(input60 - input61)) / (32.0 * 16.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_symmetry_score",
+      "type": "formula",
+      "description": "Measure of top-bottom symmetry by computing normalized absolute difference between top and bottom halves of the digit image",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "symmetry_features",
+      "expected_model_benefit": "Vertically symmetric digits like 0, 8, 3 score low; asymmetric digits like 7, 9 score high; useful SVM linear feature",
+      "leakage_risk": "low",
+      "formula": "(np.abs(input1 - input57) + np.abs(input2 - input58) + np.abs(input3 - input59) + np.abs(input4 - input60) + np.abs(input5 - input61) + np.abs(input6 - input62) + np.abs(input7 - input63) + np.abs(input8 - input64) + np.abs(input9 - input49) + np.abs(input10 - input50) + np.abs(input11 - input51) + np.abs(input12 - input52) + np.abs(input13 - input53) + np.abs(input14 - input54) + np.abs(input15 - input55) + np.abs(input16 - input56) + np.abs(input17 - input41) + np.abs(input18 - input42) + np.abs(input19 - input43) + np.abs(input20 - input44) + np.abs(input21 - input45) + np.abs(input22 - input46) + np.abs(input23 - input47) + np.abs(input24 - input48) + np.abs(input25 - input33) + np.abs(input26 - input34) + np.abs(input27 - input35) + np.abs(input28 - input36) + np.abs(input29 - input37) + np.abs(input30 - input38) + np.abs(input31 - input39) + np.abs(input32 - input40)) / (32.0 * 16.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_pixel_count_normalized",
+      "type": "formula",
+      "description": "Fraction of pixels with intensity above 0, measuring sparsity vs density of the digit stroke",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "structural_features",
+      "expected_model_benefit": "Digit 1 has very few active pixels while 8 has many; sparsity is a smooth proxy for stroke complexity useful for linear SVM",
+      "leakage_risk": "low",
+      "formula": "(np.where(input1 > 0, 1, 0) + np.where(input2 > 0, 1, 0) + np.where(input3 > 0, 1, 0) + np.where(input4 > 0, 1, 0) + np.where(input5 > 0, 1, 0) + np.where(input6 > 0, 1, 0) + np.where(input7 > 0, 1, 0) + np.where(input8 > 0, 1, 0) + np.where(input9 > 0, 1, 0) + np.where(input10 > 0, 1, 0) + np.where(input11 > 0, 1, 0) + np.where(input12 > 0, 1, 0) + np.where(input13 > 0, 1, 0) + np.where(input14 > 0, 1, 0) + np.where(input15 > 0, 1, 0) + np.where(input16 > 0, 1, 0) + np.where(input17 > 0, 1, 0) + np.where(input18 > 0, 1, 0) + np.where(input19 > 0, 1, 0) + np.where(input20 > 0, 1, 0) + np.where(input21 > 0, 1, 0) + np.where(input22 > 0, 1, 0) + np.where(input23 > 0, 1, 0) + np.where(input24 > 0, 1, 0) + np.where(input25 > 0, 1, 0) + np.where(input26 > 0, 1, 0) + np.where(input27 > 0, 1, 0) + np.where(input28 > 0, 1, 0) + np.where(input29 > 0, 1, 0) + np.where(input30 > 0, 1, 0) + np.where(input31 > 0, 1, 0) + np.where(input32 > 0, 1, 0) + np.where(input33 > 0, 1, 0) + np.where(input34 > 0, 1, 0) + np.where(input35 > 0, 1, 0) + np.where(input36 > 0, 1, 0) + np.where(input37 > 0, 1, 0) + np.where(input38 > 0, 1, 0) + np.where(input39 > 0, 1, 0) + np.where(input40 > 0, 1, 0) + np.where(input41 > 0, 1, 0) + np.where(input42 > 0, 1, 0) + np.where(input43 > 0, 1, 0) + np.where(input44 > 0, 1, 0) + np.where(input45 > 0, 1, 0) + np.where(input46 > 0, 1, 0) + np.where(input47 > 0, 1, 0) + np.where(input48 > 0, 1, 0) + np.where(input49 > 0, 1, 0) + np.where(input50 > 0, 1, 0) + np.where(input51 > 0, 1, 0) + np.where(input52 > 0, 1, 0) + np.where(input53 > 0, 1, 0) + np.where(input54 > 0, 1, 0) + np.where(input55 > 0, 1, 0) + np.where(input56 > 0, 1, 0) + np.where(input57 > 0, 1, 0) + np.where(input58 > 0, 1, 0) + np.where(input59 > 0, 1, 0) + np.where(input60 > 0, 1, 0) + np.where(input61 > 0, 1, 0) + np.where(input62 > 0, 1, 0) + np.where(input63 > 0, 1, 0) + np.where(input64 > 0, 1, 0)) / 64.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stroke_complexity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of stroke complexity based on the combination of pixel variance, active pixel count, and spatial distribution patterns. Higher scores indicate more complex multi-stroke digits like 8, lower scores indicate simple single-stroke digits like 1 or 7",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_complexity",
+      "expected_model_benefit": "Provides a holistic complexity measure that complements formula features; helps linear SVM distinguish simple vs complex digit structures",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f7cc4ed22fd8c1b7",
+  "metadata": {}
+}

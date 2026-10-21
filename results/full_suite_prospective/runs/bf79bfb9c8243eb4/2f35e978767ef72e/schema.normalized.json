@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "nsw_vic_price_diff",
+      "type": "formula",
+      "description": "Difference in electricity price between New South Wales and Victoria.",
+      "value_range": [
+        -0.25,
+        1.0
+      ],
+      "feature_family": "inter_regional_dynamics",
+      "expected_model_benefit": "Allows the tree model to split on the relative price difference between the two regions, capturing inter-regional market dynamics.",
+      "leakage_risk": "low",
+      "formula": "nswprice - vicprice",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_vic_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of electricity demand in New South Wales to Victoria.",
+      "value_range": [
+        0.0,
+        35.0
+      ],
+      "feature_family": "inter_regional_dynamics",
+      "expected_model_benefit": "Provides a normalized measure of demand imbalance, helping the model identify periods where one region disproportionately drives overall demand.",
+      "leakage_risk": "low",
+      "formula": "nswdemand / (vicdemand + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_demand_period",
+      "type": "formula",
+      "description": "Indicator for periods where both New South Wales and Victoria experience high electricity demand.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "system_load",
+      "expected_model_benefit": "Creates a direct boolean split for tree models to isolate systemic high-load events.",
+      "leakage_risk": "low",
+      "formula": "np.where((nswdemand > 0.5) & (vicdemand > 0.5), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_interaction_nsw",
+      "type": "formula",
+      "description": "Interaction term between price and demand in New South Wales.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "market_economics",
+      "expected_model_benefit": "Captures the non-linear relationship between price and demand, highlighting periods of high revenue or market stress.",
+      "leakage_risk": "low",
+      "formula": "nswprice * nswdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_direction_magnitude",
+      "type": "formula",
+      "description": "Absolute deviation of power transfer from the neutral midpoint.",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "grid_operations",
+      "expected_model_benefit": "Measures the intensity of power flow regardless of direction, providing a clear threshold for high-transfer states.",
+      "leakage_risk": "low",
+      "formula": "np.abs(transfer - 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_peak_period",
+      "type": "formula",
+      "description": "Indicator for typical peak hours based on the period feature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_patterns",
+      "expected_model_benefit": "Groups continuous time periods into a discrete categorical bucket, simplifying splits for time-of-day effects.",
+      "leakage_risk": "low",
+      "formula": "np.where((period >= 0.3) & (period <= 0.7), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vic_price_spike",
+      "type": "formula",
+      "description": "Indicator for unusually high electricity prices in Victoria.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "anomaly_detection",
+      "expected_model_benefit": "Isolates extreme price events in Victoria, allowing the model to treat them as a distinct regime.",
+      "leakage_risk": "low",
+      "formula": "np.where(vicprice > 0.01, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_price_spike",
+      "type": "formula",
+      "description": "Indicator for unusually high electricity prices in New South Wales.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "anomaly_detection",
+      "expected_model_benefit": "Isolates extreme price events in New South Wales, providing a direct boolean feature for anomaly detection.",
+      "leakage_risk": "low",
+      "formula": "np.where(nswprice > 0.1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_imbalance",
+      "type": "formula",
+      "description": "Absolute difference in electricity demand between New South Wales and Victoria.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "inter_regional_dynamics",
+      "expected_model_benefit": "Quantifies the magnitude of demand mismatch between regions, which may correlate with power transfer requirements.",
+      "leakage_risk": "low",
+      "formula": "np.abs(nswdemand - vicdemand)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_efficiency",
+      "type": "judgment",
+      "description": "Assesses the efficiency of power transfer between NSW and VIC based on demand and price differentials.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "grid_operations",
+      "expected_model_benefit": "Provides a semantic evaluation of how well the grid is balancing load and cost, capturing complex operational states.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_stress_index",
+      "type": "judgment",
+      "description": "Evaluates the overall stress on the electricity market considering combined demand and price levels across both regions.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "market_economics",
+      "expected_model_benefit": "Aggregates multiple continuous signals into a single holistic risk score, useful for identifying critical market conditions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "seasonal_demand_shift",
+      "type": "judgment",
+      "description": "Estimates the seasonal shift in demand patterns based on the date and period features.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "temporal_patterns",
+      "expected_model_benefit": "Captures long-term temporal trends and seasonal variations that affect baseline demand levels.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "b553e4244d2bcfa0",
+  "metadata": {}
+}

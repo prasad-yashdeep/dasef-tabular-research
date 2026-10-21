@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_cost_score",
+      "type": "formula",
+      "description": "Sum of buying and maintenance costs, representing the overall financial burden.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a continuous severity measure of cost, allowing the linear SVM to establish a clear margin based on affordability.",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_score",
+      "type": "formula",
+      "description": "Sum of doors, persons, and luggage boot size, representing the overall physical capacity of the car.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregates capacity metrics into a single linear projection, simplifying the feature space for the SVM.",
+      "leakage_risk": "low",
+      "formula": "doors + persons + lug_boot",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_capacity_interaction",
+      "type": "formula",
+      "description": "Product of safety and persons, capturing the interaction between passenger capacity and safety level.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Exposes a non-linear interaction to the linear model, helping to separate cars that are both safe and spacious.",
+      "leakage_risk": "low",
+      "formula": "safety * persons",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "value_for_money",
+      "type": "formula",
+      "description": "Ratio of total capacity and safety to total cost, representing the utility gained per unit of cost.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a smooth normalized score that directly correlates with overall desirability, ideal for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "(safety + persons + lug_boot) / (buying + maint + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_high_safety_low_cost",
+      "type": "formula",
+      "description": "Indicator for cars with at least medium safety and low combined cost.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "logical_indicator",
+      "expected_model_benefit": "Provides a sharp decision boundary feature for the SVM to easily identify high-value configurations.",
+      "leakage_risk": "low",
+      "formula": "np.where((safety >= 1) & ((buying + maint) <= 2), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_quality_index",
+      "type": "formula",
+      "description": "Weighted composite index balancing safety, capacity, and cost.",
+      "value_range": [
+        -6.0,
+        9.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Acts as an approximate linear projection of overall quality, aligning well with the linear SVM's decision function.",
+      "leakage_risk": "low",
+      "formula": "safety * 2.0 + persons * 1.5 + lug_boot * 1.0 - buying * 1.0 - maint * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_to_safety_ratio",
+      "type": "formula",
+      "description": "Ratio of total cost to safety level, indicating how much is paid per unit of safety.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights inefficient trade-offs between cost and safety, providing a continuous risk measure for the model.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) / (safety + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_car_suitability",
+      "type": "formula",
+      "description": "Indicator for cars with adequate persons capacity, doors, and safety for family use.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "logical_indicator",
+      "expected_model_benefit": "Creates a distinct binary feature that groups family-appropriate vehicles, aiding in margin construction.",
+      "leakage_risk": "low",
+      "formula": "np.where((persons >= 1) & (doors >= 1) & (safety >= 1), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "luxury_proxy",
+      "type": "formula",
+      "description": "Indicator for cars with high buying price, high maintenance, and high safety.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "logical_indicator",
+      "expected_model_benefit": "Isolates premium vehicles into a single dimension, allowing the SVM to apply specific weights to this segment.",
+      "leakage_risk": "low",
+      "formula": "np.where((buying >= 2) & (maint >= 2) & (safety == 2), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "basic_transport_score",
+      "type": "formula",
+      "description": "Sum of the minimum cost factor and safety, representing the baseline utility of the vehicle.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a robust, smooth feature that captures essential transportation value without being skewed by a single high cost.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(buying, maint) + safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_family_appeal",
+      "type": "judgment",
+      "description": "Semantic judgment of the car's appeal to families, considering passenger capacity, doors, luggage space, and safety.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures nuanced, non-linear combinations of capacity and safety that formulaic features might miss, providing a smooth score for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_economic_viability",
+      "type": "judgment",
+      "description": "Semantic judgment of the car's economic viability, balancing buying price, maintenance cost, and basic utility.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic assessment of cost-effectiveness, offering a continuous severity measure that aligns with linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f3c5a2de5d5921b2",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "nsw_vic_price_distance",
+      "type": "formula",
+      "description": "Absolute difference between NSW and VIC electricity prices, acting as a 1D distance metric.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Helps KNN group periods with similar inter-regional price spreads.",
+      "leakage_risk": "low",
+      "formula": "np.abs(nswprice - vicprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_vic_demand_distance",
+      "type": "formula",
+      "description": "Absolute difference between NSW and VIC electricity demand.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Improves neighborhood geometry by clustering rows with similar demand imbalances.",
+      "leakage_risk": "low",
+      "formula": "np.abs(nswdemand - vicdemand)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_demand_magnitude",
+      "type": "formula",
+      "description": "Euclidean norm of the demand in both regions.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Provides a unified magnitude of demand, allowing KNN to easily find neighbors with similar overall load.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(nswdemand**2 + vicdemand**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_euclidean_norm",
+      "type": "formula",
+      "description": "Euclidean norm of all price and demand variables.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Acts as a composite distance-from-origin metric in the 4D price-demand space.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(nswprice**2 + nswdemand**2 + vicprice**2 + vicdemand**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_deviation_from_mean",
+      "type": "formula",
+      "description": "Absolute deviation of the transfer amount from its training set mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Highlights anomalous transfer volumes, helping KNN isolate typical vs atypical transfer states.",
+      "leakage_risk": "low",
+      "formula": "np.abs(transfer - 0.4987)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_mean_demand",
+      "type": "formula",
+      "description": "Euclidean distance to the unsupervised prototype representing average demand in both regions.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Centers the demand space around the global mean, improving distance calculations for KNN.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((nswdemand - 0.4345)**2 + (vicdemand - 0.4277)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_mean_price",
+      "type": "formula",
+      "description": "Euclidean distance to the unsupervised prototype representing average price in both regions.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Centers the price space around the global mean, aiding in identifying price-shock neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((nswprice - 0.0598)**2 + (vicprice - 0.0034)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_to_mean_demand_distance",
+      "type": "formula",
+      "description": "Absolute difference between the transfer value and the average demand of the two regions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures the relationship between inter-regional transfer and overall demand levels.",
+      "leakage_risk": "low",
+      "formula": "np.abs(transfer - (nswdemand + vicdemand) / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_demand_cluster_indicator",
+      "type": "formula",
+      "description": "Binary indicator for periods where both regions experience above-average demand (>0.5).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a distinct subspace for high-demand events, forcing KNN to group these critical periods together.",
+      "leakage_risk": "low",
+      "formula": "np.where((nswdemand > 0.5) & (vicdemand > 0.5), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "max_price_deviation",
+      "type": "formula",
+      "description": "The maximum absolute deviation of either region's price from its respective mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Uses Chebyshev-like distance to identify extreme price events in either market.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.abs(nswprice - 0.0598), np.abs(vicprice - 0.0034))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_imbalance_severity",
+      "type": "judgment",
+      "description": "Semantic assessment of the severity of demand imbalance between NSW and VIC regions, considering historical transfer capacity.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a continuous semantic score that helps KNN weigh the importance of demand mismatches beyond simple subtraction.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_stress_indicator",
+      "type": "judgment",
+      "description": "Semantic evaluation of overall market stress based on combined high prices, high demand, and extreme transfer values.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Acts as a soft cluster assignment, grouping periods of high market stress closer together in the feature space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "369a877041f5e117",
+  "metadata": {}
+}

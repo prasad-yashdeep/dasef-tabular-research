@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_04",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "checking_liquidity_score",
+      "type": "formula",
+      "description": "Ordinal liquidity score from x001 checking account status; higher means more readily available checking-account funds or no disclosed checking limitation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Gives the linear SVM a monotone account-liquidity coordinate instead of four sparse levels.",
+      "leakage_risk": "low",
+      "formula": "np.where(x001 == '<0', 0.0, np.where(x001 == '0<=X<200', 0.45, np.where(x001 == '>=200', 0.85, np.where(x001 == 'no checking', 1.0, 0.5))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "savings_reserve_score",
+      "type": "formula",
+      "description": "Ordinal reserve score from x006 savings status; higher means larger declared reserve or less constrained reserve status.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Offers a compact reserve-capacity axis that can combine additively with affordability signals in a margin model.",
+      "leakage_risk": "low",
+      "formula": "np.where(x006 == '<100', 0.0, np.where(x006 == '100<=X<500', 0.35, np.where(x006 == '500<=X<1000', 0.70, np.where(x006 == '>=1000', 1.0, np.where(x006 == 'no known savings', 0.65, 0.5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_repayment_reliability_score",
+      "type": "formula",
+      "description": "Ordinal score from x003 repayment history; higher means stronger prior account performance.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_history",
+      "expected_model_benefit": "Compresses repayment-history categories into one ordered coordinate, helping a linear margin use account performance without many indicators.",
+      "leakage_risk": "low",
+      "formula": "np.where(x003 == 'no credits/all paid', 0.0, np.where(x003 == 'all paid', 0.20, np.where(x003 == 'delayed previously', 0.40, np.where(x003 == 'existing paid', 0.75, np.where(x003 == 'critical/other existing credit', 1.0, 0.5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_amount_log_scaled",
+      "type": "formula",
+      "description": "Log-normalized requested credit amount x005 using training-fold min and max; compresses large outliers while preserving order.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_terms",
+      "expected_model_benefit": "Reduces skew from large requested amounts while preserving a smooth magnitude signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(x005) - np.log1p(250.0)) / (np.log1p(15945.0) - np.log1p(250.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_duration_scaled",
+      "type": "formula",
+      "description": "Normalized duration in months from x002 using training-fold min and max; higher means longer commitment period.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_terms",
+      "expected_model_benefit": "Separates term length from amount so the margin can learn independent duration effects.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x002 - 4.0) / (60.0 - 4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_repayment_intensity_score",
+      "type": "formula",
+      "description": "Log-scaled approximate requested amount per month, computed as x005 divided by x002 and normalized by the largest training-fold amount over shortest duration.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "affordability",
+      "expected_model_benefit": "Approximates scheduled monthly size and adds a ratio-like affordability signal more linear than raw amount alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(x005 / np.maximum(x002, 1.0)) / np.log1p(15945.0 / 4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_rate_pressure_score",
+      "type": "formula",
+      "description": "Normalized installment-rate burden from x008; higher means a larger scheduled payment share.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "affordability",
+      "expected_model_benefit": "Places the ordinal installment burden on a common zero-to-one scale for SVM scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x008 - 1.0) / (4.0 - 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "personal_stability_index",
+      "type": "formula",
+      "description": "Weighted stability index combining employment tenure x007, age x013, residence duration x011, job skill x017, and phone availability x019.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "stability",
+      "expected_model_benefit": "Combines several ordered personal-stability signals into a dense approximate linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.35 * np.where(x007 == 'unemployed', 0.0, np.where(x007 == '<1', 0.15, np.where(x007 == '1<=X<4', 0.5, np.where(x007 == '4<=X<7', 0.75, np.where(x007 == '>=7', 1.0, 0.5))))) + 0.20 * np.clip((x013 - 20.0) / (68.0 - 20.0), 0.0, 1.0) + 0.15 * np.clip((x011 - 1.0) / (4.0 - 1.0), 0.0, 1.0) + 0.20 * np.where(x017 == 'unemp/unskilled non res', 0.0, np.where(x017 == 'unskilled resident', 0.35, np.where(x017 == 'skilled', 0.65, np.where(x017 == 'high qualif/self emp/mgmt', 1.0, 0.5)))) + 0.10 * np.where(x019 == 'yes', 1.0, 0.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "collateral_housing_strength_score",
+      "type": "formula",
+      "description": "Weighted strength score from property x012 and housing x015; higher means stronger tangible backing and more secure housing status.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "collateral",
+      "expected_model_benefit": "Summarizes tangible backing and housing security as an additive strength coordinate.",
+      "leakage_risk": "low",
+      "formula": "0.65 * np.where(x012 == 'no known property', 0.0, np.where(x012 == 'life insurance', 0.45, np.where(x012 == 'car', 0.55, np.where(x012 == 'real estate', 1.0, 0.5)))) + 0.35 * np.where(x015 == 'rent', 0.0, np.where(x015 == 'for free', 0.30, np.where(x015 == 'own', 1.0, 0.5)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_obligation_pressure_score",
+      "type": "formula",
+      "description": "Pressure score combining other installment plans x014, number of existing credits x016, dependents x018, and support from co-applicant or guarantor x010; higher means heavier net obligation load.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "obligations",
+      "expected_model_benefit": "Captures load from external plans, existing credit count, dependents, and guarantor or co-applicant support in one pressure measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.50 * np.where(x014 == 'none', 0.0, np.where(x014 == 'stores', 0.6, np.where(x014 == 'bank', 1.0, 0.5))) + 0.30 * np.clip((x016 - 1.0) / (4.0 - 1.0), 0.0, 1.0) + 0.20 * np.clip((x018 - 1.0) / (2.0 - 1.0), 0.0, 1.0) - 0.15 * np.where(x010 == 'guarantor', 1.0, np.where(x010 == 'co applicant', 0.6, 0.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "purpose_asset_durability_judgment",
+      "type": "judgment",
+      "description": "Semantic score from 0.0 to 1.0 using x004. Assign 0.0 to 0.3 for discretionary or unclear consumption, 0.4 to 0.7 for household durable goods or maintenance, and 0.8 to 1.0 for business, retraining, education, or durable transport with continuing utility.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_purpose",
+      "expected_model_benefit": "Condenses high-cardinality purpose semantics into one dense coordinate, avoiding many sparse purpose indicators.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "application_coherence_judgment",
+      "type": "judgment",
+      "description": "Semantic score from 0.0 to 1.0 assessing internal consistency among x004 purpose, x005 amount, x002 duration, x007 employment tenure, x013 age, x015 housing, x014 other installment plans, and x016 existing credits. High values indicate proportionate amount and term for the stated purpose and personal situation; low values indicate mismatched size, term, or circumstances.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_consistency",
+      "expected_model_benefit": "Supplies a dense nonlinear plausibility summary that a linear SVM can weight directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "17851ff244e97969",
+  "metadata": {}
+}

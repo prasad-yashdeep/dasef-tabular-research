@@ -1,0 +1,190 @@
+{
+  "dataset_name": "airlines",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "time_of_day_normalized",
+      "type": "formula",
+      "description": "Departure time normalized to [0,1] across the day (minutes since midnight / 1440).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_scaling",
+      "expected_model_benefit": "Smooth normalized scalar that supports approximately linear separation along time-of-day risk gradients.",
+      "leakage_risk": "low",
+      "formula": "np.clip(Time / 1440.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_late_afternoon_evening",
+      "type": "formula",
+      "description": "Indicator/severity that the flight departs in the higher-congestion late afternoon to evening window (roughly 15:00-22:00).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_window",
+      "expected_model_benefit": "Provides a linearly weighted indicator capturing peak-congestion departure windows.",
+      "leakage_risk": "low",
+      "formula": "np.where((Time >= 900) & (Time <= 1320), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_early_morning",
+      "type": "formula",
+      "description": "Indicator for early-morning departures (before 7am) which typically have lower delay propagation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_window",
+      "expected_model_benefit": "Linear contrast feature for off-peak early departures.",
+      "leakage_risk": "low",
+      "formula": "np.where(Time < 420, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "length_zscore",
+      "type": "formula",
+      "description": "Standardized flight length using training-fold mean/std, clipped for robustness.",
+      "value_range": [
+        -3.0,
+        6.5
+      ],
+      "feature_family": "numeric_standardization",
+      "expected_model_benefit": "Provides centered/scaled length suitable for linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Length - 131.2592) / 69.9617, -3.0, 6.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_length",
+      "type": "formula",
+      "description": "Log-transformed flight length to compress long-haul tail and linearize relationships.",
+      "value_range": [
+        3.2,
+        6.4
+      ],
+      "feature_family": "numeric_transform",
+      "expected_model_benefit": "Reduces skew in Length, helping linear projection capture monotone effects.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.clip(Length, 0.0, 1000.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_length_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between normalized time-of-day and normalized length, capturing later long flights.",
+      "value_range": [
+        0.0,
+        6.5
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows linear SVM to weight combined late-departure long-haul risk.",
+      "leakage_risk": "low",
+      "formula": "(Time / 1440.0) * np.log1p(np.clip(Length, 0.0, 1000.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expected_arrival_overflow",
+      "type": "formula",
+      "description": "Fractional overflow into the next day if Time + Length exceeds 1440 minutes; 0 otherwise.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "derived_temporal",
+      "expected_model_benefit": "Encodes red-eye/overnight arrivals which correlate with operational disruption.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Time + Length - 1440.0) / 1440.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_weekend",
+      "type": "formula",
+      "description": "Indicator for weekend departures (Saturday=6, Sunday=7).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "calendar",
+      "expected_model_benefit": "Captures weekly seasonality as a linear offset.",
+      "leakage_risk": "low",
+      "formula": "np.where((DayOfWeek.astype(float) == 6) | (DayOfWeek.astype(float) == 7), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_midweek_peak",
+      "type": "formula",
+      "description": "Indicator for the busiest midweek days (Wednesday=3, Thursday=4) per training distribution.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "calendar",
+      "expected_model_benefit": "Encodes high-traffic weekday effect for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.where((DayOfWeek.astype(float) == 3) | (DayOfWeek.astype(float) == 4), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "same_airport_indicator",
+      "type": "formula",
+      "description": "Indicator that origin and destination airports are identical (rare/irregular routing).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "routing_anomaly",
+      "expected_model_benefit": "Adds a sparse linear flag for unusual itineraries.",
+      "leakage_risk": "low",
+      "formula": "np.where(AirportFrom == AirportTo, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "congestion_propensity_score",
+      "type": "judgment",
+      "description": "Semantic score (0-1) estimating airport-level congestion propensity based on origin airport identity, using generic hub knowledge: major hubs (ATL, ORD, DFW, DEN, LAX, IAH, PHX, JFK, EWR, SFO, LGA) score near 1.0; mid-size airports score around 0.5; small regional airports score near 0.1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_airport_judgment",
+      "expected_model_benefit": "Provides a smooth continuous severity measure linking origin airport to operational congestion, improving linear margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "carrier_operational_reliability",
+      "type": "judgment",
+      "description": "Semantic score (0-1) estimating carrier operational reliability from generic industry knowledge of the Airline code; legacy/major carriers with strong on-time records score higher (closer to 1.0), low-cost or regional feeders with tighter turnarounds score lower (closer to 0.2).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_carrier_judgment",
+      "expected_model_benefit": "Continuous carrier-quality proxy that supports a linear weighting in SVM decision function.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9cb74dfaaa8fde9f",
+  "metadata": {}
+}

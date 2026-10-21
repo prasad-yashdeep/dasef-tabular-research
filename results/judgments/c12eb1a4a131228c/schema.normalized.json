@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "halogen_burden_score",
+      "type": "formula",
+      "description": "Total burden across descriptors associated with halogen atoms or halogen-specific substructures.",
+      "value_range": [
+        0.0,
+        40.0
+      ],
+      "feature_family": "substructure_count",
+      "expected_model_benefit": "Turns several sparse counts into a split-ready cumulative alert for heavy substitution patterns.",
+      "leakage_risk": "low",
+      "formula": "V3 + V24 + V25 + V29 + V41",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_motif_count",
+      "type": "formula",
+      "description": "Count of uncommon binary or count alerts among low-frequency substructure descriptors.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "sparse_alert_aggregation",
+      "expected_model_benefit": "Aggregates very sparse indicators so a tree can split on presence of any unusual motif.",
+      "leakage_risk": "low",
+      "formula": "np.where(V4 > 0, 1, 0) + np.where(V19 > 0, 1, 0) + np.where(V20 > 0, 1, 0) + np.where(V21 > 0, 1, 0) + np.where(V24 > 0, 1, 0) + np.where(V29 > 0, 1, 0) + np.where(V40 > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "halogenated_aromatic_alert",
+      "type": "formula",
+      "description": "Indicator for simultaneous halogen-related signal and aromatic or carbon-substructure signal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_indicator",
+      "expected_model_benefit": "Makes a non-linear co-occurrence available as a single branch condition.",
+      "leakage_risk": "low",
+      "formula": "np.where(((V24 > 0) | (V25 > 0) | (V29 > 0) | (V41 > 0)) & ((V7 > 0) | (V33 > 0) | (V34 > 0) | (V40 > 0)), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heteroatom_functional_burden",
+      "type": "formula",
+      "description": "Sum of oxygen, nitrogen, donor, and functional-group count descriptors.",
+      "value_range": [
+        0.0,
+        98.0
+      ],
+      "feature_family": "functional_group_count",
+      "expected_model_benefit": "Captures cumulative polar or reactive functionality without assuming a linear effect.",
+      "leakage_risk": "low",
+      "formula": "V10 + V11 + V16 + V20 + V21 + V26 + V33 + V34 + V35 + V38 + V40",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "oxygen_nitrogen_balance_ratio",
+      "type": "formula",
+      "description": "Smoothed ratio contrasting oxygen and donor-related descriptors with nitrogen and nitro descriptors.",
+      "value_range": [
+        0.09,
+        16.0
+      ],
+      "feature_family": "composition_ratio",
+      "expected_model_benefit": "Provides a thresholdable balance feature when different heteroatom families have opposing behavior.",
+      "leakage_risk": "low",
+      "formula": "(V10 + V35 + 1.0) / (V38 + V20 + V21 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "carbon_rich_low_polar_flag",
+      "type": "formula",
+      "description": "Indicator for high carbon percentage with very low oxygen, donor, and nitrogen counts.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composition_indicator",
+      "expected_model_benefit": "Exposes a hydrophobic low-polarity region using one split.",
+      "leakage_risk": "low",
+      "formula": "np.where((V8 >= 45.0) & (V10 <= 1) & (V35 <= 1) & (V38 == 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_topology_score",
+      "type": "formula",
+      "description": "Log-scaled size and topology score combining large-range topology descriptors with molecular shape descriptors.",
+      "value_range": [
+        4.2,
+        23.4
+      ],
+      "feature_family": "topology_size",
+      "expected_model_benefit": "Compresses heavy-tailed geometry signals into a stable ordered feature.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V30) + np.log1p(V31) + V36 + V37",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "large_compact_molecule_flag",
+      "type": "formula",
+      "description": "Indicator for jointly high values of global size, compactness, and topological descriptors.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_indicator",
+      "expected_model_benefit": "Captures a high-bulk interaction that trees might otherwise need several levels to isolate.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 >= 5.25) & (V15 >= 10.8) & (V30 >= 20.0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "electronic_extreme_flag",
+      "type": "formula",
+      "description": "Indicator for extreme charge or electrotopological descriptor values relative to central training-fold ranges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "distribution_tail_indicator",
+      "expected_model_benefit": "Gives a simple split for unusual electronic profiles at either tail.",
+      "leakage_risk": "low",
+      "formula": "np.where((np.abs(V12) >= 1.0) | (np.abs(V28) >= 0.35) | (V22 <= 1.10) | (V22 >= 1.35), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "descriptor_tail_count",
+      "type": "formula",
+      "description": "Count of selected descriptors lying in high training-fold tails using unsupervised thresholds.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "distribution_tail_count",
+      "expected_model_benefit": "Summarizes broad descriptor extremeness, useful for isolating atypical compounds.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 >= 3.872, 1, 0) + np.where(V3 >= 2.0, 1, 0) + np.where(V5 >= 3.0, 1, 0) + np.where(V7 >= 4.0, 1, 0) + np.where(V11 >= 4.0, 1, 0) + np.where(V16 >= 8.0, 1, 0) + np.where(V30 >= 20.6, 1, 0) + np.where(V41 >= 3.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_structural_recalcitrance_band",
+      "type": "judgment",
+      "description": "Ordinal expert or LLM judgment from row values only: 0 minimal persistent-structure cues; 1 mild; 2 elevated; 3 strong, considering aromaticity, halogenation, nitro-like alerts, ring or branching complexity, and bulky topology.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_chemistry_ordinal",
+      "expected_model_benefit": "Provides a compact chemistry-informed grouping when multiple alerts co-occur.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_polar_accessibility_band",
+      "type": "judgment",
+      "description": "Ordinal expert or LLM judgment from row values only: 0 very low polar accessibility; 1 low; 2 moderate; 3 high, considering heteroatom counts, donor signal, oxygen and nitrogen balance, and whether size or carbon richness may bury polar functionality.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_chemistry_ordinal",
+      "expected_model_benefit": "Adds a qualitative separability cue for trees around functional accessibility rather than raw counts alone.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "70dcabad2bf2c102",
+  "metadata": {}
+}

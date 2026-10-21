@@ -1,0 +1,190 @@
+{
+  "dataset_name": "coil2000_insurance_policies",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "home_asset_exposure_score",
+      "type": "formula",
+      "description": "Blends home ownership, dwelling count, household size, and existing fire/property coverage into a bounded exposure score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "dwelling_assets",
+      "expected_model_benefit": "Provides a smooth asset-oriented coordinate for a linear margin, reducing reliance on separate sparse policy indicators.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.35 * (homeOwners / 9.0) + 0.15 * ((np.clip(numberOfHouses, 1.0, 4.0) - 1.0) / 3.0) + 0.15 * ((np.clip(avgSizeHousehold, 1.0, 5.0) - 1.0) / 4.0) + 0.25 * (np.clip(numberOfFirePolicies, 0.0, 3.0) / 3.0) + 0.10 * (np.clip(numberOfPropertyInsurancePolicies, 0.0, 2.0) / 2.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ownership_rental_balance",
+      "type": "formula",
+      "description": "Signed normalized balance between owner-occupied and rented housing prevalence.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "dwelling_assets",
+      "expected_model_benefit": "Gives the linear margin a direct direction for housing tenure rather than two opposing raw shares.",
+      "leakage_risk": "low",
+      "formula": "np.clip((homeOwners - rentedHouse) / 9.0, -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_family_density_score",
+      "type": "formula",
+      "description": "Combines marriage prevalence, children in household, average household size, and low single-person prevalence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "household_structure",
+      "expected_model_benefit": "Creates a dense household-stability projection likely easier for a linear margin than several correlated ordinal fields.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.30 * (married / 9.0) + 0.25 * (householdWithChildren / 9.0) + 0.25 * ((np.clip(avgSizeHousehold, 1.0, 5.0) - 1.0) / 4.0) + 0.20 * (1.0 - singles / 9.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_affluence_projection",
+      "type": "formula",
+      "description": "Weighted projection of income bands and average income onto a smooth affluence scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "income_power",
+      "expected_model_benefit": "Compresses multiple collinear income fields into one interpretable continuous coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.70 * ((0.10 * incomeLessThan30k + 0.35 * income30To45k + 0.60 * income45To75k + 0.85 * income75To122k + 1.00 * incomeAbove123k) / 9.0) + 0.30 * (averageIncome / 9.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "car_mobility_score",
+      "type": "formula",
+      "description": "Summarizes household car access and car policy engagement while penalizing high no-car prevalence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "vehicle_mobility",
+      "expected_model_benefit": "Supplies a continuous mobility dimension that can interact linearly with household and dwelling signals.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.25 * (oneCar / 9.0) + 0.20 * (twoCars / 7.0) + 0.25 * (np.clip(numberOfCarPolicies, 0.0, 3.0) / 3.0) + 0.15 * (contributionCarPolicies / 9.0) + 0.15 * (1.0 - noCar / 9.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "policy_count_engagement_log",
+      "type": "formula",
+      "description": "Log-scaled count of existing non-excluded insurance relationships across common product groups.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "portfolio_depth",
+      "expected_model_benefit": "Reduces sparsity and outlier impact from policy counts into a smooth engagement measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(numberOfPrivateThirdPartyInsurance + numberOfCarPolicies + numberOfFirePolicies + numberOfLifeInsurances + numberOfMopedPolicies + numberOfBicyclePolicies + numberOfMotorcycleScooterPolicies + numberOfTractorPolicies + numberOfTrailerPolicies + numberOfThirdPartyInsuranceAgriculture + numberOfPropertyInsurancePolicies + numberOfSocialSecurityInsurancePolicies) / 3.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contribution_intensity_log",
+      "type": "formula",
+      "description": "Log-scaled total contribution intensity from major numeric contribution fields plus mapped private third-party contribution band.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "portfolio_depth",
+      "expected_model_benefit": "Captures monetary commitment with diminishing returns, useful for robust linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(contributionCarPolicies + contributionFirePolicies + contributionLifeInsurances + contributionMopedPolicies + contributionMotorcycleScooterPolicies + contributionTractorPolicies + contributionThirdPartyInsuranceAgriculture + contributionPropertyInsurancePolicies + contributionSocialSecurityInsurancePolicies + contributionBicyclePolicies + np.where(contributionPrivateThirdPartyInsurance == 'f 0', 0.0, np.where(contributionPrivateThirdPartyInsurance == 'f 1 - 49', 1.0, np.where(contributionPrivateThirdPartyInsurance == 'f 50 - 99', 3.0, np.where(contributionPrivateThirdPartyInsurance == 'f 100 - 199', 5.0, 0.0))))) / 3.5, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "property_fire_commitment_score",
+      "type": "formula",
+      "description": "Combines fire and property policy counts and contribution levels into a focused dwelling-related portfolio signal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "portfolio_commitment",
+      "expected_model_benefit": "Highlights existing coverage patterns closest to residential asset protection in one smooth feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.45 * (np.clip(numberOfFirePolicies, 0.0, 3.0) / 3.0) + 0.25 * (contributionFirePolicies / 7.0) + 0.15 * (np.clip(numberOfPropertyInsurancePolicies, 0.0, 2.0) / 2.0) + 0.15 * (contributionPropertyInsurancePolicies / 4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rural_agri_profile_score",
+      "type": "formula",
+      "description": "Captures agricultural and rural orientation using farmer prevalence, farmer segment membership, and agricultural policy holdings.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "rural_profile",
+      "expected_model_benefit": "Adds a smooth domain-specific projection for areas where dwelling and vehicle patterns may differ from urban households.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.30 * (farmer / 9.0) + 0.20 * np.where(customerMainType == 'Farmers', 1.0, 0.0) + 0.20 * (np.clip(numberOfTractorPolicies, 0.0, 3.0) / 3.0) + 0.15 * np.clip(numberOfThirdPartyInsuranceAgriculture, 0.0, 1.0) + 0.15 * np.clip(numberOfAgriculturalMachinesPolicies, 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_midlife_stability_score",
+      "type": "formula",
+      "description": "Maps age band to a smooth midlife household-stability score with moderate values for younger and older bands.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "life_stage",
+      "expected_model_benefit": "Turns an ordinal age band into a single monotone-friendly coordinate for linear modeling.",
+      "leakage_risk": "low",
+      "formula": "np.where(avgAge == '20-30 years', 0.20, np.where(avgAge == '30-40 years', 0.70, np.where(avgAge == '40-50 years', 1.00, np.where(avgAge == '50-60 years', 0.90, np.where(avgAge == '60-70 years', 0.55, np.where(avgAge == '70-80 years', 0.30, 0.50))))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_segment_home_anchoring_score",
+      "type": "judgment",
+      "description": "Human or LLM assessor assigns 0.0 to 1.0 from customerSubtype and customerMainType text plus visible household and dwelling fields; higher means the row appears more settled and dwelling-centered. The scorer must use only visible row fields and training-fold code meanings.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile",
+      "expected_model_benefit": "Supplies an ordered semantic coordinate from segment text that raw category identifiers may not express linearly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_portfolio_coherence_score",
+      "type": "judgment",
+      "description": "Assessor rates 0.0 to 1.0 consistency between demographic profile and current insurance portfolio; higher when home ownership, household size, age, income, and existing fire/property/car coverages form a coherent long-term household profile.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_profile",
+      "expected_model_benefit": "Captures cross-field alignment that formula-only composites may miss, giving the margin a single expert-shaped direction.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "241907e06852df9e",
+  "metadata": {}
+}

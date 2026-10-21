@@ -1,0 +1,190 @@
+{
+  "dataset_name": "ailerons",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "climb_rate_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of the climbRate feature to provide a scaled input suitable for linear SVM margins.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Improves convergence and margin scaling for linear models by centering and standardizing a high-variance feature.",
+      "leakage_risk": "low",
+      "formula": "(climbRate + 10.953) / 257.114",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sgz_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of the Sgz feature.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Ensures the Sgz feature contributes proportionally to the SVM decision boundary without dominating due to its scale.",
+      "leakage_risk": "low",
+      "formula": "(Sgz + 12.92) / 25.146",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pitch_roll_interaction",
+      "type": "formula",
+      "description": "Cross-product of current pitch and current roll to capture non-linear aerodynamic interactions in a linear-friendly format.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear SVM to model the synergistic effects of pitch and roll without requiring a non-linear kernel.",
+      "leakage_risk": "low",
+      "formula": "curPitch * curRoll",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "abs_roll_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of absRoll from its mean, capturing the magnitude of roll extremity.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Provides a continuous severity measure of roll deviation, which is highly effective for margin-based classifiers.",
+      "leakage_risk": "low",
+      "formula": "np.abs(absRoll + 11.029)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dynamic_pressure_proxy",
+      "type": "formula",
+      "description": "Proxy for dynamic pressure or aerodynamic force by multiplying the absolute values of pitch rate (q) and Sgz.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a physically meaningful composite feature that linearly correlates with aerodynamic stress.",
+      "leakage_risk": "low",
+      "formula": "np.abs(q) * np.abs(Sgz)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "alpha_pitch_ratio",
+      "type": "formula",
+      "description": "Ratio of angle of attack (alpha) to current pitch, with a small constant added to the denominator to prevent division by zero.",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights discrepancies between the angle of attack and the actual pitch, providing a strong linear signal for flight envelope boundaries.",
+      "leakage_risk": "low",
+      "formula": "alpha / (np.abs(curPitch) + 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "roll_rate_severity",
+      "type": "formula",
+      "description": "Sum of the absolute values of roll rate (p) and differential roll rate, representing the total roll volatility.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Aggregates roll rate metrics into a single continuous severity score, simplifying the feature space for the SVM.",
+      "leakage_risk": "low",
+      "formula": "np.abs(p) + np.abs(diffRollRate)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "climb_acceleration",
+      "type": "formula",
+      "description": "Sum of the first and second differences of climb rate, representing the overall acceleration in the vertical plane.",
+      "value_range": [
+        -50.0,
+        55.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Combines derivative terms into a single momentum feature, providing a smoother signal for the linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "diffClb + diffDiffClb",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "extreme_climb_indicator",
+      "type": "judgment",
+      "description": "Assesses whether the climb rate and its derivatives indicate an extreme or unstable maneuver, returning a continuous severity score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Translates complex, multi-variable thresholds into a single continuous risk score that a linear model can easily weight.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aerodynamic_instability_index",
+      "type": "judgment",
+      "description": "Evaluates the combination of pitch, roll, and their respective rates to determine the overall level of aerodynamic instability.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, expert-like evaluation of flight stability, reducing the burden on the linear model to learn complex interactions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "control_surface_stress",
+      "type": "judgment",
+      "description": "Estimates the mechanical stress on control surfaces based on the magnitude of Sgz, p, and q.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Acts as a proxy for physical strain, offering a distinct, linearly separable dimension related to aircraft limits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sensor_noise_level",
+      "type": "judgment",
+      "description": "Measures the aggregate noise or jitter across the diffSeTime variables to identify potentially unreliable sensor readings.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Allows the model to down-weight or adjust its confidence for rows with high sensor noise, improving overall robustness.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "55dd8a886caf428e",
+  "metadata": {}
+}

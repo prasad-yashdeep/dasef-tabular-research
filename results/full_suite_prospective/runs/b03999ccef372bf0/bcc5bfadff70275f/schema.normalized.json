@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "donation_frequency_rate",
+      "type": "formula",
+      "description": "Calculates the average number of donations per month of tenure.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Helps tree models split on the density of donations over the donor's known history.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_tenure_months",
+      "type": "formula",
+      "description": "The number of months between the donor's first and last donation.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "duration",
+      "expected_model_benefit": "Provides a direct measure of the donor's active lifespan, which trees can use to distinguish long-term committed donors from one-time or short-term donors.",
+      "leakage_risk": "low",
+      "formula": "V4 - V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "average_months_between_donations",
+      "type": "formula",
+      "description": "The average gap in months between consecutive donations during the donor's active tenure.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Captures the typical donation cadence, allowing the model to identify regular vs. sporadic donors.",
+      "leakage_risk": "low",
+      "formula": "(V4 - V1) / np.maximum(V2 - 1, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_recent_donor",
+      "type": "formula",
+      "description": "Boolean indicator for whether the donor has made a donation within the last 6 months.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Creates a hard split for recent activity, which is often a strong predictor of future behavior in tree models.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 <= 6, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_frequent_donor",
+      "type": "formula",
+      "description": "Boolean indicator for whether the donor has made 5 or more total donations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Isolates a cohort of highly engaged donors, providing a clean categorical split.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 >= 5, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_long_term_donor",
+      "type": "formula",
+      "description": "Boolean indicator for whether the donor's first donation was 36 or more months ago.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Helps the model easily separate established donors from newer acquisitions.",
+      "leakage_risk": "low",
+      "formula": "np.where(V4 >= 36, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_and_frequent",
+      "type": "formula",
+      "description": "Boolean indicator for donors who are both recent (<= 6 months) and frequent (>= 5 donations).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly surfaces a high-value interaction effect that might otherwise require multiple tree splits to isolate.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 <= 6) & (V2 >= 5), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "months_overdue_for_donation",
+      "type": "formula",
+      "description": "The difference between the months since their last donation and their historical average gap between donations.",
+      "value_range": [
+        -100.0,
+        30.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Quantifies how 'overdue' a donor is relative to their own personal cadence, providing a powerful relative behavioral signal.",
+      "leakage_risk": "low",
+      "formula": "V1 - ((V4 - V1) / np.maximum(V2 - 1, 1))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "single_donor_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for donors who have only ever made exactly one donation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Isolates one-time donors, a distinct behavioral cohort that often exhibits different future patterns than repeat donors.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 == 1, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_to_tenure_ratio",
+      "type": "formula",
+      "description": "The ratio of months since last donation to months since first donation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes recency against the donor's total history, helping trees identify donors whose inactivity represents a large portion of their tenure.",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_loyalty_score",
+      "type": "judgment",
+      "description": "A semantic evaluation of the donor's overall loyalty and commitment, synthesizing their frequency of donations, total volume donated, and active tenure.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, non-linear ranking of donor quality that captures complex interactions between recency, frequency, and monetary value.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "churn_risk_assessment",
+      "type": "judgment",
+      "description": "An assessment of the likelihood that the donor has permanently lapsed, comparing the recency of their last donation against their historical donation frequency and tenure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Translates raw temporal gaps into a probabilistic risk score, giving tree models a direct proxy for donor attrition.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ac6ce849abb9a7de",
+  "metadata": {}
+}

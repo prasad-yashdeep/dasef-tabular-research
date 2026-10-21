@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_ro_real_estate_20260503",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "area_sqm_z_clipped",
+      "type": "formula",
+      "description": "Standardized living area using training-fold mean and spread, clipped to reduce the effect of extreme values.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "size_normalization",
+      "expected_model_benefit": "Provides a smooth primary size signal with bounded influence for a margin-based linear model.",
+      "leakage_risk": "low",
+      "formula": "np.clip((area_sqm - 69.77014134275618) / 27.649056814586025, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "area_log_scaled",
+      "type": "formula",
+      "description": "Diminishing-return transform of recorded area, scaled by the training-fold maximum area.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "size_nonlinear",
+      "expected_model_benefit": "Captures saturation in the usefulness of additional area while staying smooth and bounded.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(area_sqm, 0.0)) / 5.203457705, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "room_count_z_clipped",
+      "type": "formula",
+      "description": "Standardized room count using training-fold mean and spread, clipped for robust scaling.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "layout_normalization",
+      "expected_model_benefit": "Adds a compact layout-capacity signal that combines well with area features in a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((rooms - 2.362190812720848) / 0.7621233164365396, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "area_per_room_z_clipped",
+      "type": "formula",
+      "description": "Square meters per room, centered by the ratio of training-fold mean area to mean room count and scaled by a broad room-size unit.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "layout_ratio",
+      "expected_model_benefit": "Separates spacious layouts from cramped layouts through a ratio that a purely linear combination cannot form by itself.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((area_sqm / np.maximum(rooms, 1.0)) - (69.77014134275618 / 2.362190812720848)) / 12.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "compact_area_issue_severity",
+      "type": "formula",
+      "description": "Severity score for implausibly tiny recorded area; decreases linearly to zero at 20 square meters and above.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "data_plausibility",
+      "expected_model_benefit": "Lets a linear margin isolate placeholder-size or unusually compact records without hard row removal.",
+      "leakage_risk": "low",
+      "formula": "np.clip((20.0 - area_sqm) / 20.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "floor_z_clipped",
+      "type": "formula",
+      "description": "Standardized floor level using training-fold mean and spread, clipped for outlier control.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "vertical_position",
+      "expected_model_benefit": "Supplies a smooth vertical-position signal that can align with building height and view-related effects.",
+      "leakage_risk": "low",
+      "formula": "np.clip((floor - 22.09540636042403) / 16.897364675063375, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "floor_log_scaled",
+      "type": "formula",
+      "description": "Monotone floor-level transform with diminishing incremental effect at high floors and safe handling of basement-like values.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "vertical_position_nonlinear",
+      "expected_model_benefit": "Adds a bounded nonlinear floor signal that is easier for a linear SVM to use than raw floor alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(floor + 1.0, 0.0)) / 4.02535169073515, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_code_z_clipped",
+      "type": "formula",
+      "description": "Standardized location code using training-fold mean and spread.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "location_numeric",
+      "expected_model_benefit": "Provides a normalized geographic-code signal when code ordering carries regional or neighborhood gradients.",
+      "leakage_risk": "low",
+      "formula": "np.clip((location - 21.653710247349824) / 9.702657754767475, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_signal_z_clipped",
+      "type": "formula",
+      "description": "Standardized numeric title signal using training-fold mean and spread.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "text_proxy_numeric",
+      "expected_model_benefit": "Exposes listing-title magnitude or code intensity after normalization, enabling monotonic text-proxy effects.",
+      "leakage_risk": "low",
+      "formula": "np.clip((title - 70.45583038869258) / 40.609890955181434, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "scrape_time_scaled",
+      "type": "formula",
+      "description": "Position of the row scrape time within the training-fold scrape-time window.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "time_position",
+      "expected_model_benefit": "Captures smooth chronology effects and market drift using only the row timestamp and training-fold bounds.",
+      "leakage_risk": "low",
+      "formula": "np.clip((scraped_at - 5.0) / (2828.0 - 5.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_desirability_judgment",
+      "type": "judgment",
+      "description": "Numeric assessment from row location information, and a training-fold codebook if available, of centrality, transit access, amenities, and neighborhood reputation; 0 means weak desirability and 1 means strong desirability. Use 0.5 when location is an opaque numeric code with no codebook.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_location",
+      "expected_model_benefit": "Adds a smooth non-ordinal neighborhood quality input that can be weighted directly by a linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "listing_appeal_judgment",
+      "type": "judgment",
+      "description": "Numeric assessment from row title information, or decoded title text from training-fold metadata if available, of appealing listing cues such as renovated condition, new construction, parking, view, furnishing, or premium finishes; 0 means weak appeal and 1 means strong appeal. Use 0.5 when title is an opaque numeric value with no decoding.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_listing_text",
+      "expected_model_benefit": "Converts qualitative marketing cues into a bounded score that a margin-based model can combine with numeric property attributes.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e8ab2f6941dfdb46",
+  "metadata": {}
+}

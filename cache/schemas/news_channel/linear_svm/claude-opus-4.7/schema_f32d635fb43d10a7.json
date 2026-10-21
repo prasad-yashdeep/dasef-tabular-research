@@ -1,0 +1,190 @@
+{
+  "dataset_name": "news_channel",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_content_length",
+      "type": "formula",
+      "description": "Log-scaled article token count for smooth linear scaling.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "length",
+      "expected_model_benefit": "Compresses heavy-tailed length distribution into a linearly separable scale.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(n_tokens_content)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lexical_richness_score",
+      "type": "formula",
+      "description": "Composite vocabulary diversity blending unique-token and non-stop-unique ratios.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lexical",
+      "expected_model_benefit": "Smooth normalized signal that linearly separates dense vs sparse vocabulary articles.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.5 * n_unique_tokens + 0.5 * n_non_stop_unique_tokens, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "media_density",
+      "type": "formula",
+      "description": "Total images plus videos normalized by article length.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "media",
+      "expected_model_benefit": "Continuous severity proxy distinguishing media-heavy entertainment/tech from text-heavy world/business.",
+      "leakage_risk": "low",
+      "formula": "np.clip((num_imgs + num_videos) / (n_tokens_content + 50.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "image_to_video_balance",
+      "type": "formula",
+      "description": "Relative balance between images and videos, scaled to [-1,1].",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "media",
+      "expected_model_benefit": "Helps linear margin separate visual-image channels (lifestyle) from video-heavy ones (entertainment).",
+      "leakage_risk": "low",
+      "formula": "(num_imgs - num_videos) / (num_imgs + num_videos + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "self_link_ratio",
+      "type": "formula",
+      "description": "Share of hyperlinks pointing to self-references.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "links",
+      "expected_model_benefit": "Captures internal-linking culture that differs across publishing verticals.",
+      "leakage_risk": "low",
+      "formula": "np.clip(num_self_hrefs / (num_hrefs + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_hrefs",
+      "type": "formula",
+      "description": "Log-scaled total hyperlinks for smoother linear scaling.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "links",
+      "expected_model_benefit": "Reduces skew of href counts beneficial to linear/SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(num_hrefs)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sentiment_intensity",
+      "type": "formula",
+      "description": "Absolute sentiment polarity capturing emotional strength.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sentiment",
+      "expected_model_benefit": "Continuous severity feature linearly separating dry vs emotive verticals.",
+      "leakage_risk": "low",
+      "formula": "np.abs(global_sentiment_polarity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positive_negative_gap",
+      "type": "formula",
+      "description": "Difference between positive and negative word rates.",
+      "value_range": [
+        -0.2,
+        0.2
+      ],
+      "feature_family": "sentiment",
+      "expected_model_benefit": "Linear projection separating upbeat lifestyle/socmed from negative-laden world news.",
+      "leakage_risk": "low",
+      "formula": "global_rate_positive_words - global_rate_negative_words",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "subjectivity_x_polarity",
+      "type": "formula",
+      "description": "Interaction between subjectivity and absolute polarity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sentiment",
+      "expected_model_benefit": "Composite useful for SVM margins discriminating opinionated channels.",
+      "leakage_risk": "low",
+      "formula": "global_subjectivity * np.abs(global_sentiment_polarity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "avg_token_length_z",
+      "type": "formula",
+      "description": "Standardized average token length using training mean and std.",
+      "value_range": [
+        -7.0,
+        3.0
+      ],
+      "feature_family": "lexical",
+      "expected_model_benefit": "Approximately linear standardized feature improving SVM scaling.",
+      "leakage_risk": "low",
+      "formula": "(average_token_length - 4.5976575) / 0.6899824",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_brevity_score",
+      "type": "judgment",
+      "description": "Semantic judgment of how concise and headline-like the article_title is (0 = long verbose, 1 = punchy short headline).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "title_semantics",
+      "expected_model_benefit": "Captures stylistic title compactness that varies by channel (tech/socmed favor punchier titles).",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_listicle_tone",
+      "type": "judgment",
+      "description": "Semantic judgment of whether the article_title exhibits listicle/clickbait tone (e.g., numeric lists, 'how to', 'top N'), scored 0=none to 1=strong listicle.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "title_semantics",
+      "expected_model_benefit": "Strong stylistic indicator separating socmed/lifestyle/entertainment from business/world news.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f32d635fb43d10a7",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_prediction_markets_20260517",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "platform_1_indicator",
+      "type": "formula",
+      "description": "Indicator for rows with platform_id equal to 1.0, giving the model a direct venue-specific offset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "platform_encoding",
+      "expected_model_benefit": "Allows a linear SVM margin to account for platform-specific market mechanics without imposing a numeric ordering across all venues.",
+      "leakage_risk": "low",
+      "formula": "np.where(platform_id == 1.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "platform_3_indicator",
+      "type": "formula",
+      "description": "Indicator for rows with platform_id equal to 3.0, with platform_id equal to 2.0 left as the reference through the intercept.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "platform_encoding",
+      "expected_model_benefit": "Provides a stable sparse platform adjustment that can shift the linear margin for venue-level effects.",
+      "leakage_risk": "low",
+      "formula": "np.where(platform_id == 3.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "open_level_z_clipped",
+      "type": "formula",
+      "description": "Open price standardized with fixed training-fold mean and scale, then clipped to bound leverage from edge prices.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "price_level",
+      "expected_model_benefit": "Creates a smooth bounded price-level coordinate that is well suited to linear margin weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip((open - 0.5287599762087843) / 0.3540544512478701, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "midpoint_level_z_clipped",
+      "type": "formula",
+      "description": "Average of high and low standardized with fixed training-fold center and scale, then clipped for robustness.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "price_level",
+      "expected_model_benefit": "Supplies a stable central price coordinate that complements the open value for a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((high + low) / 2.0) - 0.4949099331827797) / 0.34060594122275076, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "intraperiod_span_clipped",
+      "type": "formula",
+      "description": "Clipped difference between high and low, representing observed price movement width within the row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_range",
+      "expected_model_benefit": "Gives the linear margin a direct continuous severity measure for within-row price dispersion.",
+      "leakage_risk": "low",
+      "formula": "np.clip(high - low, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "open_range_position",
+      "type": "formula",
+      "description": "Open price position within the observed high-low interval, stabilized with a small denominator floor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_position",
+      "expected_model_benefit": "Converts price shape into a normalized coordinate that lets a linear SVM detect edge-position effects.",
+      "leakage_risk": "low",
+      "formula": "np.clip((open - low) / (np.maximum(high - low, 0.0) + 0.001), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_excursion_from_open",
+      "type": "formula",
+      "description": "Clipped amount by which high exceeds open, measuring upward excursion magnitude within the row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_excursion",
+      "expected_model_benefit": "Adds an interpretable directional movement component that can be combined linearly with the open and span features.",
+      "leakage_risk": "low",
+      "formula": "np.clip(high - open, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lower_excursion_from_open",
+      "type": "formula",
+      "description": "Clipped amount by which open exceeds low, measuring downward excursion magnitude within the row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_excursion",
+      "expected_model_benefit": "Provides the complementary movement component needed for a linear margin to represent asymmetric price paths.",
+      "leakage_risk": "low",
+      "formula": "np.clip(open - low, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_volume_scaled",
+      "type": "formula",
+      "description": "Log-transformed volume scaled by the fixed training-fold maximum volume and clipped to a unit interval.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Compresses heavy-tailed liquidity into a smooth bounded score that is easier for a linear SVM to weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(volume) / np.log1p(833069.887443), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_trade_count_scaled",
+      "type": "formula",
+      "description": "Log-transformed trade_count scaled by the fixed training-fold maximum trade count and clipped to a unit interval.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Captures participation intensity on a normalized scale, reducing the influence of extreme activity counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(trade_count) / np.log1p(2074.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_avg_trade_size_scaled",
+      "type": "formula",
+      "description": "Smoothed average volume per trade, log-transformed and scaled to reduce block-trade skew.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Separates trade size intensity from raw activity count, giving the linear margin another liquidity dimension.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(volume / (trade_count + 1.0)) / np.log1p(416534.9437215), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_market_quality_score",
+      "type": "judgment",
+      "description": "A 0 to 1 assessor score based only on the row values: higher when price span, open placement, volume, and trade_count appear mutually consistent; lower when activity is sparse, blocky, or price movement appears erratic.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_quality",
+      "expected_model_benefit": "Compresses cross-field consistency into a single smooth score that a linear SVM can weight directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c0b982d330997aa8",
+  "metadata": {}
+}

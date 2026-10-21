@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "buying_z",
+      "type": "formula",
+      "description": "Scale-normalized buying price (z-score) for distance computation.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Equalizes feature scale so KNN distance is not dominated by raw integer encoding.",
+      "leakage_risk": "low",
+      "formula": "(buying - 1.4382239382239381) / 1.148713537637001",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "maint_z",
+      "type": "formula",
+      "description": "Scale-normalized maintenance cost (z-score).",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Balances contribution of maintenance dimension in Euclidean distance.",
+      "leakage_risk": "low",
+      "formula": "(maint - 1.4034749034749034) / 1.1051596655849332",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_z",
+      "type": "formula",
+      "description": "Scale-normalized safety rating (z-score).",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes safety axis to comparable variance for neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "(safety - 0.9922779922779923) / 0.8101302530873647",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "persons_z",
+      "type": "formula",
+      "description": "Scale-normalized passenger capacity (z-score).",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents persons dimension underweighting in distance metric.",
+      "leakage_risk": "low",
+      "formula": "(persons - 1.0366795366795367) / 0.8105280808769877",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_pressure",
+      "type": "formula",
+      "description": "Combined buying + maintenance cost burden.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Creates a cost-axis similarity dimension that groups financially similar cars.",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_score",
+      "type": "formula",
+      "description": "Combined practical utility score from persons, lug_boot, and safety.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Groups rows with similar usability profile for nearest-neighbor lookup.",
+      "leakage_risk": "low",
+      "formula": "persons + lug_boot + safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dist_to_low_safety_prototype",
+      "type": "formula",
+      "description": "Euclidean distance to a generic low-safety, low-capacity prototype (origin reference point).",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Anchors rows to a reference geometry to enhance neighbor discrimination.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(persons**2 + safety**2 + lug_boot**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dist_to_premium_prototype",
+      "type": "formula",
+      "description": "Euclidean distance to a generic premium-feature prototype (max values across attributes).",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a complementary anchor improving radial neighborhood structure.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((3 - buying)**2 + (3 - maint)**2 + (2 - safety)**2 + (2 - persons)**2 + (2 - lug_boot)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_persons_synergy",
+      "type": "formula",
+      "description": "Multiplicative interaction capturing usable-capacity coupled with safety.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures non-linear coupling that improves KNN local separability.",
+      "leakage_risk": "low",
+      "formula": "safety * persons",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_unusable_cluster",
+      "type": "formula",
+      "description": "Cluster indicator for rows where persons=0 or safety=0 (structurally unusable cars).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a hard geometric partition aiding neighbor purity.",
+      "leakage_risk": "low",
+      "formula": "np.where((persons == 0) | (safety == 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_utility_gap",
+      "type": "formula",
+      "description": "Difference between cost burden and utility score, indicating value imbalance.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Adds a signed axis along which similar value-propositions cluster.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) - (persons + lug_boot + safety)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_quality_judgment",
+      "type": "judgment",
+      "description": "Heuristic ordinal quality judgment combining safety dominance, capacity adequacy, and affordability into a 0-4 scale, where higher means a more attractive car profile based purely on row attributes without supervised information.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a coarse semantic axis along which neighbors with similar overall desirability cluster, improving KNN locality.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c708f18bce585461",
+  "metadata": {}
+}

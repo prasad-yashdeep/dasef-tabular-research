@@ -1,0 +1,190 @@
+{
+  "dataset_name": "employee_turnover_at_techco",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "tenure_normalized",
+      "type": "formula",
+      "description": "Employee tenure normalized to [0,1] range using training set min/max bounds, capturing career stage as a smooth continuous score",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "tenure",
+      "expected_model_benefit": "Provides a smooth linear projection of tenure useful for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "np.clip((time - 1.0) / (39.0 - 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_composite_score",
+      "type": "formula",
+      "description": "Weighted composite of logical and verbal scores normalized by their combined range, representing overall cognitive ability",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cognitive_ability",
+      "expected_model_benefit": "Combines two correlated cognitive measures into a single smooth composite for linear separability",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.5 * (logical_score - (-5.0)) / (12.0 - (-5.0)) + 0.5 * (verbal_score - (-7.0)) / (17.0 - (-7.0))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "training_score_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of training score from the training set mean, measuring how atypical an employee's training performance is",
+      "value_range": [
+        0.0,
+        0.65
+      ],
+      "feature_family": "performance",
+      "expected_model_benefit": "Captures outlier performance patterns that may correlate with atypical employment outcomes",
+      "leakage_risk": "low",
+      "formula": "np.abs(training_score - 4.494845041509434)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "literacy_normalized",
+      "type": "formula",
+      "description": "Average literacy score normalized to [0,1] using training set bounds, representing educational background as a smooth continuous feature",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Smooth normalized literacy measure suitable for linear SVM weight optimization",
+      "leakage_risk": "low",
+      "formula": "np.clip((avg_literacy - 49.35454) / (96.93176 - 49.35454), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cultural_fit_score",
+      "type": "formula",
+      "description": "Composite of similar language percentage and distance penalty, measuring cultural and geographic alignment with workplace",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cultural_fit",
+      "expected_model_benefit": "Captures cultural integration factors that may influence employee retention as a single smooth score",
+      "leakage_risk": "low",
+      "formula": "np.clip((similar_language / 100.0) * (1.0 - np.clip(distance / 3.200019, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_maturity_ratio",
+      "type": "formula",
+      "description": "Ratio of employee tenure to location age, indicating how long the employee has been at the location relative to the location's total age",
+      "value_range": [
+        0.03,
+        19.5
+      ],
+      "feature_family": "tenure",
+      "expected_model_benefit": "Captures relative seniority within a location context, useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "time / np.maximum(location_age, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_log_scaled",
+      "type": "formula",
+      "description": "Log-transformed distance to workplace, compressing the right tail for more linear-friendly distribution",
+      "value_range": [
+        0.0,
+        1.42
+      ],
+      "feature_family": "geography",
+      "expected_model_benefit": "Log transformation reduces skewness in distance distribution, improving linear SVM performance",
+      "leakage_risk": "low",
+      "formula": "np.log1p(distance)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_literacy_interaction",
+      "type": "formula",
+      "description": "Product of normalized cognitive composite and normalized literacy, capturing joint effect of cognitive ability and educational background",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cognitive_ability",
+      "expected_model_benefit": "Approximates a nonlinear interaction term as a single feature, extending linear SVM expressiveness",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.5 * (logical_score - (-5.0)) / (12.0 - (-5.0)) + 0.5 * (verbal_score - (-7.0)) / (17.0 - (-7.0))), 0.0, 1.0) * np.clip((avg_literacy - 49.35454) / (96.93176 - 49.35454), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "verbal_logical_gap",
+      "type": "formula",
+      "description": "Absolute difference between verbal and logical scores normalized by their combined range, measuring cognitive profile imbalance",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cognitive_ability",
+      "expected_model_benefit": "Captures cognitive skill imbalance which may indicate fit issues, providing additional linear discriminative signal",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(verbal_score - logical_score) / 24.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "gender_weighted_cultural_fit",
+      "type": "formula",
+      "description": "Cultural fit score adjusted by gender indicator, capturing potential gender-specific cultural integration patterns",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cultural_fit",
+      "expected_model_benefit": "Provides gender-differentiated cultural fit signal that may improve linear margin for demographic subgroups",
+      "leakage_risk": "low",
+      "formula": "np.clip((similar_language / 100.0) * (1.0 - np.clip(distance / 3.200019, 0.0, 1.0)) * (0.8 + 0.2 * is_male), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_employee_risk_index",
+      "type": "judgment",
+      "description": "Holistic semantic assessment of employee flight risk based on combination of short tenure, high distance, low cultural fit, and low cognitive scores. Score from 0 (very low risk) to 10 (very high risk) based on pattern matching across multiple dimensions.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "composite_risk",
+      "expected_model_benefit": "Provides a semantically grounded composite risk score that captures non-linear interactions as a single smooth feature for SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "workplace_integration_score",
+      "type": "judgment",
+      "description": "Semantic assessment of how well an employee is likely integrated into their workplace based on language similarity, distance, location age, and tenure. Score from 0 (poorly integrated) to 10 (highly integrated).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cultural_fit",
+      "expected_model_benefit": "Captures holistic workplace integration that combines geographic, cultural, and temporal factors into a single continuous score for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8823b7d4dc5a4a98",
+  "metadata": {}
+}

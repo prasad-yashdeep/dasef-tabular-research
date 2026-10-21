@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_tracker_radar_20260316",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "reach_scale_similarity",
+      "type": "formula",
+      "description": "Log-normalized blend of prevalence and sites, scaled by training-fold maxima, so reach differences are comparable under distance metrics.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Improves neighbor geometry by preventing large reach columns from dominating while preserving broad-vs-niche similarity.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(prevalence) / np.log1p(0.475) + np.log1p(sites) / np.log1p(69229.0)) / 2.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_mix_intensity",
+      "type": "formula",
+      "description": "Average of log-scaled resource, script, image, fetch, and resource-type breadth signals.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Places heavy and light resource footprints on a compact common scale for more stable nearest-neighbor distances.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(resource_count) / np.log1p(20674.0) + np.log1p(script_count) / np.log1p(2277.0) + np.log1p(image_count) / np.log1p(9948.0) + np.log1p(fetch_count) / np.log1p(707.0) + resource_type_count / 10.0) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_persistence_similarity",
+      "type": "formula",
+      "description": "Log-scaled cookie prevalence, sent-cookie volume, first-party cookie count, and maximum cookie lifetime; high values indicate stronger persistence footprint.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Helps KNN group rows with comparable cookie persistence behavior despite extreme raw-count skew.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(total_cookie_prevalence) / np.log1p(0.44955445999999993) + np.log1p(total_cookies_sent) / np.log1p(2267.0) + np.log1p(total_first_party_cookies) / np.log1p(3544.0) + np.log1p(max_cookie_ttl_days) / np.log1p(2912396.6133101853)) / 4.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_volume_weight_similarity",
+      "type": "formula",
+      "description": "Normalized blend of API breadth, API call volume, mean API weight, and maximum API weight.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Compresses long-tailed API activity into a dense similarity coordinate useful for local neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(distinct_api_count) / np.log1p(68.0) + np.log1p(total_api_calls) / np.log1p(202410.0) + np.log1p(mean_api_weight) / np.log1p(413.2385294117648) + np.log1p(max_api_weight) / np.log1p(4255.55)) / 4.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_surface_breadth_similarity",
+      "type": "formula",
+      "description": "Scale-normalized breadth across canvas, audio, navigator, screen, device, storage, timing, media, and WebRTC API groups.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "api_group_similarity",
+      "expected_model_benefit": "Adds a compact multi-surface similarity axis so rows probing similar browser areas lie nearer together.",
+      "leakage_risk": "low",
+      "formula": "np.clip((canvas_api_count / 9.0 + audio_api_count / 2.0 + navigator_api_count / 32.0 + screen_api_count / 11.0 + device_api_count / 6.0 + storage_api_count / 6.0 + timing_api_count / 4.0 + media_api_count / 4.0 + webrtc_api_count / 2.0) / 9.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "browser_probe_signature_similarity",
+      "type": "formula",
+      "description": "Binary signature density for common browser-property probes including navigator, storage, cookie, viewport, and pixel-ratio access.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_signature_similarity",
+      "expected_model_benefit": "Improves sparse-flag neighborhood matching by summarizing several related browser-property probes into one stable coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.clip((api_Navigator_prototype_userAgent + api_Navigator_prototype_platform + api_Navigator_prototype_plugins + api_window_localStorage + api_window_sessionStorage + api_Document_cookie_getter + api_Document_cookie_setter + api_window_innerHeight + api_window_innerWidth + api_window_devicePixelRatio) / 10.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fingerprinting_signal_similarity",
+      "type": "formula",
+      "description": "Combined fingerprinting-strength score from row-level fingerprinting aggregates and high-entropy browser-surface indicators.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_similarity",
+      "expected_model_benefit": "Provides a dense distance-friendly coordinate for rows with similar high-entropy access behavior even when individual API flags are rare.",
+      "leakage_risk": "low",
+      "formula": "np.clip((fingerprinting_score / 3.0 + max_resource_fingerprinting / 3.0 + np.log1p(weighted_fp_score) / np.log1p(19568.09) + canvas_api_count / 9.0 + audio_api_count / 2.0 + webrtc_api_count / 2.0 + api_NavigatorUAData_prototype_getHighEntropyValues + api_WebGLRenderingContext_prototype_getParameter + api_HTMLCanvasElement_prototype_toDataURL) / 9.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "quiet_activity_distance",
+      "type": "formula",
+      "description": "Euclidean distance from a generic zero-activity prototype over resource, API, cookie, navigator, and storage footprints.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Creates a generic baseline-distance axis that separates quiet rows from broad, active rows without using supervised information.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((np.log1p(resource_count) / np.log1p(20674.0))**2 + (np.log1p(total_api_calls) / np.log1p(202410.0))**2 + (np.log1p(total_cookies_sent) / np.log1p(2267.0))**2 + (navigator_api_count / 32.0)**2 + (storage_api_count / 6.0)**2) / np.sqrt(5.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "training_center_activity_distance",
+      "type": "formula",
+      "description": "Distance from an unsupervised training-fold mean prototype using log-scaled reach, resource, API-call, and cookie-volume signals.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Gives KNN a centered geometry feature so unusual activity profiles can be distinguished from the dense middle of the training distribution.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((np.log1p(prevalence) - np.log1p(0.0008095094277760595)) / np.log1p(0.475))**2 + ((np.log1p(sites) - np.log1p(117.9384472626044)) / np.log1p(69229.0))**2 + ((np.log1p(resource_count) - np.log1p(17.477884317970926)) / np.log1p(20674.0))**2 + ((np.log1p(total_api_calls) - np.log1p(152.21064027219302)) / np.log1p(202410.0))**2 + ((np.log1p(total_cookies_sent) - np.log1p(1.3192081657902877)) / np.log1p(2267.0))**2) / np.sqrt(5.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "extreme_activity_cluster_indicator",
+      "type": "formula",
+      "description": "Unsupervised indicator for rows in the high-volume tail on API calls, resources, or site reach using normalized training-scale thresholds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a crisp neighborhood axis for very large-activity rows that otherwise sit far from the main cloud.",
+      "leakage_risk": "low",
+      "formula": "np.where((np.log1p(total_api_calls) / np.log1p(202410.0) > 0.55) | (np.log1p(resource_count) / np.log1p(20674.0) > 0.55) | (np.log1p(sites) / np.log1p(69229.0) > 0.55), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_fingerprinting_pattern_score",
+      "type": "judgment",
+      "description": "Semantic assessment on a 0.0 to 1.0 scale, assigned from the row values, of how coherently browser-surface API access, API counts, and fingerprinting aggregates form a recognizable device or browser fingerprinting pattern; 0.0 is absent or fragmentary, 1.0 is highly coherent.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a dense semantic coordinate so rows with different sparse API flags but similar browser-surface behavior can be closer in KNN space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_identity_persistence_score",
+      "type": "judgment",
+      "description": "Semantic assessment on a 0.0 to 1.0 scale, assigned from the row values, of durable identity-maintenance context using cookie volume, cookie prevalence, cookie lifetime, storage API use, and owner/privacy indicators; 0.0 is little evidence, 1.0 is strong evidence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Groups rows by persistence-oriented behavior even when no single cookie or storage column dominates the distance.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "55b6c8af46ae6200",
+  "metadata": {}
+}

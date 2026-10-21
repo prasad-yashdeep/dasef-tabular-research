@@ -1,0 +1,190 @@
+{
+  "dataset_name": "led7",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_active_segments",
+      "type": "formula",
+      "description": "Sum of all active segments on the display.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a continuous magnitude feature that helps the linear model separate dense patterns from sparse ones.",
+      "leakage_risk": "low",
+      "formula": "(attribute_1 == '1') * 1.0 + (attribute_2 == '1') * 1.0 + (attribute_3 == '1') * 1.0 + (attribute_4 == '1') * 1.0 + (attribute_5 == '1') * 1.0 + (attribute_6 == '1') * 1.0 + (attribute_7 == '1') * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "horizontal_active_count",
+      "type": "formula",
+      "description": "Sum of the horizontal segments (top, middle, bottom).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Creates a linear projection focusing on horizontal structure, useful for distinguishing patterns with strong horizontal lines.",
+      "leakage_risk": "low",
+      "formula": "(attribute_1 == '1') * 1.0 + (attribute_4 == '1') * 1.0 + (attribute_7 == '1') * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_active_count",
+      "type": "formula",
+      "description": "Sum of the vertical segments (top-left, top-right, bottom-left, bottom-right).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Creates a linear projection focusing on vertical structure, helping the SVM margin separate tall, vertical patterns.",
+      "leakage_risk": "low",
+      "formula": "(attribute_2 == '1') * 1.0 + (attribute_3 == '1') * 1.0 + (attribute_5 == '1') * 1.0 + (attribute_6 == '1') * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "right_side_active_count",
+      "type": "formula",
+      "description": "Sum of the right-side vertical segments.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Isolates right-aligned activation, providing a strong linear signal for patterns that heavily rely on the right side.",
+      "leakage_risk": "low",
+      "formula": "(attribute_3 == '1') * 1.0 + (attribute_6 == '1') * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "left_side_active_count",
+      "type": "formula",
+      "description": "Sum of the left-side vertical segments.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Isolates left-aligned activation, providing a strong linear signal for patterns that heavily rely on the left side.",
+      "leakage_risk": "low",
+      "formula": "(attribute_2 == '1') * 1.0 + (attribute_5 == '1') * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_symmetry_diff",
+      "type": "formula",
+      "description": "Absolute difference between right-side and left-side active segment counts.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "symmetry",
+      "expected_model_benefit": "Measures horizontal asymmetry, allowing the linear model to easily separate symmetric patterns from asymmetric ones.",
+      "leakage_risk": "low",
+      "formula": "np.abs(((attribute_3 == '1') * 1.0 + (attribute_6 == '1') * 1.0) - ((attribute_2 == '1') * 1.0 + (attribute_5 == '1') * 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "horizontal_symmetry_diff",
+      "type": "formula",
+      "description": "Absolute difference between top-half and bottom-half active segment counts.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "symmetry",
+      "expected_model_benefit": "Measures vertical asymmetry, helping the SVM identify top-heavy or bottom-heavy patterns.",
+      "leakage_risk": "low",
+      "formula": "np.abs(((attribute_1 == '1') * 1.0 + (attribute_2 == '1') * 1.0 + (attribute_3 == '1') * 1.0) - ((attribute_5 == '1') * 1.0 + (attribute_6 == '1') * 1.0 + (attribute_7 == '1') * 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cross_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction of top-left, middle, and bottom-right segments.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly provides a non-linear diagonal interaction term to the linear SVM, expanding its representational capacity.",
+      "leakage_risk": "low",
+      "formula": "((attribute_2 == '1') * 1.0) * ((attribute_4 == '1') * 1.0) * ((attribute_6 == '1') * 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "outer_ring_active_count",
+      "type": "formula",
+      "description": "Sum of all segments excluding the middle segment.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "spatial_aggregation",
+      "expected_model_benefit": "Captures the perimeter activation, useful for distinguishing hollow patterns from filled or crossed patterns.",
+      "leakage_risk": "low",
+      "formula": "(attribute_1 == '1') * 1.0 + (attribute_2 == '1') * 1.0 + (attribute_3 == '1') * 1.0 + (attribute_5 == '1') * 1.0 + (attribute_6 == '1') * 1.0 + (attribute_7 == '1') * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "top_to_bottom_activation_ratio",
+      "type": "formula",
+      "description": "Smoothed ratio of top-half segments to bottom-half segments.",
+      "value_range": [
+        0.25,
+        4.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a continuous, normalized gradient of vertical balance, highly effective for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "(((attribute_1 == '1') * 1.0 + (attribute_2 == '1') * 1.0 + (attribute_3 == '1') * 1.0) + 1.0) / (((attribute_5 == '1') * 1.0 + (attribute_6 == '1') * 1.0 + (attribute_7 == '1') * 1.0) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "visual_complexity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the visual complexity of the active segments, ranging from 0.0 (very simple, few segments) to 10.0 (highly complex, many intersecting segments).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Encodes human-like perception of shape complexity into a continuous scalar, providing a smooth feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "enclosed_loop_probability",
+      "type": "judgment",
+      "description": "Semantic judgment of the likelihood that the active segments form at least one fully enclosed loop.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures a high-level topological property (presence of a loop) that is difficult to express with simple linear combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "74394072c2b7082d",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "checking_status_score",
+      "type": "formula",
+      "description": "Ordinal encoding of checking account status from worst to best financial standing, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "account_health",
+      "expected_model_benefit": "Linear projection of checking account quality directly separates creditworthy applicants along a single dimension",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == '<0', 0.0, np.where(checking_status == '0<=X<200', 0.33, np.where(checking_status == '>=200', 0.67, np.where(checking_status == 'no checking', 1.0, 0.5))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_risk_score",
+      "type": "formula",
+      "description": "Ordinal risk score for credit history from highest risk to lowest risk, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_history",
+      "expected_model_benefit": "Smooth linear encoding of repayment history quality enables SVM to find clean margin boundaries",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_history == 'no credits/all paid', 0.25, np.where(credit_history == 'all paid', 0.25, np.where(credit_history == 'delayed previously', 0.5, np.where(credit_history == 'existing paid', 0.75, np.where(credit_history == 'critical/other existing credit', 1.0, 0.5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_amount_normalized",
+      "type": "formula",
+      "description": "Log-transformed credit amount normalized by training mean and std to reduce skewness for linear models",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "credit_amount",
+      "expected_model_benefit": "Log normalization compresses heavy tail of credit amounts, improving linear separability for SVM",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(credit_amount) - np.log1p(3271.258)) / (np.log1p(3271.258 + 2821.325) - np.log1p(3271.258))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_normalized",
+      "type": "formula",
+      "description": "Loan duration normalized to [0,1] using training min/max range",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loan_terms",
+      "expected_model_benefit": "Normalized duration provides smooth continuous feature for linear margin optimization",
+      "leakage_risk": "low",
+      "formula": "np.clip((duration - 4.0) / (72.0 - 4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "savings_status_score",
+      "type": "formula",
+      "description": "Ordinal encoding of savings account status from lowest to highest savings, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "account_health",
+      "expected_model_benefit": "Savings level is a strong linear predictor of creditworthiness; smooth encoding aids SVM margin",
+      "leakage_risk": "low",
+      "formula": "np.where(savings_status == '<100', 0.0, np.where(savings_status == '100<=X<500', 0.25, np.where(savings_status == '500<=X<1000', 0.5, np.where(savings_status == '>=1000', 0.75, np.where(savings_status == 'no known savings', 1.0, 0.25)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_score",
+      "type": "formula",
+      "description": "Ordinal encoding of employment duration from unemployed to long-term employed, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "employment",
+      "expected_model_benefit": "Employment stability linearly correlates with repayment capacity; smooth encoding improves SVM performance",
+      "leakage_risk": "low",
+      "formula": "np.where(employment == 'unemployed', 0.0, np.where(employment == '<1', 0.25, np.where(employment == '1<=X<4', 0.5, np.where(employment == '4<=X<7', 0.75, np.where(employment == '>=7', 1.0, 0.5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_burden_ratio",
+      "type": "formula",
+      "description": "Estimated monthly payment burden as ratio of credit amount times installment rate to duration, log-scaled",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "loan_terms",
+      "expected_model_benefit": "Captures affordability stress as a continuous ratio feature useful for linear decision boundaries",
+      "leakage_risk": "low",
+      "formula": "np.log1p((credit_amount * installment_commitment) / np.maximum(duration, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Age normalized to [0,1] using training min/max, capturing life-stage financial stability",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Normalized age provides smooth continuous feature capturing financial maturity for linear models",
+      "leakage_risk": "low",
+      "formula": "np.clip((age - 19.0) / (75.0 - 19.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "property_collateral_score",
+      "type": "formula",
+      "description": "Ordinal score for property magnitude as collateral quality from no property to real estate",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "collateral",
+      "expected_model_benefit": "Collateral quality linearly reduces default risk; smooth encoding supports SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "np.where(property_magnitude == 'no known property', 0.0, np.where(property_magnitude == 'life insurance', 0.33, np.where(property_magnitude == 'car', 0.67, np.where(property_magnitude == 'real estate', 1.0, 0.33))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_financial_stability",
+      "type": "formula",
+      "description": "Weighted composite of checking status, savings status, employment stability, and credit history scores as overall financial health index",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Single composite score approximates a linear projection of key financial health indicators, directly useful for SVM margin",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.3 * np.where(checking_status == '<0', 0.0, np.where(checking_status == '0<=X<200', 0.33, np.where(checking_status == '>=200', 0.67, np.where(checking_status == 'no checking', 1.0, 0.5)))) + 0.25 * np.where(savings_status == '<100', 0.0, np.where(savings_status == '100<=X<500', 0.25, np.where(savings_status == '500<=X<1000', 0.5, np.where(savings_status == '>=1000', 0.75, np.where(savings_status == 'no known savings', 1.0, 0.25))))) + 0.25 * np.where(employment == 'unemployed', 0.0, np.where(employment == '<1', 0.25, np.where(employment == '1<=X<4', 0.5, np.where(employment == '4<=X<7', 0.75, np.where(employment == '>=7', 1.0, 0.5))))) + 0.2 * np.where(credit_history == 'no credits/all paid', 0.25, np.where(credit_history == 'all paid', 0.25, np.where(credit_history == 'delayed previously', 0.5, np.where(credit_history == 'existing paid', 0.75, np.where(credit_history == 'critical/other existing credit', 1.0, 0.5)))))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "purpose_risk_judgment",
+      "type": "judgment",
+      "description": "Semantic risk score for loan purpose based on typical repayment risk: low risk for used car/radio/tv, medium for furniture/education, high risk for new car/business/repairs",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loan_purpose",
+      "expected_model_benefit": "Purpose-based risk captures domain knowledge about loan use cases that maps to a smooth linear feature for SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_creditworthiness_judgment",
+      "type": "judgment",
+      "description": "Holistic creditworthiness score from 0 to 1 integrating housing stability, other payment plans, other parties involvement, job quality, and foreign worker status as a continuous severity measure",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures non-formulaic interactions between stability indicators as a smooth composite score for linear SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9a7137cfd40db81f",
+  "metadata": {}
+}

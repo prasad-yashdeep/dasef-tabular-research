@@ -1,0 +1,190 @@
+{
+  "dataset_name": "taiwanese_bankruptcy_prediction",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "profitability_weakness_zscore",
+      "type": "formula",
+      "description": "Composite of standardized shortfalls in ROA, net income to assets, and persistent EPS versus training-fold norms; larger values indicate weaker earnings power.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "profitability",
+      "expected_model_benefit": "Creates a stable one-dimensional profitability axis so a linear margin can use a single coefficient rather than many highly correlated earnings ratios.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((0.5594310898375731 - ROA_A_Before_Interest_After_Tax) / 0.06441599398409825 + (0.5543947670271822 - ROA_B_Before_Interest_Depreciation_After_Tax) / 0.06053615965650312 + (0.8085175866467855 - Net_Income_to_Total_Assets) / 0.03762880451150477 + (0.22923379672597713 - Persistent_EPS_Last_4_Seasons) / 0.03452798229802705) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "leverage_pressure_zscore",
+      "type": "formula",
+      "description": "Scale-aligned composite of debt ratio, liability-to-equity pressure, current-liability intensity, and weak equity-to-liability cushion.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "capital_structure",
+      "expected_model_benefit": "Summarizes balance-sheet leverage into a centered severity score that is easier for a linear SVM to separate than raw ratios on different scales.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((Debt_Ratio_Percent - 0.11179953303002779) / 0.05246786843988207 + (Liability_to_Equity - 0.28036242596770844) / 0.012232129797486536 + (Current_Liability_to_Assets - 0.08984700521650858) / 0.04852225896286919 + (0.04938566355052288 - Equity_to_Liability) / 0.058655368462831155) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_shortfall_zscore",
+      "type": "formula",
+      "description": "Composite of low working capital, low quick assets, low cash-to-assets, and elevated current liabilities relative to current assets.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Maps immediate liquidity buffers and current-claim pressure into a smooth severity measure useful for linear margin placement.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((0.8147556119221444 - Working_Capital_to_Total_Assets) / 0.057705208659474816 + (0.3985561502510961 - Quick_Assets_to_Total_Assets) / 0.2027889820458002 + (0.1265037825761884 - Cash_to_Total_Assets) / 0.14193909923774248 + (Current_Liability_to_Current_Assets - 0.03163688036862557) / 0.03110675464099577) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cash_flow_coverage_shortfall_zscore",
+      "type": "formula",
+      "description": "Standardized shortfall in cash-flow coverage of assets and liabilities, including CFO to assets and operating funds to liability.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "cash_flow_coverage",
+      "expected_model_benefit": "Condenses several cash-generation and coverage ratios into a single approximately linear solvency signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((0.6496947230092652 - Cash_Flow_to_Total_Assets) / 0.045939981077800625 + (0.46227616062967897 - Cash_Flow_to_Liability) / 0.031471082212233555 + (0.5935519877434603 - CFO_to_Assets) / 0.058471942730564094 + (0.35489636922190365 - Operating_Funds_to_Liability) / 0.040967980740778016) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_service_burden_zscore",
+      "type": "formula",
+      "description": "Composite of elevated interest expense, higher financial leverage sensitivity, lower interest coverage, and greater borrowing dependency.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "debt_service",
+      "expected_model_benefit": "Provides a compact debt-service stress axis that can improve margin sensitivity to financing strain.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((Interest_Expense_Ratio - 0.6311297170829525) / 0.01074056697108171 + (DFL - 0.02718444038013418) / 0.004584952592378427 + (0.5655015542707412 - Interest_Coverage_Ratio) / 0.01673702319582774 + (Borrowing_Dependency - 0.37464788690801015) / 0.016239456862297826) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "operating_efficiency_gap_zscore",
+      "type": "formula",
+      "description": "Standardized operating weakness score combining lower gross margin, lower operating profit rate, lower operating profit per share, and higher expense intensity.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "operating_efficiency",
+      "expected_model_benefit": "Turns small deviations in tightly scaled operating ratios into a margin-ready continuous feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((0.6079944111947236 - Operating_Gross_Margin) / 0.013374540885590688 + (0.9989508815325283 - Operating_Profit_Rate) / 0.00108438302510952 + (0.10946119286177447 - Operating_Profit_Per_Share) / 0.03194031709033242 + (Total_Expense_to_Assets - 0.028804938883732728) / 0.024770482440768005) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "growth_and_retention_weakness_zscore",
+      "type": "formula",
+      "description": "Composite of weaker profit growth, weaker continuous net profit growth, and lower retained earnings to assets relative to training-fold norms.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "growth_quality",
+      "expected_model_benefit": "Adds a forward-looking financial momentum axis using only contemporaneous growth and retention ratios.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((0.6894366831302375 - AfterTax_Net_Profit_Growth_Rate) / 0.008896496816325304 + (0.6894266892836455 - Regular_Net_Profit_Growth_Rate) / 0.008874306550019926 + (0.21789847728185438 - Continuous_Net_Profit_Growth_Rate) / 0.01759388815296681 + (0.9348253260069006 - Retained_Earnings_to_Total_Assets) / 0.024173968251614417) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "equity_cushion_erosion_zscore",
+      "type": "formula",
+      "description": "Standardized shortfall in net value per share variants and net profit before tax per share, representing reduced shareholder cushion.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "equity_cushion",
+      "expected_model_benefit": "Aggregates related per-share equity and profit measures into one less noisy linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((0.19082668528337018 - Net_Value_Per_Share_A) / 0.03235273163539346 + (0.19086379642898468 - Net_Value_Per_Share_B) / 0.032255542155848034 + (0.19084992868828585 - Net_Value_Per_Share_C) / 0.03234868064484587 + (0.18459828963188543 - Net_Profit_Before_Tax_Per_Share) / 0.0341058531765983) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "working_capital_quality_zscore",
+      "type": "formula",
+      "description": "Composite of inventory and receivables burden, inventory relative to working capital, lower asset turnover, and short-term liability concentration.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "working_capital_quality",
+      "expected_model_benefit": "Captures asset-quality and turnover stress that may be missed by simple cash or debt ratios alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((Inventory_Accounts_Receivable_to_Net_Value - 0.4023258113962249) / 0.009234737634846854 + (Inventory_to_Working_Capital - 0.2773478166355106) / 0.002436187381872456 + (0.14341777766373534 - Total_Asset_Turnover) / 0.10595506415199797 + (Current_Liabilities_to_Liability - 0.7643473075340003) / 0.2025393409974292) / 4.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cash_debt_resilience_ratio",
+      "type": "formula",
+      "description": "Ratio of liquid and cash-flow buffers to leverage and current-claim pressure, clipped to reduce influence of extreme denominators.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "liquidity_leverage_ratio",
+      "expected_model_benefit": "Gives a smooth resilience axis that a linear margin can weight against stress-oriented composites.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Cash_to_Total_Assets + Quick_Assets_to_Total_Assets + Cash_Flow_to_Liability + Operating_Funds_to_Liability) / (Debt_Ratio_Percent + Current_Liability_to_Assets + Liability_to_Equity + 1e-6), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "broad_financial_deviation_score",
+      "type": "formula",
+      "description": "Average absolute standardized deviation across profitability, income, debt, liquidity, cash-flow, coverage, leverage, retention, and expense ratios.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "global_row_deviation",
+      "expected_model_benefit": "Captures broad atypicality so a linear margin can respond when many financial ratios are modestly unusual at the same time.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs((ROA_A_Before_Interest_After_Tax - 0.5594310898375731) / 0.06441599398409825) + np.abs((Net_Income_to_Total_Assets - 0.8085175866467855) / 0.03762880451150477) + np.abs((Debt_Ratio_Percent - 0.11179953303002779) / 0.05246786843988207) + np.abs((Working_Capital_to_Total_Assets - 0.8147556119221444) / 0.057705208659474816) + np.abs((Cash_Flow_to_Total_Assets - 0.6496947230092652) / 0.045939981077800625) + np.abs((Interest_Coverage_Ratio - 0.5655015542707412) / 0.01673702319582774) + np.abs((Liability_to_Equity - 0.28036242596770844) / 0.012232129797486536) + np.abs((Current_Liability_to_Current_Assets - 0.03163688036862557) / 0.03110675464099577) + np.abs((Retained_Earnings_to_Total_Assets - 0.9348253260069006) / 0.024173968251614417) + np.abs((Total_Expense_to_Assets - 0.028804938883732728) / 0.024770482440768005)) / 20.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_financial_distress_score",
+      "type": "judgment",
+      "description": "Fixed expert-rubric assessment of overall financial distress from the row profitability, liquidity, leverage, cash-flow coverage, growth, and interest-service ratios benchmarked only to training-fold summaries; 0.0 means broadly strong and internally consistent, 1.0 means severe multi-area weakness.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_financial_assessment",
+      "expected_model_benefit": "Supplies a compact qualitative synthesis that can express multi-area red flags not fully captured by simple additive formulas.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "50d1f1873f10f5f3",
+  "metadata": {}
+}

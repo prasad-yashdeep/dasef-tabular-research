@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_cost_score",
+      "type": "formula",
+      "description": "Sum of buying and maintenance costs as a combined financial burden indicator",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Direct split on combined cost burden; high values strongly predict unacceptable ratings",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_persons_interaction",
+      "type": "formula",
+      "description": "Product of safety rating and passenger capacity as a combined safety-utility score",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "safety_utility",
+      "expected_model_benefit": "Captures nonlinear interaction between safety and capacity; zero when either is zero",
+      "leakage_risk": "low",
+      "formula": "safety * persons",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_low_safety",
+      "type": "formula",
+      "description": "Boolean indicator for lowest safety rating (safety == 0)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety",
+      "expected_model_benefit": "Hard threshold split; low safety is a strong disqualifier for acceptable ratings",
+      "leakage_risk": "low",
+      "formula": "np.where(safety == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_low_persons",
+      "type": "formula",
+      "description": "Boolean indicator for minimum passenger capacity (persons == 0)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capacity",
+      "expected_model_benefit": "Hard threshold split; minimum capacity strongly predicts unacceptable ratings",
+      "leakage_risk": "low",
+      "formula": "np.where(persons == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_cost_low_safety",
+      "type": "formula",
+      "description": "Boolean indicator for both high combined cost and low safety simultaneously",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cost_safety_interaction",
+      "expected_model_benefit": "Captures worst-case combination of high cost and low safety for direct tree splitting",
+      "leakage_risk": "low",
+      "formula": "np.where((buying + maint >= 4) & (safety == 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_quality_score",
+      "type": "formula",
+      "description": "Composite quality score combining safety, capacity, and luggage boot while penalizing cost",
+      "value_range": [
+        -3.0,
+        7.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Single numeric score capturing overall desirability; enables efficient tree splits across quality spectrum",
+      "leakage_risk": "low",
+      "formula": "safety + persons + lug_boot - (buying + maint) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of combined buying and maintenance cost into 4 tiers (0=very low, 3=very high)",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Ordinal grouping of cost tiers for cleaner tree splits than raw sum",
+      "leakage_risk": "low",
+      "formula": "np.minimum((buying + maint) // 2, 3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_score",
+      "type": "formula",
+      "description": "Combined utility score from doors, persons, and luggage boot representing practical usability",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "utility",
+      "expected_model_benefit": "Aggregates practical utility dimensions; higher scores correlate with better ratings",
+      "leakage_risk": "low",
+      "formula": "doors + persons + lug_boot",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_high_safety_high_capacity",
+      "type": "formula",
+      "description": "Boolean indicator for both high safety (>=2) and high capacity (persons>=2)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety_utility",
+      "expected_model_benefit": "Identifies premium safety-capacity combinations associated with good and very good ratings",
+      "leakage_risk": "low",
+      "formula": "np.where((safety >= 2) & (persons >= 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_to_utility_ratio",
+      "type": "formula",
+      "description": "Ratio of total cost to utility score, clipped to avoid division issues; higher means worse value",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "value_ratio",
+      "expected_model_benefit": "Value-for-money ratio enables nonlinear splits; high ratio indicates poor value proposition",
+      "leakage_risk": "low",
+      "formula": "np.clip((buying + maint) / np.maximum(doors + persons + lug_boot, 1), 0, 6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_comfort_level",
+      "type": "judgment",
+      "description": "Ordinal comfort level score (0-3) based on combined assessment of doors, luggage space, and passenger capacity as proxies for physical comfort and practicality",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "comfort",
+      "expected_model_benefit": "Semantic grouping of comfort-related features into interpretable ordinal buckets for tree splitting",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "risk_adjusted_value",
+      "type": "judgment",
+      "description": "Holistic value assessment (0-4) considering safety risk relative to cost paid; penalizes high cost with low safety and rewards low cost with high safety",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures the risk-adjusted value perception that drives car acceptability judgments beyond simple additive features",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "98973d91adadc832",
+  "metadata": {}
+}

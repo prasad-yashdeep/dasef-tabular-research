@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bitcoinheist_ransomware",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_income",
+      "type": "formula",
+      "description": "Log-transformed income to compress extreme tail and produce a smooth linear-friendly scale.",
+      "value_range": [
+        16.0,
+        35.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Linearizes heavy-tailed income for stable SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(income)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_count",
+      "type": "formula",
+      "description": "Log-transformed transaction count to reduce skew.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Smooths transaction-count distribution for linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(count)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_neighbors",
+      "type": "formula",
+      "description": "Log-transformed neighbor count.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Compresses degree skew for linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(neighbors)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_weight",
+      "type": "formula",
+      "description": "Symmetric log transform of weight handling extremely small values.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Tames extreme weight tail for stable linear coefficients.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(weight, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "looped_ratio",
+      "type": "formula",
+      "description": "Fraction of looped transactions relative to total count, an interpretable circularity score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Bounded ratio is directly useful as a linear feature for behavioral signal.",
+      "leakage_risk": "low",
+      "formula": "looped / (count + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_per_count",
+      "type": "formula",
+      "description": "Log of average income per transaction count, a per-event severity measure.",
+      "value_range": [
+        15.0,
+        35.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Per-transaction income magnitude useful as linear severity feature.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(income / (count + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "neighbors_per_count",
+      "type": "formula",
+      "description": "Neighbor density per transaction, log-scaled.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures fan-out density used by SVM as smooth predictor.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(neighbors / (count + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "day_of_year_sin",
+      "type": "formula",
+      "description": "Sine-like cyclic encoding approximation of day-of-year via polynomial smoothing.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Cyclic temporal projection helps linear separability across seasons.",
+      "leakage_risk": "low",
+      "formula": "np.sin(2 * 3.141592653589793 * day / 365.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "day_of_year_cos",
+      "type": "formula",
+      "description": "Cosine-like cyclic encoding approximation of day-of-year.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Complements sine encoding for full cyclic representation.",
+      "leakage_risk": "low",
+      "formula": "np.cos(2 * 3.141592653589793 * day / 365.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "length_norm",
+      "type": "formula",
+      "description": "Length normalized to [0,1] using observed maximum (144).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Bounded chain-length signal directly usable as linear coefficient.",
+      "leakage_risk": "low",
+      "formula": "np.clip(length / 144.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "activity_composite",
+      "type": "formula",
+      "description": "Weighted composite of normalized activity signals (count, neighbors, looped) emphasizing overall transaction intensity.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Linear composite aligns with SVM hyperplane orientation for activity-driven signals.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(count) / 10.0) + (np.log1p(neighbors) / 7.0) + (np.log1p(looped) / 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "suspicious_pattern_score",
+      "type": "judgment",
+      "description": "Semantic judgment of suspicious transaction structure: high looped ratio combined with low neighbors and high income-per-count indicates self-cycling laundering-like behavior. Computed as a bounded smooth score combining these signals.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Encodes domain heuristic about circular flow patterns as a smooth linear feature.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "15efc684ea960857",
+  "metadata": {}
+}

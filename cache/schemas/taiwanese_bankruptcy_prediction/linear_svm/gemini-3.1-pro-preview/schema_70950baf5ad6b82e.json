@@ -1,0 +1,190 @@
+{
+  "dataset_name": "taiwanese_bankruptcy_prediction",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "profitability_composite",
+      "type": "formula",
+      "description": "Average of three Return on Assets (ROA) metrics to provide a stable, smoothed profitability signal.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "profitability",
+      "expected_model_benefit": "Provides a robust, continuous measure of overall asset profitability, reducing noise from individual ROA components and creating a strong linear margin.",
+      "leakage_risk": "low",
+      "formula": "(ROA_A_Before_Interest_After_Tax + ROA_B_Before_Interest_Depreciation_After_Tax + ROA_C_Before_Interest_Depreciation) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "debt_burden_index",
+      "type": "formula",
+      "description": "Ratio of debt percentage to net worth percentage, indicating the relative weight of debt against equity.",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "leverage",
+      "expected_model_benefit": "Captures the severity of leverage in a continuous ratio, which is highly informative for linear models assessing financial stability.",
+      "leakage_risk": "low",
+      "formula": "Debt_Ratio_Percent / (Net_Worth_to_Assets + 0.0001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_stress_ratio",
+      "type": "formula",
+      "description": "Ratio of current liabilities to current assets, representing short-term liquidity pressure.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Highlights potential short-term cash flow issues through a direct ratio, allowing the SVM to separate highly stressed entities.",
+      "leakage_risk": "low",
+      "formula": "Current_Liability_to_Assets / (Current_Assets_to_Total_Assets + 0.0001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cash_flow_adequacy",
+      "type": "formula",
+      "description": "Product of cash flow to total assets and cash flow to liability, emphasizing strong cash generation relative to both size and obligations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cash_flow",
+      "expected_model_benefit": "Creates a non-linear interaction term (product) that acts as a single continuous feature for the linear model, rewarding companies with robust cash flows.",
+      "leakage_risk": "low",
+      "formula": "Cash_Flow_to_Total_Assets * Cash_Flow_to_Liability",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "operational_efficiency_score",
+      "type": "judgment",
+      "description": "Semantic evaluation of the company's efficiency in utilizing assets and managing inventory/receivables based on turnover rates.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "efficiency",
+      "expected_model_benefit": "Synthesizes multiple high-variance turnover metrics into a stable, bounded score suitable for linear scaling.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "retained_earnings_health",
+      "type": "formula",
+      "description": "Difference between retained earnings ratio and total expense ratio, indicating the net accumulation of wealth relative to ongoing costs.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "profitability",
+      "expected_model_benefit": "Provides a linear projection of long-term financial health versus short-term expenditure drag.",
+      "leakage_risk": "low",
+      "formula": "Retained_Earnings_to_Total_Assets - Total_Expense_to_Assets",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_leverage_risk",
+      "type": "judgment",
+      "description": "Assesses the risk associated with the company's capital structure, considering long-term liability, equity, and borrowing dependency.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "leverage",
+      "expected_model_benefit": "Translates complex capital structure interactions into a single continuous risk severity measure.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_income_margin_proxy",
+      "type": "formula",
+      "description": "Approximation of net income margin by dividing net income to assets by total asset turnover, clipped to prevent extreme outliers.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "profitability",
+      "expected_model_benefit": "Reconstructs a fundamental financial ratio (margin) from available normalized components, providing a strong linear predictor.",
+      "leakage_risk": "low",
+      "formula": "np.clip(Net_Income_to_Total_Assets / (Total_Asset_Turnover + 0.001), 0.0, 1000.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "working_capital_stability",
+      "type": "formula",
+      "description": "Product of working capital to total assets and working capital turnover rate.",
+      "value_range": [
+        0.3,
+        0.7
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Combines the volume of working capital with its velocity, offering a smoothed composite feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": "Working_Capital_to_Total_Assets * Working_Capital_Turnover_Rate",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "growth_sustainability_metric",
+      "type": "judgment",
+      "description": "Evaluates the sustainability of the company's growth by analyzing asset growth, profit growth, and cash reinvestment.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "growth",
+      "expected_model_benefit": "Provides a qualitative assessment of whether reported growth is backed by cash and sustainable practices, reducing the impact of purely accounting-driven growth.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_coverage_margin",
+      "type": "formula",
+      "description": "Difference between interest coverage ratio and interest expense ratio.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "solvency",
+      "expected_model_benefit": "Creates a direct linear margin representing the buffer a company has to cover its interest obligations.",
+      "leakage_risk": "low",
+      "formula": "Interest_Coverage_Ratio - Interest_Expense_Ratio",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "equity_buffer_ratio",
+      "type": "formula",
+      "description": "Product of net worth to assets and equity to liability, representing the overall equity cushion.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "solvency",
+      "expected_model_benefit": "Amplifies the signal of strong equity positions, providing a clear continuous feature that correlates with financial resilience.",
+      "leakage_risk": "low",
+      "formula": "Net_Worth_to_Assets * Equity_to_Liability",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "70950baf5ad6b82e",
+  "metadata": {}
+}

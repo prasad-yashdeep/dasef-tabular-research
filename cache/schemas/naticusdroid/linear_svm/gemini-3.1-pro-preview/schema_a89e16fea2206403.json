@@ -1,0 +1,190 @@
+{
+  "dataset_name": "naticusdroid",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "network_activity_score",
+      "type": "formula",
+      "description": "Composite score representing the breadth of network and internet access requested by the application.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a dense severity measure of network capability, helping the linear SVM establish a margin based on overall network access rather than individual sparse flags.",
+      "leakage_risk": "low",
+      "formula": "android_permission_internet + android_permission_access_network_state + android_permission_access_wifi_state + android_permission_change_wifi_state + android_permission_change_network_state",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_risk_telephony_score",
+      "type": "formula",
+      "description": "Sum of telephony and SMS permissions, which are frequently abused for premium SMS fraud or data exfiltration.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "risk_assessment",
+      "expected_model_benefit": "Aggregates high-risk telephony features into a single continuous-like dimension, allowing the SVM to apply a unified weight to telephony abuse potential.",
+      "leakage_risk": "low",
+      "formula": "android_permission_read_phone_state + android_permission_call_phone + android_permission_read_sms + android_permission_send_sms + android_permission_receive_sms",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_tracking_intensity",
+      "type": "formula",
+      "description": "Measures the intensity of location tracking capabilities requested by the app.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "privacy_exposure",
+      "expected_model_benefit": "Creates a smooth gradient of location tracking severity, improving the linear model's ability to penalize excessive tracking.",
+      "leakage_risk": "low",
+      "formula": "android_permission_access_fine_location + android_permission_access_coarse_location + android_permission_access_mock_location",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "storage_and_media_access",
+      "type": "formula",
+      "description": "Evaluates the extent to which the app can access local files, camera, and microphone.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Reduces dimensionality by grouping related media and storage permissions, providing a more robust signal for the SVM decision boundary.",
+      "leakage_risk": "low",
+      "formula": "android_permission_read_external_storage + android_permission_write_external_storage + android_permission_camera + android_permission_record_audio",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "system_persistence_and_stealth",
+      "type": "formula",
+      "description": "Calculates a score based on permissions that allow an app to run at startup, stay awake, draw over other apps, and monitor tasks.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "behavioral_analysis",
+      "expected_model_benefit": "Highlights persistence mechanisms commonly used by background services, offering a strong linear projection for behavioral risk.",
+      "leakage_risk": "low",
+      "formula": "android_permission_receive_boot_completed + android_permission_wake_lock + android_permission_system_alert_window + android_permission_get_tasks",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "personal_data_exposure",
+      "type": "formula",
+      "description": "Sum of permissions related to reading or modifying user contacts, accounts, and calendar events.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "privacy_exposure",
+      "expected_model_benefit": "Consolidates personal data access into a single severity metric, which is highly effective for linear models assessing privacy risks.",
+      "leakage_risk": "low",
+      "formula": "android_permission_read_contacts + android_permission_write_contacts + android_permission_get_accounts + android_permission_read_calendar",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "launcher_manipulation_count",
+      "type": "formula",
+      "description": "Counts permissions related to installing/uninstalling shortcuts and modifying launcher badges.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "adware_indicators",
+      "expected_model_benefit": "Captures aggressive UI manipulation tactics often seen in adware, providing a clear numerical feature for the SVM to weight.",
+      "leakage_risk": "low",
+      "formula": "com_android_launcher_permission_install_shortcut + com_android_launcher_permission_uninstall_shortcut + com_sonyericsson_home_permission_broadcast_badge + com_sec_android_provider_badge_permission_read + com_sec_android_provider_badge_permission_write",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "telephony_to_network_ratio",
+      "type": "formula",
+      "description": "Ratio of telephony/SMS permissions to basic network permissions, smoothed to avoid division by zero.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Identifies apps that request heavy telephony access without corresponding network needs, creating a non-linear interaction feature that is linearly separable for the SVM.",
+      "leakage_risk": "low",
+      "formula": "(android_permission_read_phone_state + android_permission_send_sms + android_permission_receive_sms) / (android_permission_internet + android_permission_access_network_state + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "suspicious_behavior_composite",
+      "type": "formula",
+      "description": "Weighted composite of highly sensitive permissions such as sending SMS, reading phone state, drawing over apps, and requesting package installations.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Provides a pre-calculated, weighted severity score that directly aligns with the margin-maximization objective of a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "2.0 * android_permission_send_sms + 1.5 * android_permission_read_phone_state + 1.5 * android_permission_system_alert_window + 2.0 * android_permission_request_install_packages",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hardware_control_index",
+      "type": "formula",
+      "description": "Measures the extent of hardware control requested, including bluetooth, camera, vibrate, and flashlight.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Groups miscellaneous hardware controls into a denser feature, reducing sparsity and improving model generalization.",
+      "leakage_risk": "low",
+      "formula": "android_permission_bluetooth + android_permission_camera + android_permission_vibrate + android_permission_flashlight",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "suspicious_permission_synergy",
+      "type": "judgment",
+      "description": "Semantic assessment of whether the app requests a combination of permissions that are rarely needed together in benign apps (e.g., SMS + Internet + Boot Completed), indicating potential botnet or spyware behavior.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures complex, multi-permission interactions that a linear model cannot easily learn from raw binary flags alone.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adware_monetization_potential",
+      "type": "judgment",
+      "description": "Semantic assessment of the app's likelihood to aggressively monetize via ads or unwanted shortcuts, based on the presence of billing, launcher shortcuts, and system alert windows.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a continuous risk score for adware-like behavior, allowing the SVM to separate aggressive monetization tactics from standard app functionality.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a89e16fea2206403",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "online_shoppers",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "page_value_log",
+      "type": "formula",
+      "description": "Log-transformed PageValues to compress the heavy right tail into a smooth scale suitable for linear margins.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Provides a smooth monotonic signal of session monetary value that scales well in a linear decision function.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(PageValues)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "page_value_nonzero_flag",
+      "type": "formula",
+      "description": "Binary indicator that PageValues is greater than zero, separating sessions that touched any valued page.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Linear models benefit from an explicit zero-versus-nonzero split because PageValues has a massive zero mass.",
+      "leakage_risk": "low",
+      "formula": "np.where(PageValues > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "exit_minus_bounce",
+      "type": "formula",
+      "description": "Difference between ExitRates and BounceRates as a measure of mid-session abandonment versus immediate bounce.",
+      "value_range": [
+        -0.2,
+        0.2
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Gives the linear SVM a signed continuous axis differentiating bounce versus deeper exit behavior.",
+      "leakage_risk": "low",
+      "formula": "ExitRates - BounceRates",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_quality_score",
+      "type": "formula",
+      "description": "Composite engagement quality: high page value reduced by exit and bounce friction.",
+      "value_range": [
+        -0.5,
+        7.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Pre-weighted linear composite directly aligns with margin direction for a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(PageValues) - 5.0 * ExitRates - 2.0 * BounceRates",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "special_day_proximity",
+      "type": "formula",
+      "description": "SpecialDay value clipped, representing closeness to a holiday shopping event.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Already normalized smooth severity that fits a linear projection cleanly.",
+      "leakage_risk": "low",
+      "formula": "np.clip(SpecialDay, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "new_visitor_flag",
+      "type": "formula",
+      "description": "Indicator for new visitor type, which tends to behave differently than returning visitors.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Linear-friendly encoding of a high-signal categorical level.",
+      "leakage_risk": "low",
+      "formula": "np.where(VisitorType == 'New_Visitor', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weekend_flag",
+      "type": "formula",
+      "description": "Numeric encoding of Weekend boolean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Direct binary feature contributing additive offset in linear margin.",
+      "leakage_risk": "low",
+      "formula": "Weekend * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_intent_month_flag",
+      "type": "formula",
+      "description": "Indicator for months historically associated with higher purchase intent traffic (Nov, Oct, Sep, Dec).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Collapses Month into a single linear-margin-aligned signal capturing seasonality.",
+      "leakage_risk": "low",
+      "formula": "np.where((Month == 'Nov') | (Month == 'Oct') | (Month == 'Sep') | (Month == 'Dec'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_intent_month_flag",
+      "type": "formula",
+      "description": "Indicator for months associated with lower conversion probability (Feb, Mar, May, June).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Provides a balancing negative-side seasonality axis for the linear classifier.",
+      "leakage_risk": "low",
+      "formula": "np.where((Month == 'Feb') | (Month == 'Mar') | (Month == 'May') | (Month == 'June'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "exit_rate_severity",
+      "type": "formula",
+      "description": "Normalized ExitRates scaled to [0,1] reflecting abandonment severity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Smooth normalized severity score fits linear SVM scaling expectations.",
+      "leakage_risk": "low",
+      "formula": "np.clip(ExitRates / 0.2, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bounce_to_exit_ratio",
+      "type": "formula",
+      "description": "Ratio of BounceRates to ExitRates, indicating how much of exits are immediate bounces.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a bounded ratio capturing browsing depth quality independent of magnitude.",
+      "leakage_risk": "low",
+      "formula": "np.clip(BounceRates / (ExitRates + 0.0001), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "session_intent_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall purchase intent strength based on visitor recency, engagement depth, page value signal, and seasonal context; higher means stronger inferred buying intent for the session.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Encapsulates multi-column qualitative reasoning into a single bounded score that gives the linear SVM a high-signal projection axis beyond raw deterministic transforms.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "da4980c97c317bca",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of V1 to a shifted V2, capturing the relative magnitude between the first two features.",
+      "value_range": [
+        -2.5,
+        5.5
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows tree models to split directly on the non-linear relationship between V1 and V2, which would otherwise require deep, complex split paths.",
+      "leakage_risk": "low",
+      "formula": "V1 / (V2 + 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v4_diff",
+      "type": "formula",
+      "description": "Difference between V3 and V4.",
+      "value_range": [
+        -4.0,
+        4.5
+      ],
+      "feature_family": "linear_combination",
+      "expected_model_benefit": "Provides a pre-computed linear combination, saving the tree from having to approximate this diagonal split with multiple orthogonal splits.",
+      "leakage_risk": "low",
+      "formula": "V3 - V4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_v3_sum",
+      "type": "formula",
+      "description": "Sum of the first three features, representing an overall magnitude or energy level.",
+      "value_range": [
+        -4.5,
+        10.5
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Gives the tree a single feature to evaluate the combined strength of the primary variables, useful for broad thresholding.",
+      "leakage_risk": "low",
+      "formula": "V1 + V2 + V3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v5_squared",
+      "type": "formula",
+      "description": "Squared value of V5, emphasizing extreme deviations from zero.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Helps trees isolate high-magnitude outliers in V5 by stretching the scale for larger absolute values.",
+      "leakage_risk": "low",
+      "formula": "V5 ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_above_mean_indicator",
+      "type": "formula",
+      "description": "Boolean indicator if V1 is above its training set mean (0.838).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "threshold",
+      "expected_model_benefit": "Provides a strong, immediate binary split point based on the central tendency of V1.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 > 0.838, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_v3_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between V2 and V3.",
+      "value_range": [
+        -4.5,
+        11.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the joint effect of V2 and V3, a non-linear surface that tree models cannot easily synthesize on their own.",
+      "leakage_risk": "low",
+      "formula": "V2 * V3",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_v5_max",
+      "type": "formula",
+      "description": "The maximum value between V4 and V5.",
+      "value_range": [
+        -1.2,
+        2.5
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Identifies the dominant higher-order feature, allowing the tree to split on the most prominent signal among the two.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V4, V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v5_diff_abs",
+      "type": "formula",
+      "description": "Absolute difference between the first and last features (V1 and V5).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "distance",
+      "expected_model_benefit": "Measures the divergence across the feature spectrum, providing a magnitude of difference that trees can threshold effectively.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V1 - V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_ordinal_bucket",
+      "type": "formula",
+      "description": "Ordinal bucketing of V2 into three categories: negative, below mean, and above mean.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "binning",
+      "expected_model_benefit": "Reduces the number of splits needed by pre-grouping V2 into meaningful ordinal ranges.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 < 0.0, 0, np.where(V2 < 1.27, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_shifted_log",
+      "type": "formula",
+      "description": "Logarithmic transformation of V3 shifted by 1.5 to ensure positive values.",
+      "value_range": [
+        0.2,
+        1.8
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Compresses the right tail of V3's distribution, making it easier for trees to create balanced splits across the feature's range.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3 + 1.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_harmonic_resonance_score",
+      "type": "judgment",
+      "description": "A semantic assessment of the harmonic resonance quality based on the relationship and magnitudes of the first two features (V1 and V2).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, expert-like evaluation of the lower-frequency components that might correlate with specific underlying physical or acoustic properties.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v4_v5_spectral_complexity",
+      "type": "judgment",
+      "description": "Evaluates the spectral complexity and high-frequency energy distribution using the higher features (V3, V4, V5).",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures complex, multi-variable patterns in the higher-order features that are difficult to express through simple deterministic formulas.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "21707f12a9e2e18f",
+  "metadata": {}
+}

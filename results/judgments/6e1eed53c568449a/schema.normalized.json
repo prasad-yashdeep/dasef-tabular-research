@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recency_normalized",
+      "type": "formula",
+      "description": "Recency (V1) normalized by its training-set max to [0,1] scale, representing how recently the donor donated",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized input improves SVM margin geometry",
+      "leakage_risk": "low",
+      "formula": "V1 / 74.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_normalized",
+      "type": "formula",
+      "description": "Frequency (V2) normalized by its training-set max to [0,1] scale",
+      "value_range": [
+        0.02,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized input improves SVM margin geometry",
+      "leakage_risk": "low",
+      "formula": "V2 / 50.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monetary_log1p",
+      "type": "formula",
+      "description": "Log1p transform of monetary value (V3) to reduce skewness and compress large values",
+      "value_range": [
+        5.52,
+        9.43
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces skew in monetary distribution, improving linear separability",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_normalized",
+      "type": "formula",
+      "description": "Time since first donation (V4) normalized by training-set max",
+      "value_range": [
+        0.02,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized input improves SVM margin geometry",
+      "leakage_risk": "low",
+      "formula": "V4 / 98.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate",
+      "type": "formula",
+      "description": "Ratio of frequency to time (V2/V4), measuring average donation rate per month",
+      "value_range": [
+        0.01,
+        2.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures donation intensity as a continuous ratio useful for linear margins",
+      "leakage_risk": "low",
+      "formula": "np.clip(V2 / V4, 0.01, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monetary_per_donation",
+      "type": "formula",
+      "description": "Average monetary value per donation (V3/V2), measuring blood volume per visit",
+      "value_range": [
+        200.0,
+        300.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures per-donation consistency as a ratio feature",
+      "leakage_risk": "low",
+      "formula": "np.clip(V3 / V2, 200.0, 300.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_interaction",
+      "type": "formula",
+      "description": "Product of normalized recency and frequency, capturing joint recency-frequency signal",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Approximate bilinear interaction term useful for linear SVM as a composite feature",
+      "leakage_risk": "low",
+      "formula": "(V1 / 74.0) * (V2 / 50.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_deviation_from_mean",
+      "type": "formula",
+      "description": "Signed deviation of recency from training mean (9.51), normalized by std (8.09)",
+      "value_range": [
+        -1.18,
+        7.97
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Zero-centered feature improves SVM convergence and margin quality",
+      "leakage_risk": "low",
+      "formula": "(V1 - 9.506684491978609) / 8.08998246476059",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_deviation_from_mean",
+      "type": "formula",
+      "description": "Signed deviation of frequency from training mean (5.51), normalized by std (5.84)",
+      "value_range": [
+        -0.77,
+        7.62
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Zero-centered feature improves SVM convergence and margin quality",
+      "leakage_risk": "low",
+      "formula": "(V2 - 5.514705882352941) / 5.835402537482516",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_since_first_vs_recency_gap",
+      "type": "formula",
+      "description": "Difference between time since first donation (V4) and recency (V1), measuring donor tenure span",
+      "value_range": [
+        -72.0,
+        98.0
+      ],
+      "feature_family": "derived",
+      "expected_model_benefit": "Captures donor loyalty span as a continuous linear feature",
+      "leakage_risk": "low",
+      "formula": "V4 - V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_frequency_donor_score",
+      "type": "judgment",
+      "description": "Semantic score from 0 to 1 assessing whether the donor exhibits high-frequency donation behavior based on V2 relative to population norms (mean~5.5, high>=10)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_severity",
+      "expected_model_benefit": "Provides a smooth semantic signal about donor engagement level for SVM margin",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lapsed_donor_risk_score",
+      "type": "judgment",
+      "description": "Semantic score from 0 to 1 assessing lapsed donor risk: high recency (V1 large) combined with low frequency (V2 small) and long time since first donation (V4 large) indicates lapsed donor",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_severity",
+      "expected_model_benefit": "Captures composite lapsed-donor risk as a weighted severity score useful for SVM classification boundary",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8525501f567daac2",
+  "metadata": {}
+}

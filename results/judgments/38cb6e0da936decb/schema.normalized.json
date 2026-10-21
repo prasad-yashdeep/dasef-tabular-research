@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "monthly_payment_burden",
+      "type": "formula",
+      "description": "Approximate monthly payment as credit_amount divided by duration months.",
+      "value_range": [
+        10.0,
+        4000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a key threshold for separating affordable vs heavy obligations; trees can split on payment size.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / np.maximum(duration, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_amount",
+      "type": "formula",
+      "description": "Log-transformed credit amount to compress the right tail for cleaner threshold splits.",
+      "value_range": [
+        5.0,
+        10.0
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Stabilizes scale of loan size; provides more uniform split points for tree algorithms.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "long_duration_flag",
+      "type": "formula",
+      "description": "Indicator that the loan duration exceeds 24 months, capturing long-horizon risk exposure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Clean boolean split for long-term loans which often associate with higher default risk.",
+      "leakage_risk": "low",
+      "formula": "np.where(duration > 24, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of loan duration: 0=<=12, 1=13-24, 2=25-36, 3=37-48, 4=>48 months.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Predefined nonlinear duration bins help trees segment risk tiers efficiently.",
+      "leakage_risk": "low",
+      "formula": "np.where(duration <= 12, 0, np.where(duration <= 24, 1, np.where(duration <= 36, 2, np.where(duration <= 48, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Ordinal age bucket: 0=<25, 1=25-34, 2=35-44, 3=45-59, 4=60+.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Life-stage groupings capture nonlinear effects of age on creditworthiness.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 25, 0, np.where(age < 35, 1, np.where(age < 45, 2, np.where(age < 60, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "young_high_installment",
+      "type": "formula",
+      "description": "Interaction: applicant under 30 with installment commitment of 3 or more (high relative burden).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures vulnerable demographic with high income-share commitment as one tree-friendly indicator.",
+      "leakage_risk": "low",
+      "formula": "np.where((age < 30) & (installment_commitment >= 3), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "no_checking_flag",
+      "type": "formula",
+      "description": "Indicator for applicants who have no checking account on file.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Strong known signal in this dataset; isolates a clean categorical split.",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == 'no checking', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "negative_checking_flag",
+      "type": "formula",
+      "description": "Indicator for applicants with negative checking account balance (<0).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Captures financial stress signal independent of other checking categories.",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == '<0', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_savings_flag",
+      "type": "formula",
+      "description": "Indicator that savings are below 100 (lowest known savings bucket).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Identifies thin financial cushion, a key risk threshold for trees.",
+      "leakage_risk": "low",
+      "formula": "np.where(savings_status == '<100', 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "amount_per_installment_unit",
+      "type": "formula",
+      "description": "Credit amount scaled by installment commitment level, proxying total income-relative load.",
+      "value_range": [
+        50.0,
+        16000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Combines two predictive features; useful nonlinear interaction for tree splits.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / np.maximum(installment_commitment, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "applicant_stability_score",
+      "type": "judgment",
+      "description": "Semantic 0-5 ordinal score of applicant stability combining housing ownership, employment tenure, residence duration, and job skill level. Higher = more stable. Computed as sum of: own housing (+1), employment >=4 years (+1), employment >=7 years (+1 additional), residence_since >=3 (+1), skilled or high-qualif job (+1).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Encodes domain notion of life stability as a single ordinal that trees can threshold cleanly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_profile_risk_score",
+      "type": "judgment",
+      "description": "Semantic 0-4 ordinal risk score from credit history and external obligations. +1 if credit_history is 'no credits/all paid' or 'all paid' (no track record or just-cleared), +1 if other_payment_plans is 'bank' or 'stores', +1 if existing_credits >= 2, +1 if other_parties == 'co applicant'. Higher = more concerning profile.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Combines several weak categorical risk signals into a tree-splittable ordinal score.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6b264bdaa2e0f555",
+  "metadata": {}
+}

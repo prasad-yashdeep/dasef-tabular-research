@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_ro_real_estate_20260503",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "area_per_room_norm",
+      "type": "formula",
+      "description": "Calculates the average area per room and normalizes it by a typical value (30 sqm) to create a scale-invariant measure of spatial density.",
+      "value_range": [
+        0.0,
+        6.1
+      ],
+      "feature_family": "scale_normalized_ratio",
+      "expected_model_benefit": "Provides a scale-invariant measure of spatial density, helping KNN group properties with similar layouts regardless of absolute size.",
+      "leakage_risk": "low",
+      "formula": "(area_sqm / np.maximum(rooms, 1.0)) / 30.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "z_score_area",
+      "type": "formula",
+      "description": "Standardizes the area_sqm feature using the training set mean and standard deviation.",
+      "value_range": [
+        -2.6,
+        4.1
+      ],
+      "feature_family": "scale_normalized_feature",
+      "expected_model_benefit": "Standardizes the area feature to zero mean and unit variance, preventing it from dominating distance calculations in KNN.",
+      "leakage_risk": "low",
+      "formula": "(area_sqm - 69.77) / 27.65",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "z_score_rooms",
+      "type": "formula",
+      "description": "Standardizes the rooms feature using the training set mean and standard deviation.",
+      "value_range": [
+        -1.8,
+        3.5
+      ],
+      "feature_family": "scale_normalized_feature",
+      "expected_model_benefit": "Standardizes the room count, ensuring it contributes proportionally to the overall distance metric.",
+      "leakage_risk": "low",
+      "formula": "(rooms - 2.36) / 0.76",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "z_score_location",
+      "type": "formula",
+      "description": "Standardizes the location feature using the training set mean and standard deviation.",
+      "value_range": [
+        -2.3,
+        1.5
+      ],
+      "feature_family": "scale_normalized_feature",
+      "expected_model_benefit": "Normalizes the location code, allowing it to be meaningfully combined with other standardized features in distance computations.",
+      "leakage_risk": "low",
+      "formula": "(location - 21.65) / 9.70",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "z_score_floor",
+      "type": "formula",
+      "description": "Standardizes the floor feature using the training set mean and standard deviation.",
+      "value_range": [
+        -1.4,
+        1.9
+      ],
+      "feature_family": "scale_normalized_feature",
+      "expected_model_benefit": "Standardizes the floor level, balancing its influence on neighborhood geometry against other property attributes.",
+      "leakage_risk": "low",
+      "formula": "(floor - 22.09) / 16.89",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "euclidean_dist_to_centroid",
+      "type": "formula",
+      "description": "Calculates the Euclidean distance from the property to the multivariate centroid of the training data based on standardized area, rooms, location, and floor.",
+      "value_range": [
+        0.0,
+        6.5
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures the overall typicality of a property by measuring its Euclidean distance to the dataset's multivariate mean, useful for identifying outliers.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((area_sqm - 69.77) / 27.65)**2 + ((rooms - 2.36) / 0.76)**2 + ((location - 21.65) / 9.70)**2 + ((floor - 22.09) / 16.89)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "manhattan_dist_to_centroid",
+      "type": "formula",
+      "description": "Calculates the Manhattan (L1) distance from the property to the multivariate centroid of the training data.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides an alternative, robust measure of typicality using L1 distance, which is less sensitive to extreme values in individual dimensions.",
+      "leakage_risk": "low",
+      "formula": "np.abs((area_sqm - 69.77) / 27.65) + np.abs((rooms - 2.36) / 0.76) + np.abs((location - 21.65) / 9.70) + np.abs((floor - 22.09) / 16.89)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prototype_dist_large_apartment",
+      "type": "formula",
+      "description": "Calculates the Euclidean distance to an unsupervised generic prototype representing a large apartment (150 sqm, 4 rooms) in the standardized feature space.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Measures similarity to a generic large apartment prototype, creating a continuous feature that improves clustering of spacious properties.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((area_sqm - 150.0) / 27.65)**2 + ((rooms - 4.0) / 0.76)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prototype_dist_small_studio",
+      "type": "formula",
+      "description": "Calculates the Euclidean distance to an unsupervised generic prototype representing a small studio (30 sqm, 1 room) in the standardized feature space.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Measures similarity to a generic small studio prototype, helping the model identify and group compact living spaces.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((area_sqm - 30.0) / 27.65)**2 + ((rooms - 1.0) / 0.76)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_floor_indicator",
+      "type": "formula",
+      "description": "Binary indicator for properties located above the 10th floor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a binary indicator for high-floor properties, introducing a categorical dimension that helps partition the feature space for KNN.",
+      "leakage_risk": "low",
+      "formula": "np.where(floor > 10.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_location_desirability",
+      "type": "judgment",
+      "description": "Assesses the desirability of the location code based on typical urban real estate patterns, assigning a score from 0.0 (least desirable) to 1.0 (most desirable).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Translates raw location codes into a continuous desirability score, providing a semantically meaningful dimension for distance calculations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_property_type_cluster",
+      "type": "judgment",
+      "description": "Assigns a semantic cluster ID (1 to 5) representing the property type (e.g., studio, family apartment, penthouse) based on area, rooms, and floor.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Assigns a discrete cluster ID based on property characteristics, acting as a categorical grouping variable to refine neighborhood boundaries.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d0a9cb0828caa7ea",
+  "metadata": {}
+}

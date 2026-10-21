@@ -1,0 +1,190 @@
+{
+  "dataset_name": "nursery",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "health_score",
+      "type": "formula",
+      "description": "Ordinal encoding of health status where recommended=2, priority=1, not_recom=0, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Provides smooth linear signal for health quality dimension useful for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "np.where(health == 'recommended', 1.0, np.where(health == 'priority', 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_score",
+      "type": "formula",
+      "description": "Ordinal encoding of housing quality: convenient=1.0, less_conv=0.5, critical=0.0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Continuous housing quality signal enabling linear separation in SVM feature space",
+      "leakage_risk": "low",
+      "formula": "np.where(housing == 'convenient', 1.0, np.where(housing == 'less_conv', 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "finance_score",
+      "type": "formula",
+      "description": "Binary encoding of finance: convenient=1.0, inconv=0.0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Clean binary financial signal for linear model discrimination",
+      "leakage_risk": "low",
+      "formula": "np.where(finance == 'convenient', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_score",
+      "type": "formula",
+      "description": "Ordinal encoding of social situation: nonprob=1.0, slightly_prob=0.5, problematic=0.0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Smooth social risk signal for linear margin optimization",
+      "leakage_risk": "low",
+      "formula": "np.where(social == 'nonprob', 1.0, np.where(social == 'slightly_prob', 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "parents_score",
+      "type": "formula",
+      "description": "Ordinal encoding of parents status: usual=1.0, pretentious=0.5, great_pret=0.0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Continuous parental status signal for linear feature space",
+      "leakage_risk": "low",
+      "formula": "np.where(parents == 'usual', 1.0, np.where(parents == 'pretentious', 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nursery_quality_score",
+      "type": "formula",
+      "description": "Ordinal encoding of nursery quality: proper=1.0, less_proper=0.75, improper=0.5, critical=0.25, very_crit=0.0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Smooth nursery quality gradient enabling linear SVM to exploit ordinal structure",
+      "leakage_risk": "low",
+      "formula": "np.where(has_nurs == 'proper', 1.0, np.where(has_nurs == 'less_proper', 0.75, np.where(has_nurs == 'improper', 0.5, np.where(has_nurs == 'critical', 0.25, 0.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "children_count_score",
+      "type": "formula",
+      "description": "Ordinal encoding of number of children: 1=1.0, 2=0.67, 3=0.33, more=0.0 (fewer children may indicate better placement prospects)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Continuous child count proxy for linear model to capture family size effects",
+      "leakage_risk": "low",
+      "formula": "np.where(children == '1', 1.0, np.where(children == '2', 0.67, np.where(children == '3', 0.33, 0.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "form_completeness_score",
+      "type": "formula",
+      "description": "Ordinal encoding of form status: complete=1.0, completed=0.75, incomplete=0.25, foster=0.0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Form completeness signal as continuous feature for linear margin",
+      "leakage_risk": "low",
+      "formula": "np.where(form == 'complete', 1.0, np.where(form == 'completed', 0.75, np.where(form == 'incomplete', 0.25, 0.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_suitability_composite",
+      "type": "formula",
+      "description": "Weighted composite of health, housing, finance, and social scores emphasizing health and finance as primary determinants",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Single composite score approximating linear projection of key suitability dimensions for SVM",
+      "leakage_risk": "low",
+      "formula": "(0.35 * np.where(health == 'recommended', 1.0, np.where(health == 'priority', 0.5, 0.0)) + 0.25 * np.where(finance == 'convenient', 1.0, 0.0) + 0.25 * np.where(housing == 'convenient', 1.0, np.where(housing == 'less_conv', 0.5, 0.0)) + 0.15 * np.where(social == 'nonprob', 1.0, np.where(social == 'slightly_prob', 0.5, 0.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "risk_factor_count",
+      "type": "formula",
+      "description": "Count of adverse conditions: health=not_recom, housing=critical, finance=inconv, social=problematic, nursery=very_crit, normalized to [0,1]",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_aggregation",
+      "expected_model_benefit": "Aggregated risk count as smooth severity measure for linear SVM boundary",
+      "leakage_risk": "low",
+      "formula": "(np.where(health == 'not_recom', 1.0, 0.0) + np.where(housing == 'critical', 1.0, 0.0) + np.where(finance == 'inconv', 1.0, 0.0) + np.where(social == 'problematic', 1.0, 0.0) + np.where(has_nurs == 'very_crit', 1.0, 0.0)) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_stability_index",
+      "type": "judgment",
+      "description": "Semantic assessment of overall family stability combining parents attitude, social situation, and financial status. Score reflects how stable and supportive the family environment appears: high=stable/supportive, low=unstable/problematic",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Holistic family stability judgment captures interaction effects not easily expressed in individual ordinal features",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "placement_readiness_score",
+      "type": "judgment",
+      "description": "Semantic assessment of how ready and suitable the application is for nursery placement based on form completeness, nursery quality, and housing adequacy. Ranges from 0 (not ready) to 4 (fully ready)",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_composite",
+      "expected_model_benefit": "Captures holistic placement readiness that combines administrative and physical readiness dimensions for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "566b6022cf14f38b",
+  "metadata": {}
+}

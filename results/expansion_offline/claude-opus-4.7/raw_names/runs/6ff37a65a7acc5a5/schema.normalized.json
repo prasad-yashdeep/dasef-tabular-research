@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bng_breast_w",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "mean_cytology_score",
+      "type": "formula",
+      "description": "Average of all nine cytological measurements, providing a smooth overall severity score.",
+      "value_range": [
+        0.5,
+        13.0
+      ],
+      "feature_family": "aggregate_severity",
+      "expected_model_benefit": "Smooth linear composite that strongly correlates with overall cellular abnormality, ideal for linear SVM margin.",
+      "leakage_risk": "low",
+      "formula": "(Clump_Thickness + Cell_Size_Uniformity + Cell_Shape_Uniformity + Marginal_Adhesion + Single_Epi_Cell_Size + Bare_Nuclei + Bland_Chromatin + Normal_Nucleoli + Mitoses) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "uniformity_composite",
+      "type": "formula",
+      "description": "Weighted sum of size and shape uniformity, two highly diagnostic correlated features.",
+      "value_range": [
+        0.9,
+        12.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Captures uniformity axis as a single smooth projection, reducing redundancy in the linear margin.",
+      "leakage_risk": "low",
+      "formula": "0.5 * Cell_Size_Uniformity + 0.5 * Cell_Shape_Uniformity",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nuclei_chromatin_composite",
+      "type": "formula",
+      "description": "Weighted average of bare nuclei and bland chromatin, both indicators of nuclear abnormality.",
+      "value_range": [
+        0.5,
+        12.5
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Smooth nuclear-severity projection complementary to uniformity axis.",
+      "leakage_risk": "low",
+      "formula": "0.5 * np.maximum(Bare_Nuclei, 0.0) + 0.5 * Bland_Chromatin",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_shape_ratio",
+      "type": "formula",
+      "description": "Ratio of cell size uniformity to cell shape uniformity, capturing relative abnormality direction.",
+      "value_range": [
+        0.1,
+        8.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a normalized scale-invariant ratio feature beneficial for linear separation.",
+      "leakage_risk": "low",
+      "formula": "(Cell_Size_Uniformity + 1.0) / (Cell_Shape_Uniformity + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_mitoses",
+      "type": "formula",
+      "description": "Log-transformed mitoses count to compress its skewed range into a smooth scale.",
+      "value_range": [
+        0.0,
+        2.6
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Linearizes mitoses signal so it contributes proportionally to the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(Mitoses - 1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "severity_max",
+      "type": "formula",
+      "description": "Maximum value across all cytology measurements, capturing the worst single indicator.",
+      "value_range": [
+        1.0,
+        14.0
+      ],
+      "feature_family": "extremum",
+      "expected_model_benefit": "Adds a non-linear extremum signal still usable as a linear coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(Clump_Thickness, Cell_Size_Uniformity), np.maximum(Cell_Shape_Uniformity, Marginal_Adhesion)), np.maximum(np.maximum(Single_Epi_Cell_Size, np.maximum(Bare_Nuclei, 0.0)), np.maximum(Bland_Chromatin, np.maximum(Normal_Nucleoli, Mitoses))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "severity_spread",
+      "type": "formula",
+      "description": "Range between maximum and minimum measurement across the nine features, indicating heterogeneity.",
+      "value_range": [
+        0.0,
+        13.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Heterogeneity across measurements is informative and provides a smooth additional axis.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(Clump_Thickness, Cell_Size_Uniformity), np.maximum(Cell_Shape_Uniformity, Marginal_Adhesion)), np.maximum(np.maximum(Single_Epi_Cell_Size, np.maximum(Bare_Nuclei, 0.0)), np.maximum(Bland_Chromatin, np.maximum(Normal_Nucleoli, Mitoses)))) - np.minimum(np.minimum(np.minimum(Clump_Thickness, Cell_Size_Uniformity), np.minimum(Cell_Shape_Uniformity, Marginal_Adhesion)), np.minimum(np.minimum(Single_Epi_Cell_Size, np.maximum(Bare_Nuclei, 0.0)), np.minimum(Bland_Chromatin, np.minimum(Normal_Nucleoli, Mitoses))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_severity_count",
+      "type": "formula",
+      "description": "Count of measurements with values above 5, a soft indicator of multiple elevated markers.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "count_threshold",
+      "expected_model_benefit": "Discrete count adds a step-wise linear contribution capturing breadth of abnormality.",
+      "leakage_risk": "low",
+      "formula": "np.where(Clump_Thickness > 5, 1, 0) + np.where(Cell_Size_Uniformity > 5, 1, 0) + np.where(Cell_Shape_Uniformity > 5, 1, 0) + np.where(Marginal_Adhesion > 5, 1, 0) + np.where(Single_Epi_Cell_Size > 5, 1, 0) + np.where(Bare_Nuclei > 5, 1, 0) + np.where(Bland_Chromatin > 5, 1, 0) + np.where(Normal_Nucleoli > 5, 1, 0) + np.where(Mitoses > 5, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adhesion_epi_interaction",
+      "type": "formula",
+      "description": "Product of marginal adhesion and epithelial cell size capturing combined tissue disorganization.",
+      "value_range": [
+        1.0,
+        13.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Square-root interaction provides a smooth, bounded interaction term linearizable for SVM.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(Marginal_Adhesion * Single_Epi_Cell_Size)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nuclei_to_thickness_ratio",
+      "type": "formula",
+      "description": "Ratio of bare nuclei to clump thickness, capturing relative nuclear vs structural severity.",
+      "value_range": [
+        0.05,
+        8.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalized ratio supplies a scale-invariant signal complementing absolute composites.",
+      "leakage_risk": "low",
+      "formula": "(np.maximum(Bare_Nuclei, 0.0) + 1.0) / (Clump_Thickness + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "clinical_severity_judgment",
+      "type": "judgment",
+      "description": "Semantic clinical severity score blending domain weighting: uniformity and bare nuclei carry stronger diagnostic weight than mitoses or epithelial size in standard cytology interpretation.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "semantic_weighted_score",
+      "expected_model_benefit": "Encodes prior medical knowledge about feature importance into a smooth scalar useful for linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "atypia_pattern_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of whether the pattern of measurements resembles atypical concerted elevation (multiple uniformity, nuclei, and chromatin features simultaneously elevated) versus isolated elevations, scored continuously.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_pattern",
+      "expected_model_benefit": "Captures co-elevation pattern as a smooth probability-like score that linear SVM can weight directly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "23b1cdfdde856a3d",
+  "metadata": {}
+}

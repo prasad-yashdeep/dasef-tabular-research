@@ -1,0 +1,148 @@
+{
+  "dataset_name": "phishingwebsites",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "v1",
+  "features": [
+    {
+      "name": "url_structural_integrity",
+      "type": "formula",
+      "description": "Averaged score of URL structural features to provide a continuous measure of URL legitimacy.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "url_analysis",
+      "expected_model_benefit": "Provides a smooth, linearly separable composite feature that helps the SVM establish a clear margin based on URL characteristics.",
+      "leakage_risk": "low",
+      "formula": "(url_length + shortining_service + having_at_symbol + double_slash_redirecting + prefix_suffix + abnormal_url) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "domain_registration_trust",
+      "type": "formula",
+      "description": "Composite index of domain registration and DNS features, representing the overall trustworthiness of the domain.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "domain_analysis",
+      "expected_model_benefit": "Aggregates multiple sparse domain signals into a single continuous vector, improving linear projection.",
+      "leakage_risk": "low",
+      "formula": "(having_ip_address + having_sub_domain + domain_registeration_length + age_of_domain + dnsrecord) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "connection_security_index",
+      "type": "formula",
+      "description": "Measures the strength of the connection security by averaging SSL, HTTPS, port, and request URL states.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "security_analysis",
+      "expected_model_benefit": "Creates a continuous severity measure for connection security, allowing the SVM to weight security posture effectively.",
+      "leakage_risk": "low",
+      "formula": "(sslfinal_state + https_token + port + request_url) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "page_content_safety",
+      "type": "formula",
+      "description": "Evaluates the safety of the page content by combining indicators like iframe usage, popups, and right-click disabling.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "content_analysis",
+      "expected_model_benefit": "Reduces dimensionality of highly correlated HTML/JS features into a single robust margin feature.",
+      "leakage_risk": "low",
+      "formula": "(favicon + submitting_to_email + on_mouseover + rightclick + popupwidnow + iframe) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "external_reference_reliability",
+      "type": "formula",
+      "description": "Assesses the reliability of external references by averaging anchor URLs, tags, and form handler states.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "link_analysis",
+      "expected_model_benefit": "Provides a normalized score of external link integrity, which is a strong linear predictor for web safety.",
+      "leakage_risk": "low",
+      "formula": "(url_of_anchor + links_in_tags + sfh + links_pointing_to_page) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "web_reputation_index",
+      "type": "formula",
+      "description": "Combines traffic, page rank, and search index presence into a continuous reputation score.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "reputation_analysis",
+      "expected_model_benefit": "Transforms discrete reputation flags into a smooth continuous feature, ideal for linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "(web_traffic + page_rank + google_index + statistical_report) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "core_trust_signals_average",
+      "type": "formula",
+      "description": "An unweighted average of the most critical trust signals across different domains (SSL, anchors, prefix/suffix, traffic, subdomains).",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "composite_analysis",
+      "expected_model_benefit": "Acts as a strong primary linear projection that captures the most variance in site legitimacy.",
+      "leakage_risk": "low",
+      "formula": "(sslfinal_state + url_of_anchor + prefix_suffix + web_traffic + having_sub_domain) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ssl_domain_mismatch",
+      "type": "formula",
+      "description": "Calculates the absolute difference between the SSL state and the subdomain state to identify inconsistencies.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "anomaly_detection",
+      "expected_model_benefit": "Introduces a non-linear interaction (absolute difference) as a linear feature, helping the SVM capture specific mismatch anomalies.",
+      "leakage_risk": "low",
+      "formula": "np.abs(sslfinal_state - having_sub_domain)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "js_obfuscation_risk",
+      "type": "formula",
+      "description": "Identifies the worst-case scenario among JavaScript-based obfuscation techniques (mouseover, right-click, popups).",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "content_analysis",
+      "expected_model_benefit": "Uses a minimum function to create a strict threshold feature, allowing the SVM to penalize any single severe JS obfuscation.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(np.minimum(on_mouseover, rightclick), popupwidnow)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f5660179c9d260fc",
+  "metadata": {
+    "salvaged_from_partial_raw": "cache/schemas/phishingwebsites/linear_svm/gemini-3.1-pro-preview/schema_f5660179c9d260fc.raw.json",
+    "n_salvaged_features": 9
+  }
+}

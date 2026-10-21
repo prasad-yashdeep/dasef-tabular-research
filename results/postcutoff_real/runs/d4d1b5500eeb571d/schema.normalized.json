@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_tracker_radar_20260316",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "deployment_scale_bucket",
+      "type": "formula",
+      "description": "Ordinal footprint tier from site count and prevalence.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "deployment_scale",
+      "expected_model_benefit": "Turns very skewed footprint measures into small ordinal splits for broad-versus-narrow deployment patterns.",
+      "leakage_risk": "low",
+      "formula": "np.where((sites >= 1000) | (prevalence >= 0.01), 4, np.where((sites >= 100) | (prevalence >= 0.001), 3, np.where((sites >= 10) | (prevalence >= 0.0001), 2, np.where(sites >= 2, 1, 0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cname_subdomain_complexity",
+      "type": "formula",
+      "description": "Ordinal complexity tier for DNS-style indirection and subdomain spread.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "network_infrastructure",
+      "expected_model_benefit": "Highlights rows with CNAME use plus many subdomains, a combination trees can isolate with one split.",
+      "leakage_risk": "low",
+      "formula": "np.where((has_cnames == 1) & (subdomain_count >= 5), 3, np.where((has_cnames == 1) | (subdomain_count >= 2), 2, np.where(subdomain_count >= 1, 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transparency_gap_count",
+      "type": "formula",
+      "description": "Count of missing public owner and privacy-policy signals; 0 means both present, 2 means neither present.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "transparency",
+      "expected_model_benefit": "Provides a simple monotonic split for opaque versus transparent entries.",
+      "leakage_risk": "low",
+      "formula": "(1 - has_owner) + (1 - has_privacy_policy)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_volume_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket for total resource observations.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "resource_mix",
+      "expected_model_benefit": "Compresses heavy-tailed resource counts into stable thresholds.",
+      "leakage_risk": "low",
+      "formula": "np.where(resource_count >= 1000, 4, np.where(resource_count >= 100, 3, np.where(resource_count >= 10, 2, np.where(resource_count >= 2, 1, 0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_request_mix_ratio",
+      "type": "formula",
+      "description": "Clipped share of resources represented by scripts or fetches.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "resource_mix",
+      "expected_model_benefit": "Exposes active-code and resource-request mix as a bounded nonlinear interaction.",
+      "leakage_risk": "low",
+      "formula": "np.clip((script_count + fetch_count) / (resource_count + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_persistence_bucket",
+      "type": "formula",
+      "description": "Ordinal lifetime tier based on maximum cookie time-to-live in days: none, sub-day, day-plus, month-plus, year-plus.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "cookie_behavior",
+      "expected_model_benefit": "Lets trees split directly on persistence horizons.",
+      "leakage_risk": "low",
+      "formula": "np.where(max_cookie_ttl_days >= 365.0, 4, np.where(max_cookie_ttl_days >= 30.0, 3, np.where(max_cookie_ttl_days >= 1.0, 2, np.where(max_cookie_ttl_days > 0.0, 1, 0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_exchange_bucket",
+      "type": "formula",
+      "description": "Ordinal cookie activity tier using sent-cookie volume, first-party cookie volume, and observed cookie prevalence.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "cookie_behavior",
+      "expected_model_benefit": "Combines sparse cookie signals into one split-friendly severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.where((total_cookies_sent >= 100) | (total_first_party_cookies >= 100), 4, np.where((total_cookies_sent >= 10) | (total_first_party_cookies >= 10), 3, np.where((total_cookies_sent >= 1) | (total_first_party_cookies >= 1), 2, np.where(total_cookie_prevalence > 0.0, 1, 0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_volume_bucket",
+      "type": "formula",
+      "description": "Ordinal volume bucket for total API calls.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "api_activity",
+      "expected_model_benefit": "Transforms a highly skewed count into direct thresholds.",
+      "leakage_risk": "low",
+      "formula": "np.where(total_api_calls >= 1000, 4, np.where(total_api_calls >= 100, 3, np.where(total_api_calls >= 10, 2, np.where(total_api_calls > 0, 1, 0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_family_breadth_count",
+      "type": "formula",
+      "description": "Number of semantic API families with any observed use.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "api_activity",
+      "expected_model_benefit": "Captures breadth across browser surfaces without relying on hundreds of sparse individual flags.",
+      "leakage_risk": "low",
+      "formula": "np.where(canvas_api_count > 0, 1, 0) + np.where(audio_api_count > 0, 1, 0) + np.where(navigator_api_count > 0, 1, 0) + np.where(screen_api_count > 0, 1, 0) + np.where(device_api_count > 0, 1, 0) + np.where(storage_api_count > 0, 1, 0) + np.where(timing_api_count > 0, 1, 0) + np.where(media_api_count > 0, 1, 0) + np.where(webrtc_api_count > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fingerprinting_strength_bucket",
+      "type": "formula",
+      "description": "Ordinal strength tier combining row fingerprinting scores, resource fingerprinting maximum, weighted score, and API diversity.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "fingerprinting",
+      "expected_model_benefit": "Makes high-intensity fingerprinting patterns available as a compact split.",
+      "leakage_risk": "low",
+      "formula": "np.where((fingerprinting_score >= 3) | (max_resource_fingerprinting >= 3) | (weighted_fp_score >= 1000.0), 4, np.where((fingerprinting_score >= 2) | (max_resource_fingerprinting >= 2) | (weighted_fp_score >= 100.0), 3, np.where((fingerprinting_score >= 1) | (max_resource_fingerprinting >= 1) | (weighted_fp_score > 0.0), 2, np.where(distinct_api_count > 0, 1, 0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "browser_surface_semantic_level",
+      "type": "judgment",
+      "description": "Ordinal 0-4 assessor score from only the row's API names, API counts, API family counts, and fingerprinting fields: 0 no meaningful browser-surface use, 1 generic environment reads, 2 several high-entropy browser properties, 3 canvas/audio/WebGL/device/screen probing, 4 probing plus unusually high API volume or storage/cookie activity.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_api_assessment",
+      "expected_model_benefit": "Adds a human-readable ordinal summary of intent-like API patterns that sparse formula counts may miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "infrastructure_semantic_level",
+      "type": "judgment",
+      "description": "Ordinal 0-4 assessor score from prevalence, sites, subdomain_count, has_cnames, resource_count, resource_type_count, owner, and policy indicators: 0 isolated and transparent, 1 small footprint, 2 moderate multi-site or CNAME footprint, 3 broad footprint with transparency gaps, 4 very broad footprint with CNAMEs/subdomains/resources suggesting embedded third-party infrastructure.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_infrastructure_assessment",
+      "expected_model_benefit": "Gives trees a compact semantic grouping for footprint and transparency combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "062b6616e6a7c76e",
+  "metadata": {}
+}

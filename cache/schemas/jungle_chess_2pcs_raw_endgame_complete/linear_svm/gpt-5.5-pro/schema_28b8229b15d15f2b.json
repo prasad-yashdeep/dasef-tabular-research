@@ -1,0 +1,190 @@
+{
+  "dataset_name": "jungle_chess_2pcs_raw_endgame_complete",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "strength_balance_norm",
+      "type": "formula",
+      "description": "Signed normalized difference in animal strength; values above zero favor white and values below zero favor black.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "material_balance",
+      "expected_model_benefit": "Provides a calibrated linear axis for side-to-side strength imbalance.",
+      "leakage_risk": "low",
+      "formula": "((1.0 * white_piece0_strength - 1.0 * black_piece0_strength) / 7.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "strength_total_norm",
+      "type": "formula",
+      "description": "Normalized total animal strength across both pieces, using the observed 0 to 7 strength scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "material_scale",
+      "expected_model_benefit": "Lets the margin adjust for overall piece tier and broad endgame texture.",
+      "leakage_risk": "low",
+      "formula": "((1.0 * white_piece0_strength + 1.0 * black_piece0_strength) / 14.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capture_rule_balance",
+      "type": "formula",
+      "description": "Jungle capture hierarchy balance with the smallest-versus-largest exception; +1 means a one-way white capture edge, -1 means a one-way black capture edge, 0 means symmetric or equal hierarchy.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "capture_hierarchy",
+      "expected_model_benefit": "Encodes a rule discontinuity that raw integer strength differences cannot represent linearly.",
+      "leakage_risk": "low",
+      "formula": "np.where((((white_piece0_strength > black_piece0_strength) & ((white_piece0_strength < 7) | (black_piece0_strength > 0))) | ((white_piece0_strength == 0) & (black_piece0_strength == 7))), 1.0, np.where((((black_piece0_strength > white_piece0_strength) & ((black_piece0_strength < 7) | (white_piece0_strength > 0))) | ((black_piece0_strength == 0) & (white_piece0_strength == 7))), -1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rat_elephant_exception_balance",
+      "type": "formula",
+      "description": "Isolates the cyclic smallest/largest animal interaction: +1 for smallest white against largest black, -1 for largest white against smallest black, 0 otherwise.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "capture_hierarchy",
+      "expected_model_benefit": "Gives the margin a direct feature for a rare but important non-ordinal matchup.",
+      "leakage_risk": "low",
+      "formula": "np.where(((white_piece0_strength == 0) & (black_piece0_strength == 7)), 1.0, np.where(((white_piece0_strength == 7) & (black_piece0_strength == 0)), -1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "piece_separation_manhattan_norm",
+      "type": "formula",
+      "description": "Manhattan separation between pieces divided by the board maximum of 14.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distance",
+      "expected_model_benefit": "Adds a smooth distance axis for encounter likelihood and tempo.",
+      "leakage_risk": "low",
+      "formula": "((np.abs(1.0 * white_piece0_file - 1.0 * black_piece0_file) + np.abs(1.0 * white_piece0_rank - 1.0 * black_piece0_rank)) / 14.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capture_proximity_balance",
+      "type": "formula",
+      "description": "One-way capture hierarchy balance multiplied by proximity, so close threats have larger magnitude than remote threats.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "capture_distance_interaction",
+      "expected_model_benefit": "Supplies a strength-position interaction usable by a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "(np.where((((white_piece0_strength > black_piece0_strength) & ((white_piece0_strength < 7) | (black_piece0_strength > 0))) | ((white_piece0_strength == 0) & (black_piece0_strength == 7))), 1.0, np.where((((black_piece0_strength > white_piece0_strength) & ((black_piece0_strength < 7) | (white_piece0_strength > 0))) | ((black_piece0_strength == 0) & (white_piece0_strength == 7))), -1.0, 0.0)) * (1.0 - ((np.abs(1.0 * white_piece0_file - 1.0 * black_piece0_file) + np.abs(1.0 * white_piece0_rank - 1.0 * black_piece0_rank)) / 14.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "same_line_pressure_score",
+      "type": "formula",
+      "description": "Alignment pressure on a shared file or rank, decreasing linearly with separation along that line and zero off-line.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "line_geometry",
+      "expected_model_benefit": "Captures row/column contact geometry not expressible by independent coordinates alone.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.where((white_piece0_file == black_piece0_file), 1.0 - (np.abs(1.0 * white_piece0_rank - 1.0 * black_piece0_rank) / 8.0), 0.0), np.where((white_piece0_rank == black_piece0_rank), 1.0 - (np.abs(1.0 * white_piece0_file - 1.0 * black_piece0_file) / 6.0), 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "advance_balance_norm",
+      "type": "formula",
+      "description": "Signed progress contrast using standard opposite-edge orientation: white progress toward high ranks versus black progress toward low ranks.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "territorial_progress",
+      "expected_model_benefit": "Creates a normalized territorial projection for the margin.",
+      "leakage_risk": "low",
+      "formula": "((1.0 * white_piece0_rank + 1.0 * black_piece0_rank - 8.0) / 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "opposing_den_distance_balance_norm",
+      "type": "formula",
+      "description": "Distance contrast to opposing dens at file 3, ranks 8 and 0; values above zero indicate white is closer to its attacking den than black is to its attacking den.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "goal_distance",
+      "expected_model_benefit": "Approximates race-to-den pressure with one side-to-side distance contrast.",
+      "leakage_risk": "low",
+      "formula": "(((np.abs(1.0 * black_piece0_file - 3.0) + np.abs(1.0 * black_piece0_rank - 0.0)) - (np.abs(1.0 * white_piece0_file - 3.0) + np.abs(1.0 * white_piece0_rank - 8.0))) / 11.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mirror_symmetry_score",
+      "type": "formula",
+      "description": "Score for equal-strength mirrored placement under reflection across the board center; 1 means perfectly mirrored and equal strength.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "symmetry",
+      "expected_model_benefit": "Highlights symmetric configurations that may need a different margin offset than asymmetric configurations.",
+      "leakage_risk": "low",
+      "formula": "(1.0 - (((np.abs(1.0 * white_piece0_strength - 1.0 * black_piece0_strength) / 7.0) + (np.abs((1.0 * white_piece0_file) - (6.0 - 1.0 * black_piece0_file)) / 6.0) + (np.abs((1.0 * white_piece0_rank) - (8.0 - 1.0 * black_piece0_rank)) / 8.0)) / 3.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "trap_den_tactical_balance_judgment",
+      "type": "judgment",
+      "description": "Rules-aware scorer rates den/trap context from the six row fields and fixed Jungle board landmarks: +1 strongly favors white, -1 strongly favors black, 0 neutral.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic_tactics",
+      "expected_model_benefit": "Injects compact nonlinear trap and den semantics that coordinates alone do not expose to a linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "river_movement_balance_judgment",
+      "type": "judgment",
+      "description": "Rules-aware scorer rates relative movement flexibility from piece strength and square, accounting for water access, river blocking, and leaping ability; +1 favors white mobility, -1 favors black mobility, 0 neutral.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic_mobility",
+      "expected_model_benefit": "Summarizes animal-specific movement constraints as a smooth side-to-side axis.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "28b8229b15d15f2b",
+  "metadata": {}
+}

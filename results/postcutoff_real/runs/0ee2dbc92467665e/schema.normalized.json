@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_clinical_trials_ai_20260517",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "ai_use_type_position_score",
+      "type": "formula",
+      "description": "Min-max normalization of the observed AI-use code from -1 to 9 into a bounded 0 to 1 score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ai_semantics",
+      "expected_model_benefit": "Preserves broad use-type variation in a scale-compatible feature for linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((ai_use_type + 1.0) / 10.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ai_method_specificity_score",
+      "type": "formula",
+      "description": "Weighted 0 to 1 intensity of explicit AI, algorithm, machine-learning, and deep-learning terminology; tri-state mention fields are mapped from -1/0/1 into 0/0.5/1 before averaging.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ai_semantics",
+      "expected_model_benefit": "Provides a smooth technology-depth axis rather than several sparse mention flags.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.25 * ((mentions_ai + 1.0) / 2.0) + 0.25 * ((mentions_algorithm + 1.0) / 2.0) + 0.25 * ((mentions_machine_learning + 1.0) / 2.0) + 0.25 * ((mentions_deep_learning + 1.0) / 2.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "digital_delivery_intensity_score",
+      "type": "formula",
+      "description": "Weighted 0 to 1 signal for deployable digital delivery through software, mobile app, wearable, and real-world deployment fields.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "digital_deployment",
+      "expected_model_benefit": "Condenses correlated delivery cues into one continuous product-readiness axis for a linear separator.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.40 * real_world_deployment_score + 0.25 * ((mentions_software + 1.0) / 2.0) + 0.20 * ((mentions_mobile_app + 1.0) / 2.0) + 0.15 * ((mentions_wearable + 1.0) / 2.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "evidence_design_rigor_score",
+      "type": "formula",
+      "description": "Weighted 0 to 1 study-rigor composite from evidence strength, randomization, blinding, phase bucket, and enrollment bucket.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "study_design",
+      "expected_model_benefit": "Supplies a smooth evidence-quality axis that is easier for a linear SVM than separate sparse design flags.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.45 * np.clip(evidence_strength_score / 0.9, 0.0, 1.0) + 0.20 * ((has_randomization + 1.0) / 2.0) + 0.15 * ((has_blinding + 1.0) / 2.0) + 0.10 * np.clip(trial_phase_bucket / 5.0, 0.0, 1.0) + 0.10 * np.clip(enrollment_bucket / 3.0, 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "trial_scale_reach_score",
+      "type": "formula",
+      "description": "0 to 1 measure of operational scale combining later phase, larger enrollment bucket, and logarithmic country reach.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "trial_scale",
+      "expected_model_benefit": "Creates an approximately linear projection of trial maturity and geographic reach.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.45 * np.clip(trial_phase_bucket / 5.0, 0.0, 1.0) + 0.35 * np.clip(enrollment_bucket / 3.0, 0.0, 1.0) + 0.20 * np.clip(np.log1p(country_count) / np.log1p(8.0), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "current_activity_score",
+      "type": "formula",
+      "description": "0 to 1 operational activity score emphasizing recruiting status, not-yet-completed status, deployment readiness, and enrollment size.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "trial_status",
+      "expected_model_benefit": "Separates active-development profiles from finished or unclear profiles via a smooth one-dimensional score.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.40 * ((is_recruiting + 1.0) / 2.0) + 0.25 * (1.0 - ((is_completed + 1.0) / 2.0)) + 0.20 * real_world_deployment_score + 0.15 * np.clip(enrollment_bucket / 3.0, 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "governance_safety_attention_score",
+      "type": "formula",
+      "description": "0 to 1 intensity of bias, safety, and privacy attention in the trial record.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "governance",
+      "expected_model_benefit": "Adds a continuous governance axis that may align with regulated AI development without relying on sparse text flags.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.34 * ((mentions_safety + 1.0) / 2.0) + 0.33 * ((mentions_privacy + 1.0) / 2.0) + 0.33 * ((mentions_bias + 1.0) / 2.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "population_inclusion_breadth_score",
+      "type": "formula",
+      "description": "0 to 1 breadth measure combining all-sex eligibility, child inclusion, older-adult inclusion, enrollment size, and country reach.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "population_scope",
+      "expected_model_benefit": "Summarizes participant-coverage breadth into a single smooth margin feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.25 * np.clip(sex_all, 0.0, 1.0) + 0.20 * ((includes_children + 1.0) / 2.0) + 0.20 * ((includes_older_adults + 1.0) / 2.0) + 0.20 * np.clip(enrollment_bucket / 3.0, 0.0, 1.0) + 0.15 * np.clip(np.log1p(country_count) / np.log1p(8.0), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "internationalization_score",
+      "type": "formula",
+      "description": "0 to 1 geographic expansion score combining the international-trial flag and log-scaled country count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "geographic_scope",
+      "expected_model_benefit": "Captures global operational reach with reduced sensitivity to outlier country counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * ((international_trial + 1.0) / 2.0) + 0.45 * np.clip(np.log1p(country_count) / np.log1p(8.0), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "deployment_evidence_ratio_score",
+      "type": "formula",
+      "description": "Clipped deployment-to-evidence ratio comparing real-world deployment intensity with normalized evidence strength; the small constant stabilizes low-evidence rows.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "deployment_evidence_balance",
+      "expected_model_benefit": "Highlights deployment-heavy records relative to documented evidence as a continuous nonlinear contrast for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((real_world_deployment_score + 0.05) / (np.clip(evidence_strength_score / 0.9, 0.0, 1.0) + 0.05), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "workflow_integration_judgment",
+      "type": "judgment",
+      "description": "Human or semantic-model score from 0.0 to 1.0 for how directly the AI tool appears integrated into clinical workflow: 0.0 means retrospective or analytic context, 1.0 means direct prospective use in care delivery. Use only row fields such as ai_use_type, real_world_deployment_score, software/mobile/wearable mentions, trial status, and evidence score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_workflow",
+      "expected_model_benefit": "Captures non-formulaic context about operational embedding that may be nonlinear across coded fields.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_pathway_judgment",
+      "type": "judgment",
+      "description": "Human or semantic-model score from 0.0 to 1.0 for how clearly the study resembles a scalable deployable product pathway: 0.0 means exploratory method work, 1.0 means mature solution with clear distribution or device/software pathway. Use only non-sponsor row fields such as ai_use_type, disease_area, trial_phase_bucket, deployment score, enrollment_bucket, country_count, and digital-modality mentions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_market_pathway",
+      "expected_model_benefit": "Adds expert semantic compression of product-pathway cues that a linear SVM may not easily infer from individual encoded fields.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "5a9555824f6298cc",
+  "metadata": {}
+}

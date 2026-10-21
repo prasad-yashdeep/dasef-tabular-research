@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_cost_score",
+      "type": "formula",
+      "description": "Aggregates buying and maintenance costs into a single dimension, reducing the feature space and improving distance calculations for cost-sensitive neighborhoods.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Reduces dimensionality of cost features, creating a smoother gradient for KNN distance metrics.",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_score",
+      "type": "formula",
+      "description": "Combines persons and luggage boot capacity, creating a unified utility dimension that helps KNN group vehicles with similar physical space.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a single axis for physical capacity, improving the geometric grouping of similarly sized vehicles.",
+      "leakage_risk": "low",
+      "formula": "persons + lug_boot",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_capacity_ratio",
+      "type": "formula",
+      "description": "Measures safety relative to passenger capacity, providing a normalized metric that helps identify cars with disproportionate safety features in the KNN space.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes safety by capacity, allowing the distance metric to capture relative safety rather than just absolute safety.",
+      "leakage_risk": "low",
+      "formula": "safety / (persons + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_to_utility_ratio",
+      "type": "formula",
+      "description": "Evaluates the trade-off between total cost and overall utility (capacity plus safety), creating a continuous gradient for similarity matching.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the value proposition of the vehicle, creating a dense feature space where cars with similar value are closer together.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) / (persons + lug_boot + safety + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_safety_capacity_indicator",
+      "type": "formula",
+      "description": "Binary indicator for cars with at least moderate safety and capacity, acting as a cluster indicator to separate viable family cars from others.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Acts as a hard boundary in the KNN space, effectively partitioning the neighborhood into high-utility and low-utility clusters.",
+      "leakage_risk": "low",
+      "formula": "np.where((safety >= 1) & (persons >= 1), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_ideal_prototype",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised 'ideal' car prototype (lowest cost, highest capacity and safety), providing a strong radial basis feature for KNN.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Transforms the multi-dimensional space into a 1D distance from an optimal point, simplifying neighborhood structures.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((buying - 0)**2 + (maint - 0)**2 + (doors - 3)**2 + (persons - 2)**2 + (lug_boot - 2)**2 + (safety - 2)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_worst_prototype",
+      "type": "formula",
+      "description": "Euclidean distance to an unsupervised 'worst' car prototype (highest cost, lowest capacity and safety), anchoring the opposite end of the feature space.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a complementary radial basis feature to the ideal prototype, helping to triangulate positions in the KNN geometry.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((buying - 3)**2 + (maint - 3)**2 + (doors - 0)**2 + (persons - 0)**2 + (lug_boot - 0)**2 + (safety - 0)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_variance",
+      "type": "formula",
+      "description": "Absolute difference between buying and maintenance costs, helping KNN distinguish between balanced-cost cars and those with skewed expenses.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "variance",
+      "expected_model_benefit": "Adds a dimension of cost consistency, allowing the model to separate cars with high upfront costs from those with high ongoing costs.",
+      "leakage_risk": "low",
+      "formula": "np.abs(buying - maint)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_variance",
+      "type": "formula",
+      "description": "Absolute difference between passenger and luggage capacity, identifying specialized vehicles (e.g., cargo vs passenger) in the neighborhood geometry.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "variance",
+      "expected_model_benefit": "Helps the distance metric differentiate between balanced utility vehicles and specialized ones, refining local neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.abs(persons - lug_boot)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "manhattan_distance_to_average",
+      "type": "formula",
+      "description": "L1 distance to the dataset's mean feature vector, acting as an anomaly or centrality score that improves density-based neighborhood resolution.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Measures how typical a car is compared to the dataset average, helping KNN adjust for varying point densities.",
+      "leakage_risk": "low",
+      "formula": "np.abs(buying - 1.475) + np.abs(maint - 1.397) + np.abs(doors - 1.490) + np.abs(persons - 1.035) + np.abs(lug_boot - 0.977) + np.abs(safety - 0.988)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_family_suitability",
+      "type": "judgment",
+      "description": "Semantic judgment scoring the car's suitability for a large family based on doors, persons, and luggage capacity, providing a human-aligned similarity dimension.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Injects domain knowledge into the distance metric, ensuring that cars with similar family-friendly profiles are grouped together.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_luxury_profile",
+      "type": "judgment",
+      "description": "Semantic judgment assessing whether the car fits a luxury profile based on cost, maintenance, and safety features, adding a qualitative cluster dimension.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Creates a qualitative axis for similarity, allowing KNN to match cars based on perceived market segment rather than just raw specs.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "1e49844610be3883",
+  "metadata": {}
+}

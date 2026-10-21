@@ -1,0 +1,190 @@
+{
+  "dataset_name": "kr_vs_kp",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "white_tactical_advantage_score",
+      "type": "formula",
+      "description": "Weighted sum of white tactical indicators: skewr, wkovl, wkpos, wknck, r2ar8 encoded as binary, capturing white's positional and tactical strength",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "tactical_composite",
+      "expected_model_benefit": "Linear combination of key white advantage indicators provides smooth margin signal for SVM",
+      "leakage_risk": "low",
+      "formula": "(skewr == 't').astype(float) + (wkovl == 't').astype(float) + (wkpos == 't').astype(float) + (wknck == 't').astype(float) + (r2ar8 == 't').astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "black_king_vulnerability_score",
+      "type": "formula",
+      "description": "Sum of black king vulnerability indicators: bkblk, bknwy, bkon8, bkona, bkspr encoded as binary threats to black king safety",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "king_safety",
+      "expected_model_benefit": "Aggregated black king exposure metric provides continuous severity measure for linear separation",
+      "leakage_risk": "low",
+      "formula": "(bkblk == 't').astype(float) + (bknwy == 't').astype(float) + (bkon8 == 't').astype(float) + (bkona == 't').astype(float) + (bkspr == 't').astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rook_activity_index",
+      "type": "formula",
+      "description": "Composite rook activity score combining rook-related features: rxmsq, rkxwp, rimmx, reskr indicating rook mobility and attacking potential",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "piece_activity",
+      "expected_model_benefit": "Continuous rook activity measure helps SVM find linear boundary based on rook effectiveness",
+      "leakage_risk": "low",
+      "formula": "(rxmsq == 't').astype(float) + (rkxwp == 't').astype(float) + (rimmx == 't').astype(float) + (reskr == 't').astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "black_king_cross_attack_score",
+      "type": "formula",
+      "description": "Black king cross-attack indicators: bkxbq, bkxcr, bkxwp, blxwp, bxqsq measuring black king exposure to cross-attacks",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "attack_patterns",
+      "expected_model_benefit": "Smooth cross-attack severity score enables linear SVM to exploit attack pattern information",
+      "leakage_risk": "low",
+      "formula": "(bkxbq == 't').astype(float) + (bkxcr == 't').astype(float) + (bkxwp == 't').astype(float) + (blxwp == 't').astype(float) + (bxqsq == 't').astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tactical_threat_density",
+      "type": "formula",
+      "description": "Ratio of active tactical threats to total possible tactical features, normalized to [0,1] range for smooth SVM input",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "tactical_composite",
+      "expected_model_benefit": "Normalized density ratio provides well-scaled continuous feature ideal for SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "((skewr == 't').astype(float) + (wkovl == 't').astype(float) + (wkpos == 't').astype(float) + (wknck == 't').astype(float) + (r2ar8 == 't').astype(float) + (bkxbq == 't').astype(float) + (bkxcr == 't').astype(float) + (cntxt == 't').astype(float) + (simpl == 't').astype(float) + (dsopp == 't').astype(float)) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "katri_encoded",
+      "type": "formula",
+      "description": "Ordinal encoding of katri (king attack triangle) with n=0, w=1, b=2 to capture directional threat severity",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "king_safety",
+      "expected_model_benefit": "Ordinal encoding of three-level categorical preserves ordering information useful for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.where(katri == 'n', 0, np.where(katri == 'w', 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dwipd_encoded",
+      "type": "formula",
+      "description": "Binary encoding of dwipd (distance/width indicator): g=1 (greater), l=0 (less) for positional distance measure",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "positional",
+      "expected_model_benefit": "Clean binary encoding of positional distance feature for linear SVM boundary",
+      "leakage_risk": "low",
+      "formula": "np.where(dwipd == 'g', 1, 0).astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "wtoeg_encoded",
+      "type": "formula",
+      "description": "Binary encoding of wtoeg (white to edge): t=1 (true), n=0 (neutral) indicating white king edge proximity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "positional",
+      "expected_model_benefit": "Edge proximity binary feature contributes to linear margin for endgame position assessment",
+      "leakage_risk": "low",
+      "formula": "np.where(wtoeg == 't', 1, 0).astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_event_composite",
+      "type": "formula",
+      "description": "Sum of rare tactical events: hdchk, skach, reskd, thrsk, mulch, stlmt, qxmsq, skrxp which occur infrequently but may be decisive",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "rare_events",
+      "expected_model_benefit": "Aggregating rare decisive events into one feature reduces sparsity while preserving signal for SVM",
+      "leakage_risk": "low",
+      "formula": "(hdchk == 't').astype(float) + (skach == 't').astype(float) + (reskd == 't').astype(float) + (thrsk == 't').astype(float) + (mulch == 't').astype(float) + (stlmt == 't').astype(float) + (qxmsq == 't').astype(float) + (skrxp == 't').astype(float)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "white_vs_black_advantage_differential",
+      "type": "formula",
+      "description": "Difference between white tactical advantage score and black king vulnerability score, representing net positional balance",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "tactical_composite",
+      "expected_model_benefit": "Signed differential directly encodes relative advantage as a continuous value ideal for SVM hyperplane",
+      "leakage_risk": "low",
+      "formula": "((skewr == 't').astype(float) + (wkovl == 't').astype(float) + (wkpos == 't').astype(float) + (wknck == 't').astype(float) + (r2ar8 == 't').astype(float)) - ((bkblk == 't').astype(float) + (bknwy == 't').astype(float) + (bkon8 == 't').astype(float) + (bkona == 't').astype(float) + (bkspr == 't').astype(float))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_position_complexity",
+      "type": "judgment",
+      "description": "Semantic assessment of overall position complexity based on number of active tactical features, rare events, and interaction patterns. Higher values indicate more complex positions with multiple simultaneous threats and counter-threats that are harder to resolve deterministically.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "positional",
+      "expected_model_benefit": "Complexity score helps SVM identify positions where simple heuristics fail and more nuanced boundary is needed",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "endgame_decisiveness_index",
+      "type": "judgment",
+      "description": "Semantic assessment of how decisive the endgame position is, considering king placement indicators (wkcti, wkna8, wkpos), rook activity (rimmx, rkxwp), and pawn-related features (bkxwp, blxwp, rkxwp). Higher values indicate positions closer to forced outcomes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "king_safety",
+      "expected_model_benefit": "Decisiveness measure provides smooth continuous signal for SVM to distinguish near-forced from unclear positions",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "b36b9137f640e222",
+  "metadata": {}
+}

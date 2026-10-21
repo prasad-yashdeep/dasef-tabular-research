@@ -1,0 +1,747 @@
+{
+ "cell": {
+  "dataset": "electricity",
+  "run_id": "7071c2fa8ffa5a0f",
+  "generator": "claude-opus-4.7",
+  "tier": "core",
+  "run_dir": "results/judgments/7071c2fa8ffa5a0f",
+  "safe_columns": false
+ },
+ "k_llm_formulas": 11,
+ "k_random_formulas": 11,
+ "n_rows": 3500,
+ "schema": {
+  "dataset_name": "electricity",
+  "model_family": "linear_svm",
+  "schema_generator": "random-formula-control",
+  "schema_version": "random-formula-control-v2",
+  "features": [
+   {
+    "name": "rf01_ratio",
+    "type": "formula",
+    "description": "random ratio formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     765957.0
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "period / (np.abs(date) + 1e-6)",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf02_sum",
+    "type": "formula",
+    "description": "random sum formula over the dataset's own columns",
+    "value_range": [
+     0.145353,
+     1.675666
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "nswdemand + period",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf03_log1p",
+    "type": "formula",
+    "description": "random log1p formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     0.3048127509169311
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "np.log1p(np.abs(nswprice))",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf04_bucket3",
+    "type": "formula",
+    "description": "random bucket3 formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     2.0
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "np.where(nswprice < 0.0277845, 0, np.where(nswprice > 0.0873286, 2, 1))",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf05_difference",
+    "type": "formula",
+    "description": "random difference formula over the dataset's own columns",
+    "value_range": [
+     -0.003467,
+     0.99359
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "date - vicprice",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf06_sum",
+    "type": "formula",
+    "description": "random sum formula over the dataset's own columns",
+    "value_range": [
+     0.077122,
+     1.795617
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "nswdemand + date",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf07_share",
+    "type": "formula",
+    "description": "random share formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     0.900787468247248
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "period / (np.abs(period) + np.abs(transfer) + 1e-6)",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf08_product",
+    "type": "formula",
+    "description": "random product formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     0.046947938
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "vicprice * vicdemand",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf09_sqrt_abs",
+    "type": "formula",
+    "description": "random sqrt_abs formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     0.5969681733560006
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "np.sqrt(np.abs(nswprice))",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf10_zsum",
+    "type": "formula",
+    "description": "random zsum formula over the dataset's own columns",
+    "value_range": [
+     -3.286780825872956,
+     3.1669261135972713
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "((period - 0.508468) / (0.286345 + 1e-6)) + ((date - 0.508144) / (0.336075 + 1e-6))",
+    "computation_method": null,
+    "uses_only_row_values": true
+   },
+   {
+    "name": "rf11_bucket3",
+    "type": "formula",
+    "description": "random bucket3 formula over the dataset's own columns",
+    "value_range": [
+     0.0,
+     2.0
+    ],
+    "feature_family": "random_control",
+    "expected_model_benefit": "none (control)",
+    "leakage_risk": "low",
+    "formula": "np.where(vicdemand < 0.306974, 0, np.where(vicdemand > 0.552939, 2, 1))",
+    "computation_method": null,
+    "uses_only_row_values": true
+   }
+  ],
+  "prompt_hash": null,
+  "metadata": {
+   "matched_generator": "claude-opus-4.7",
+   "design_statistics_only": true,
+   "attempts": 11
+  }
+ },
+ "formula_nan_rate": {
+  "rf01_ratio": 0.0,
+  "rf02_sum": 0.0,
+  "rf03_log1p": 0.0,
+  "rf04_bucket3": 0.0,
+  "rf05_difference": 0.0,
+  "rf06_sum": 0.0,
+  "rf07_share": 0.0,
+  "rf08_product": 0.0,
+  "rf09_sqrt_abs": 0.0,
+  "rf10_zsum": 0.0,
+  "rf11_bucket3": 0.0
+ },
+ "formula_constant_cols": [],
+ "cv": {
+  "n_splits": 5,
+  "n_repeats": 2,
+  "seed": 42
+ },
+ "permutation_seed": 42,
+ "models": {
+  "logistic_regression": {
+   "raw_plus_random_formula_fx": {
+    "accuracy": 0.7452857142857143,
+    "balanced_accuracy": 0.7452857142857143,
+    "f1_macro": 0.7444120063938101,
+    "roc_auc_ovr": 0.8221102040816326
+   },
+   "raw_plus_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.7271428571428571,
+     0.7342857142857143,
+     0.7428571428571429,
+     0.7614285714285715,
+     0.7571428571428571,
+     0.7571428571428571,
+     0.7471428571428571,
+     0.7257142857142858,
+     0.7728571428571429,
+     0.7271428571428571
+    ],
+    "balanced_accuracy": [
+     0.7271428571428571,
+     0.7342857142857143,
+     0.7428571428571429,
+     0.7614285714285713,
+     0.7571428571428571,
+     0.7571428571428571,
+     0.7471428571428571,
+     0.7257142857142858,
+     0.7728571428571429,
+     0.7271428571428571
+    ],
+    "f1_macro": [
+     0.7262035677497701,
+     0.7324488940398983,
+     0.7423839705581681,
+     0.7606073079278095,
+     0.7567536630036631,
+     0.7563472563472564,
+     0.7466459730205566,
+     0.7252747252747254,
+     0.7715475039563539,
+     0.7259072020598987
+    ],
+    "roc_auc_ovr": [
+     0.8127510204081632,
+     0.8184408163265305,
+     0.8121224489795917,
+     0.8420816326530614,
+     0.8252816326530612,
+     0.8256489795918369,
+     0.8385632653061225,
+     0.7995673469387756,
+     0.8375673469387755,
+     0.8090775510204081
+    ]
+   },
+   "raw_plus_permuted_random_formula_fx": {
+    "accuracy": 0.7354285714285715,
+    "balanced_accuracy": 0.7354285714285715,
+    "f1_macro": 0.734271114485537,
+    "roc_auc_ovr": 0.8177853061224489
+   },
+   "raw_plus_permuted_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.72,
+     0.7328571428571429,
+     0.7214285714285714,
+     0.7571428571428571,
+     0.7428571428571429,
+     0.7442857142857143,
+     0.75,
+     0.7085714285714285,
+     0.7657142857142857,
+     0.7114285714285714
+    ],
+    "balanced_accuracy": [
+     0.72,
+     0.7328571428571429,
+     0.7214285714285714,
+     0.7571428571428571,
+     0.7428571428571429,
+     0.7442857142857143,
+     0.75,
+     0.7085714285714286,
+     0.7657142857142858,
+     0.7114285714285714
+    ],
+    "f1_macro": [
+     0.7188893259900341,
+     0.7306756153414082,
+     0.7204696110534302,
+     0.7560895622729993,
+     0.742175222629649,
+     0.7432245504380347,
+     0.7491393945351297,
+     0.7080351666325905,
+     0.7643116998300088,
+     0.709700996132084
+    ],
+    "roc_auc_ovr": [
+     0.8058367346938777,
+     0.8199836734693877,
+     0.8082857142857143,
+     0.8440408163265307,
+     0.8126857142857142,
+     0.8146285714285715,
+     0.8373714285714287,
+     0.7891102040816325,
+     0.8390612244897959,
+     0.8068489795918368
+    ]
+   },
+   "stored_raw": {
+    "accuracy": 0.738,
+    "balanced_accuracy": 0.738,
+    "f1_macro": 0.7367248328063144,
+    "roc_auc_ovr": 0.8193648979591837
+   },
+   "stored_raw_plus_formula": {
+    "accuracy": 0.7404285714285714,
+    "balanced_accuracy": 0.7404285714285714,
+    "f1_macro": 0.7397964187293242,
+    "roc_auc_ovr": 0.8226653061224489
+   },
+   "stored_raw_plus_random_noise": {
+    "accuracy": 0.7365714285714284,
+    "balanced_accuracy": 0.7365714285714284,
+    "f1_macro": 0.7354430793592646,
+    "roc_auc_ovr": 0.8165542857142857
+   },
+   "seconds": 0.4
+  },
+  "knn": {
+   "raw_plus_random_formula_fx": {
+    "accuracy": 0.7471428571428571,
+    "balanced_accuracy": 0.7471428571428571,
+    "f1_macro": 0.7469873754762723,
+    "roc_auc_ovr": 0.8355661224489795
+   },
+   "raw_plus_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.7571428571428571,
+     0.7471428571428571,
+     0.7385714285714285,
+     0.7771428571428571,
+     0.7485714285714286,
+     0.7342857142857143,
+     0.77,
+     0.7271428571428571,
+     0.7628571428571429,
+     0.7085714285714285
+    ],
+    "balanced_accuracy": [
+     0.7571428571428571,
+     0.7471428571428571,
+     0.7385714285714285,
+     0.7771428571428571,
+     0.7485714285714287,
+     0.7342857142857142,
+     0.77,
+     0.7271428571428571,
+     0.7628571428571429,
+     0.7085714285714286
+    ],
+    "f1_macro": [
+     0.7570932843437437,
+     0.7465796433297676,
+     0.7385452830997385,
+     0.7770536786143029,
+     0.748520106144111,
+     0.7342835451717973,
+     0.7695480319565515,
+     0.727115568699727,
+     0.7626226721904902,
+     0.7085119412124924
+    ],
+    "roc_auc_ovr": [
+     0.8379061224489797,
+     0.8277428571428571,
+     0.8205591836734694,
+     0.864461224489796,
+     0.8316448979591837,
+     0.8280571428571429,
+     0.8603795918367347,
+     0.8261591836734693,
+     0.855334693877551,
+     0.8034163265306122
+    ]
+   },
+   "raw_plus_permuted_random_formula_fx": {
+    "accuracy": 0.6679999999999999,
+    "balanced_accuracy": 0.6679999999999999,
+    "f1_macro": 0.6675874588445677,
+    "roc_auc_ovr": 0.7407628571428571
+   },
+   "raw_plus_permuted_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.6471428571428571,
+     0.6671428571428571,
+     0.6614285714285715,
+     0.6514285714285715,
+     0.6857142857142857,
+     0.6585714285714286,
+     0.7071428571428572,
+     0.64,
+     0.7,
+     0.6614285714285715
+    ],
+    "balanced_accuracy": [
+     0.6471428571428572,
+     0.6671428571428571,
+     0.6614285714285715,
+     0.6514285714285715,
+     0.6857142857142857,
+     0.6585714285714286,
+     0.7071428571428572,
+     0.64,
+     0.7,
+     0.6614285714285715
+    ],
+    "f1_macro": [
+     0.6467615037458807,
+     0.6670606415053513,
+     0.6607632520105758,
+     0.6509470207878625,
+     0.6848808276584599,
+     0.658565157319216,
+     0.7069269400517524,
+     0.6391486854702113,
+     0.699447965651196,
+     0.6613725942451711
+    ],
+    "roc_auc_ovr": [
+     0.7213265306122449,
+     0.7693918367346939,
+     0.722734693877551,
+     0.7402285714285715,
+     0.7447673469387756,
+     0.734204081632653,
+     0.7708448979591838,
+     0.6995183673469388,
+     0.7773591836734695,
+     0.7272530612244898
+    ]
+   },
+   "stored_raw": {
+    "accuracy": 0.752,
+    "balanced_accuracy": 0.752,
+    "f1_macro": 0.751814396986382,
+    "roc_auc_ovr": 0.8378755102040815
+   },
+   "stored_raw_plus_formula": {
+    "accuracy": 0.7491428571428571,
+    "balanced_accuracy": 0.7491428571428572,
+    "f1_macro": 0.748800042225033,
+    "roc_auc_ovr": 0.8370995918367348
+   },
+   "stored_raw_plus_random_noise": {
+    "accuracy": 0.6580000000000001,
+    "balanced_accuracy": 0.658,
+    "f1_macro": 0.6577358951101651,
+    "roc_auc_ovr": 0.726489387755102
+   },
+   "seconds": 0.7
+  },
+  "random_forest": {
+   "raw_plus_random_formula_fx": {
+    "accuracy": 0.8038571428571428,
+    "balanced_accuracy": 0.8038571428571428,
+    "f1_macro": 0.803838528583437,
+    "roc_auc_ovr": 0.8864681632653062
+   },
+   "raw_plus_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.8142857142857143,
+     0.78,
+     0.8028571428571428,
+     0.8271428571428572,
+     0.8028571428571428,
+     0.8071428571428572,
+     0.8242857142857143,
+     0.8,
+     0.8014285714285714,
+     0.7785714285714286
+    ],
+    "balanced_accuracy": [
+     0.8142857142857143,
+     0.78,
+     0.8028571428571428,
+     0.8271428571428572,
+     0.8028571428571429,
+     0.8071428571428572,
+     0.8242857142857143,
+     0.8,
+     0.8014285714285714,
+     0.7785714285714286
+    ],
+    "f1_macro": [
+     0.814284198238353,
+     0.7799550928760972,
+     0.8027991899660308,
+     0.8271001614684442,
+     0.8028555335145593,
+     0.807142463556048,
+     0.8242853556843994,
+     0.799973874138663,
+     0.8014184397163121,
+     0.7785709766754626
+    ],
+    "roc_auc_ovr": [
+     0.8807469387755101,
+     0.8760163265306122,
+     0.8902285714285714,
+     0.9054775510204082,
+     0.8861714285714286,
+     0.8902367346938775,
+     0.8980285714285715,
+     0.8797795918367347,
+     0.8926163265306122,
+     0.8653795918367347
+    ]
+   },
+   "raw_plus_permuted_random_formula_fx": {
+    "accuracy": 0.7825714285714286,
+    "balanced_accuracy": 0.7825714285714286,
+    "f1_macro": 0.7822987266639007,
+    "roc_auc_ovr": 0.8648195918367346
+   },
+   "raw_plus_permuted_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.7685714285714286,
+     0.7585714285714286,
+     0.7685714285714286,
+     0.8028571428571428,
+     0.8057142857142857,
+     0.7871428571428571,
+     0.7942857142857143,
+     0.7657142857142857,
+     0.7957142857142857,
+     0.7785714285714286
+    ],
+    "balanced_accuracy": [
+     0.7685714285714286,
+     0.7585714285714287,
+     0.7685714285714286,
+     0.8028571428571429,
+     0.8057142857142857,
+     0.7871428571428571,
+     0.7942857142857143,
+     0.7657142857142857,
+     0.7957142857142857,
+     0.7785714285714285
+    ],
+    "f1_macro": [
+     0.7684183010807146,
+     0.7581563458916221,
+     0.7684788200994683,
+     0.8023909468051158,
+     0.8056127282825313,
+     0.7867768966736788,
+     0.7939071764465344,
+     0.7656454141625294,
+     0.7954099057577497,
+     0.7781907314390617
+    ],
+    "roc_auc_ovr": [
+     0.8541224489795918,
+     0.8563551020408163,
+     0.8666734693877551,
+     0.881191836734694,
+     0.861534693877551,
+     0.867138775510204,
+     0.8808204081632653,
+     0.8414081632653061,
+     0.8835795918367347,
+     0.8553714285714286
+    ]
+   },
+   "stored_raw": {
+    "accuracy": 0.8028571428571428,
+    "balanced_accuracy": 0.8028571428571428,
+    "f1_macro": 0.802816878001876,
+    "roc_auc_ovr": 0.8880791836734694
+   },
+   "stored_raw_plus_formula": {
+    "accuracy": 0.7835714285714286,
+    "balanced_accuracy": 0.7835714285714286,
+    "f1_macro": 0.7834802445612408,
+    "roc_auc_ovr": 0.8740036734693877
+   },
+   "stored_raw_plus_random_noise": {
+    "accuracy": 0.7824285714285714,
+    "balanced_accuracy": 0.7824285714285715,
+    "f1_macro": 0.7821305388279998,
+    "roc_auc_ovr": 0.861730612244898
+   },
+   "seconds": 16.7
+  },
+  "xgboost": {
+   "raw_plus_random_formula_fx": {
+    "accuracy": 0.8007142857142856,
+    "balanced_accuracy": 0.8007142857142858,
+    "f1_macro": 0.8006648200339146,
+    "roc_auc_ovr": 0.887822857142857
+   },
+   "raw_plus_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.7928571428571428,
+     0.7857142857142857,
+     0.7857142857142857,
+     0.8085714285714286,
+     0.8042857142857143,
+     0.8042857142857143,
+     0.8314285714285714,
+     0.79,
+     0.8028571428571428,
+     0.8014285714285714
+    ],
+    "balanced_accuracy": [
+     0.7928571428571429,
+     0.7857142857142857,
+     0.7857142857142857,
+     0.8085714285714286,
+     0.8042857142857143,
+     0.8042857142857143,
+     0.8314285714285714,
+     0.79,
+     0.8028571428571429,
+     0.8014285714285714
+    ],
+    "f1_macro": [
+     0.7928567201157553,
+     0.7856862937199961,
+     0.7853708791208791,
+     0.8084948265020293,
+     0.8042821194675005,
+     0.8042853148679895,
+     0.831423066875653,
+     0.789965279974853,
+     0.8028555335145593,
+     0.801428166179931
+    ],
+    "roc_auc_ovr": [
+     0.8787265306122448,
+     0.8791755102040817,
+     0.8877877551020408,
+     0.9036244897959183,
+     0.8856081632653061,
+     0.8896081632653061,
+     0.9026040816326532,
+     0.8825306122448978,
+     0.8932489795918367,
+     0.8753142857142857
+    ]
+   },
+   "raw_plus_permuted_random_formula_fx": {
+    "accuracy": 0.7934285714285714,
+    "balanced_accuracy": 0.7934285714285714,
+    "f1_macro": 0.7933645419233417,
+    "roc_auc_ovr": 0.8776302040816326
+   },
+   "raw_plus_permuted_random_formula_fx_raw_scores": {
+    "accuracy": [
+     0.7842857142857143,
+     0.7728571428571429,
+     0.78,
+     0.8142857142857143,
+     0.7971428571428572,
+     0.8014285714285714,
+     0.8,
+     0.7714285714285715,
+     0.8285714285714286,
+     0.7842857142857143
+    ],
+    "balanced_accuracy": [
+     0.7842857142857143,
+     0.7728571428571429,
+     0.78,
+     0.8142857142857143,
+     0.7971428571428572,
+     0.8014285714285714,
+     0.8,
+     0.7714285714285714,
+     0.8285714285714285,
+     0.7842857142857143
+    ],
+    "f1_macro": [
+     0.7842817521138143,
+     0.7728010386238234,
+     0.7796960704972574,
+     0.8141886373288902,
+     0.7971412011526624,
+     0.8014087122998014,
+     0.7999983673336108,
+     0.7713819146764646,
+     0.8285364360073484,
+     0.7842112891997444
+    ],
+    "roc_auc_ovr": [
+     0.8637224489795918,
+     0.8653632653061225,
+     0.8730367346938774,
+     0.898326530612245,
+     0.8754367346938775,
+     0.8801224489795918,
+     0.8903918367346939,
+     0.8648571428571429,
+     0.8945959183673469,
+     0.8704489795918366
+    ]
+   },
+   "stored_raw": {
+    "accuracy": 0.8019999999999999,
+    "balanced_accuracy": 0.8019999999999999,
+    "f1_macro": 0.8019233713487799,
+    "roc_auc_ovr": 0.8908175510204084
+   },
+   "stored_raw_plus_formula": {
+    "accuracy": 0.8012857142857144,
+    "balanced_accuracy": 0.8012857142857144,
+    "f1_macro": 0.8012133455155638,
+    "roc_auc_ovr": 0.8872742857142857
+   },
+   "stored_raw_plus_random_noise": {
+    "accuracy": 0.7905714285714286,
+    "balanced_accuracy": 0.7905714285714286,
+    "f1_macro": 0.7904668994790306,
+    "roc_auc_ovr": 0.8749191836734693
+   },
+   "seconds": 4.1
+  }
+ },
+ "seconds_total": 22.0
+}

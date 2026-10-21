@@ -1,0 +1,190 @@
+{
+  "dataset_name": "codexglue",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "id_minmax_position",
+      "type": "formula",
+      "description": "Scales row id to the unit interval using training-fold minimum and maximum, then clips values outside the observed span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "id_numeric_projection",
+      "expected_model_benefit": "Provides a smooth corpus-index coordinate that a linear SVM can weight without relying on raw magnitude.",
+      "leakage_risk": "medium",
+      "formula": "np.clip((id - 0.0) / (27317.0 - 0.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "id_log_position",
+      "type": "formula",
+      "description": "Log-scales row id by the training-fold maximum to compress large index differences while preserving ordering.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "id_numeric_projection",
+      "expected_model_benefit": "Adds a monotone nonlinear projection useful when corpus drift is stronger at smaller index values.",
+      "leakage_risk": "medium",
+      "formula": "np.clip(np.log1p(id) / np.log1p(27317.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "id_edge_distance_score",
+      "type": "formula",
+      "description": "Measures closeness of id to either end of the observed id range; 0 is near the midpoint and 1 is near an edge.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "id_numeric_shape",
+      "expected_model_benefit": "Gives a linear margin access to a simple U-shaped corpus-position effect.",
+      "leakage_risk": "medium",
+      "formula": "np.clip(np.abs((id - 13658.5) / 13658.5), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "project_qemu_centered",
+      "type": "formula",
+      "description": "Frequency-centered indicator for project identity: qemu gets 1 minus its training-fold share, FFmpeg gets the negative of that share, and unknown projects get 0.",
+      "value_range": [
+        -0.636,
+        0.365
+      ],
+      "feature_family": "project_metadata",
+      "expected_model_benefit": "Represents project membership as a centered coordinate, improving compatibility with linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.where(project == 'qemu', 1.0 - 5209.0 / 8195.0, np.where(project == 'FFmpeg', 0.0 - 5209.0 / 8195.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "commit_top_frequency_score",
+      "type": "formula",
+      "description": "Assigns fold-observed frequency to the most recurrent commit identifiers from metadata and a small fallback to others.",
+      "value_range": [
+        0.0001,
+        0.022
+      ],
+      "feature_family": "commit_metadata",
+      "expected_model_benefit": "Captures repeated patch-batch structure as a smooth low-cardinality coordinate while avoiding direct memorization of every commit.",
+      "leakage_risk": "medium",
+      "formula": "np.where(commit_id == 'a8170e5e97ad17ca169c64ba87ae2f53850dab4c', 178.0 / 8195.0, np.where(commit_id == '60fe637bf0e4d7989e21e50f52526444765c63b4', 64.0 / 8195.0, np.where(commit_id == '4be746345f13e99e468c60acbd3a355e8183e3ce', 48.0 / 8195.0, np.where(commit_id == '72cf2d4f0e181d0d3a3122e04129c58a95da713e', 46.0 / 8195.0, np.where(commit_id == 'c2b38b277a7882a592f4f2ec955084b2b756daaa', 37.0 / 8195.0, np.where(commit_id == '61007b316cd71ee7333ff7a0a749a8949527575f', 36.0 / 8195.0, np.where(commit_id == 'd9bce9d99f4656ae0b0127f7472db9067b8f84ab', 31.0 / 8195.0, np.where(commit_id == 'b3db211f3c80bb996a704d665fe275619f728bd4', 27.0 / 8195.0, np.where(commit_id == '42a268c241183877192c376d03bd9b6d527407c7', 26.0 / 8195.0, np.where(commit_id == 'b4ba67d9a702507793c2724e56f98e9b0f7be02b', 26.0 / 8195.0, 1.0 / 8195.0))))))))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "id_project_interaction",
+      "type": "formula",
+      "description": "Product of clipped standardized id and the centered project coordinate, using training-fold metadata constants.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "metadata_interaction",
+      "expected_model_benefit": "Precomputes a project-specific corpus-position projection that a linear SVM cannot form from separate coordinates alone.",
+      "leakage_risk": "medium",
+      "formula": "np.clip((id - 13745.74850518609) / 7895.771983471203, -3.0, 3.0) * np.where(project == 'qemu', 1.0 - 5209.0 / 8195.0, np.where(project == 'FFmpeg', 0.0 - 5209.0 / 8195.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "control_flow_complexity_score",
+      "type": "judgment",
+      "description": "Assesses nesting, branching, loops, goto paths, early returns, and state-machine style flow in func. 0 means simple straight-line code; 1 means highly branched or stateful code.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_semantic_control_flow",
+      "expected_model_benefit": "Adds a smooth complexity axis that can shift the margin for functions whose logic is hard to audit.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "memory_access_intensity_score",
+      "type": "judgment",
+      "description": "Assesses pointer dereferences, array indexing, casts, buffer operations, raw address arithmetic, and manual memory layout in func. 0 means little direct memory manipulation; 1 means dense low-level memory manipulation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_semantic_memory",
+      "expected_model_benefit": "Provides a direct continuous signal for raw memory usage that token-level patterns may scatter across many terms.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "input_validation_gap_score",
+      "type": "judgment",
+      "description": "Assesses whether sizes, indices, enum values, pointers, return values, and external inputs are checked before risky use. 0 means checks are systematic and near each use; 1 means checks are missing, distant, or incomplete.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_semantic_validation",
+      "expected_model_benefit": "Separates risky-use patterns along a single near-linear direction: unchecked inputs versus nearby guards.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "numeric_boundary_risk_score",
+      "type": "judgment",
+      "description": "Assesses potential for overflow, underflow, shift-width issues, signed or unsigned surprises, truncation, scaling, and length calculation mistakes. 0 means arithmetic is simple and bounded; 1 means boundary behavior is hard to verify.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_semantic_numeric",
+      "expected_model_benefit": "Highlights arithmetic boundary patterns that are not captured by project or commit metadata.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_cleanup_fragility_score",
+      "type": "judgment",
+      "description": "Assesses consistency of allocation, free, refcount, descriptor, lock, JNI local-ref, error path, and cleanup handling. 0 means coherent and complete cleanup; 1 means fragile, inconsistent, or unclear cleanup.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_semantic_lifetime",
+      "expected_model_benefit": "Gives the margin a coherent cleanup-quality dimension across different APIs and coding styles.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "external_interface_exposure_score",
+      "type": "judgment",
+      "description": "Assesses interaction with parsers, files, sockets, devices, hypervisors, JNI, DMA, or other trust-boundary APIs. 0 means internal helper only; 1 means exposed to complex outside-controlled data or privileged interfaces.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "code_semantic_interface",
+      "expected_model_benefit": "Adds an exposure axis for code near parsers, devices, sockets, JNI, or hypervisor boundaries.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6426c47834a64afa",
+  "metadata": {}
+}

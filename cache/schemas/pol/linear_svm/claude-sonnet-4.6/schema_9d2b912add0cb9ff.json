@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pol",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "active_signal_sum",
+      "type": "formula",
+      "description": "Sum of all variable features (f5-f9) that have non-zero variance, representing total signal magnitude across active channels",
+      "value_range": [
+        431.0,
+        972.0
+      ],
+      "feature_family": "aggregate",
+      "expected_model_benefit": "Captures overall signal intensity as a single linear projection useful for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "f5 + f6 + f7 + f8 + f9",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sparse_feature_total",
+      "type": "formula",
+      "description": "Sum of sparse features f13-f33 which have low means but high variance, capturing total sparse signal activity",
+      "value_range": [
+        0.0,
+        500.0
+      ],
+      "feature_family": "aggregate",
+      "expected_model_benefit": "Aggregates sparse signal contributions into a smooth continuous score for linear separation",
+      "leakage_risk": "low",
+      "formula": "f13 + f14 + f15 + f16 + f17 + f18 + f19 + f20 + f21 + f22 + f23 + f24 + f25 + f26 + f27 + f28 + f29 + f30 + f31 + f32 + f33",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f5_normalized_deviation",
+      "type": "formula",
+      "description": "Z-score normalized deviation of f5 from its training mean (76.354) divided by std (34.874), capturing relative position in distribution",
+      "value_range": [
+        -1.83,
+        3.55
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides smooth normalized score centered at zero, ideal for SVM margin computation",
+      "leakage_risk": "low",
+      "formula": "(f5 - 76.354) / 34.874",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_activity_ratio",
+      "type": "formula",
+      "description": "Ratio of sparse feature total to active signal sum, measuring relative sparse activity compared to primary signal",
+      "value_range": [
+        0.0,
+        1.2
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio features provide scale-invariant linear projections useful for SVM decision boundaries",
+      "leakage_risk": "low",
+      "formula": "(f13 + f14 + f15 + f16 + f17 + f18 + f19 + f20 + f21 + f22 + f23 + f24 + f25 + f26 + f27 + f28 + f29 + f30 + f31 + f32 + f33) / (f5 + f6 + f7 + f8 + f9 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "early_sparse_concentration",
+      "type": "formula",
+      "description": "Weighted sum of early sparse features (f13-f18) with higher weights, capturing concentration in early sparse channels",
+      "value_range": [
+        0.0,
+        800.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Weighted composite emphasizes early sparse features which have higher means, creating informative linear projection",
+      "leakage_risk": "low",
+      "formula": "3.0 * f13 + 3.0 * f14 + 3.0 * f15 + 3.0 * f16 + 3.0 * f17 + 3.0 * f18 + 2.0 * f19 + 1.0 * f20 + 1.0 * f21 + 1.0 * f22",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f6_f7_balance",
+      "type": "formula",
+      "description": "Normalized difference between f6 and f7, measuring balance between two active signal channels",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Balance ratio captures relative channel dominance as a smooth bounded score for linear SVM",
+      "leakage_risk": "low",
+      "formula": "(f6 - f7) / (f6 + f7 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_sparse_signal",
+      "type": "formula",
+      "description": "Log-transformed total sparse signal to compress heavy-tailed distribution into more linear-friendly range",
+      "value_range": [
+        0.0,
+        6.22
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Log transformation of skewed sparse features creates smoother distribution better suited for linear SVM margins",
+      "leakage_risk": "low",
+      "formula": "np.log1p(f13 + f14 + f15 + f16 + f17 + f18 + f19 + f20 + f21 + f22 + f23 + f24 + f25 + f26 + f27 + f28 + f29 + f30 + f31 + f32 + f33)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f5_below_mean_indicator",
+      "type": "formula",
+      "description": "Soft indicator of how far f5 is below its training mean (76.354), clipped to non-negative values",
+      "value_range": [
+        0.0,
+        63.354
+      ],
+      "feature_family": "threshold",
+      "expected_model_benefit": "Captures one-sided deviation from mean as a continuous severity measure for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0.0, 76.354 - f5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "f9_elevation_score",
+      "type": "formula",
+      "description": "Normalized elevation of f9 above its minimum (94), scaled by its range, measuring relative position within observed range",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Normalized continuous score in [0,1] range provides well-scaled input for SVM margin computation",
+      "leakage_risk": "low",
+      "formula": "np.clip((f9 - 94.0) / (172.0 - 94.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sparse_decay_score",
+      "type": "formula",
+      "description": "Weighted sum with exponentially decaying weights across sparse features f13-f33, capturing decay pattern in sparse signal",
+      "value_range": [
+        0.0,
+        400.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Decay-weighted composite captures structural pattern in sparse features as a single linear projection",
+      "leakage_risk": "low",
+      "formula": "1.0 * f13 + 0.9 * f14 + 0.81 * f15 + 0.73 * f16 + 0.66 * f17 + 0.59 * f18 + 0.53 * f19 + 0.48 * f20 + 0.43 * f21 + 0.39 * f22 + 0.35 * f23 + 0.31 * f24 + 0.28 * f25 + 0.25 * f26 + 0.23 * f27 + 0.21 * f28 + 0.19 * f29 + 0.17 * f30 + 0.15 * f31 + 0.14 * f32 + 0.12 * f33",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "primary_signal_spread",
+      "type": "judgment",
+      "description": "Semantic assessment of how spread out the primary active signals (f5-f9) are relative to each other, scored from 0 (all similar) to 1 (highly spread). Higher spread may indicate distinct signal patterns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures signal diversity pattern that may correlate with outcome, providing interpretable continuous score for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sparse_vs_primary_severity",
+      "type": "judgment",
+      "description": "Semantic severity score from 0 to 1 assessing how dominant the sparse signal activity is relative to primary signals. Score near 1 indicates high sparse activity relative to primary channels, near 0 indicates sparse activity is negligible.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides interpretable severity measure of signal imbalance as a smooth continuous score useful for SVM margin",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9d2b912add0cb9ff",
+  "metadata": {}
+}

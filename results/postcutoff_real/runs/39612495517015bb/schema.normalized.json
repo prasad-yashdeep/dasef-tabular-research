@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_salmonella_serovar_20260401",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "log_broadband_signal_energy",
+      "type": "formula",
+      "description": "Log-compressed mean intensity across representative anchors from violet through far NIR; captures overall specimen brightness while reducing extreme leverage.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "broadband_intensity",
+      "expected_model_benefit": "Provides a smooth scale coordinate so a linear SVM can adjust margins for global radiance differences without relying on many correlated raw bands.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p((`Band_2_W_401.00` + `Band_27_W_451.10` + `Band_52_W_500.90` + `Band_77_W_550.90` + `Band_102_W_601.00` + `Band_127_W_650.80` + `Band_152_W_700.70` + `Band_177_W_750.70` + `Band_202_W_800.40` + `Band_227_W_850.10` + `Band_252_W_899.90` + `Band_278_W_951.00` + `Band_303_W_1000.90`) / 13.0), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "centered_visible_shape_projection",
+      "type": "formula",
+      "description": "Training-normalized weighted projection of key visible and tail anchors, using unsupervised per-band means and standard deviations from the training fold.",
+      "value_range": [
+        -8.0,
+        8.0
+      ],
+      "feature_family": "training_normalized_projection",
+      "expected_model_benefit": "Supplies an approximate one-dimensional color-shape coordinate that is already centered and well scaled for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.30 * ((`Band_52_W_500.90` - 648.6319926040151) / 288.5416939215348) + 0.35 * ((`Band_77_W_550.90` - 1167.380470226384) / 602.7116088652798) + 0.20 * ((`Band_102_W_601.00` - 893.8425239463483) / 456.40343744285593) - 0.20 * ((`Band_27_W_451.10` - 195.6475503168048) / 90.08211706605826) - 0.25 * ((`Band_152_W_700.70` - 249.96717191866998) / 139.4100291929239) - 0.10 * ((`Band_227_W_850.10` - 8.437140971090434) / 8.514829405830621), -8.0, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "early_rise_450_520_index",
+      "type": "formula",
+      "description": "Normalized rise from blue reflectance to early green reflectance.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "visible_slope",
+      "expected_model_benefit": "Helps linear margins capture the steepness of the low-wavelength ascent as a single smooth contrast.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_52_W_500.90` + `Band_59_W_515.10` + `Band_62_W_521.10`) / 3.0) - ((`Band_24_W_445.10` + `Band_27_W_451.10` + `Band_30_W_457.10`) / 3.0)) / (((`Band_52_W_500.90` + `Band_59_W_515.10` + `Band_62_W_521.10`) / 3.0) + ((`Band_24_W_445.10` + `Band_27_W_451.10` + `Band_30_W_457.10`) / 3.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "green_blue_contrast_index",
+      "type": "formula",
+      "description": "Normalized contrast between the main green-yellow hump and the violet/blue baseline.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "visible_hump",
+      "expected_model_benefit": "Condenses a broad hump-vs-baseline pattern into one ratio, reducing reliance on many collinear raw bands.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_72_W_540.80` + `Band_75_W_546.80` + `Band_78_W_553.20` + `Band_81_W_559.10`) / 4.0) - ((`Band_2_W_401.00` + `Band_12_W_421.00` + `Band_23_W_443.20`) / 3.0)) / (((`Band_72_W_540.80` + `Band_75_W_546.80` + `Band_78_W_553.20` + `Band_81_W_559.10`) / 4.0) + ((`Band_2_W_401.00` + `Band_12_W_421.00` + `Band_23_W_443.20`) / 3.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "green_plateau_tilt_index",
+      "type": "formula",
+      "description": "Signed tilt from the 530-545 nm side of the green plateau to the 561-581 nm side.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "visible_peak_geometry",
+      "expected_model_benefit": "Adds a directional peak-shape coordinate that can shift a linear margin without needing separate weights for each plateau band.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_82_W_560.90` + `Band_86_W_568.70` + `Band_90_W_576.90` + `Band_92_W_581.00`) / 4.0) - ((`Band_67_W_530.70` + `Band_71_W_539.00` + `Band_74_W_544.90`) / 3.0)) / (((`Band_82_W_560.90` + `Band_86_W_568.70` + `Band_90_W_576.90` + `Band_92_W_581.00`) / 4.0) + ((`Band_67_W_530.70` + `Band_71_W_539.00` + `Band_74_W_544.90`) / 3.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "orange_red_drop_index",
+      "type": "formula",
+      "description": "Normalized drop from orange wavelengths into the red and early far-red region.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "red_transition",
+      "expected_model_benefit": "Summarizes a broad descending segment as a stable signed contrast, useful for linear separation of spectral shapes.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_96_W_588.70` + `Band_102_W_601.00` + `Band_110_W_616.90` + `Band_114_W_624.60`) / 4.0) - ((`Band_127_W_650.80` + `Band_136_W_668.80` + `Band_145_W_686.80` + `Band_152_W_700.70`) / 4.0)) / (((`Band_96_W_588.70` + `Band_102_W_601.00` + `Band_110_W_616.90` + `Band_114_W_624.60`) / 4.0) + ((`Band_127_W_650.80` + `Band_136_W_668.80` + `Band_145_W_686.80` + `Band_152_W_700.70`) / 4.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "red_tail_collapse_index",
+      "type": "formula",
+      "description": "Normalized contrast between red-region intensity and the much lower 731-783 nm tail.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "far_red_transition",
+      "expected_model_benefit": "Captures the severity of the post-red intensity collapse in one smooth coordinate for margin-based modeling.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_127_W_650.80` + `Band_136_W_668.80` + `Band_145_W_686.80`) / 3.0) - ((`Band_167_W_730.60` + `Band_177_W_750.70` + `Band_187_W_770.70` + `Band_193_W_782.70`) / 4.0)) / (((`Band_127_W_650.80` + `Band_136_W_668.80` + `Band_145_W_686.80`) / 3.0) + ((`Band_167_W_730.60` + `Band_177_W_750.70` + `Band_187_W_770.70` + `Band_193_W_782.70`) / 4.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "far_nir_residual_fraction",
+      "type": "formula",
+      "description": "Fraction of far-NIR residual signal relative to the green-yellow hump.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "tail_residual",
+      "expected_model_benefit": "Offers a bounded tail-strength measure that can separate true broad signal from near-zero long-wavelength background.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((`Band_227_W_850.10` + `Band_252_W_899.90` + `Band_278_W_951.00` + `Band_303_W_1000.90`) / 4.0) / (((`Band_72_W_540.80` + `Band_75_W_546.80` + `Band_78_W_553.20` + `Band_81_W_559.10`) / 4.0) + 1e-6), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "narrowband_815_spike_index",
+      "type": "formula",
+      "description": "Signed narrowband excess at 814.5 nm relative to neighboring bands at 810.5 nm and 818.4 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "local_spike",
+      "expected_model_benefit": "Captures a localized spectral anomaly as a single bounded variable, preventing a linear SVM from overusing adjacent raw bands independently.",
+      "leakage_risk": "low",
+      "formula": "np.clip((`Band_209_W_814.50` - ((`Band_207_W_810.50` + `Band_211_W_818.40`) / 2.0)) / (`Band_209_W_814.50` + ((`Band_207_W_810.50` + `Band_211_W_818.40`) / 2.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "longwave_960_peak_index",
+      "type": "formula",
+      "description": "Signed peak strength around 955-969 nm relative to shoulders near 936-948 nm and 991-997 nm.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "longwave_peak",
+      "expected_model_benefit": "Provides a compact longwave shape contrast that is robust to multiplicative brightness changes.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((`Band_280_W_955.40` + `Band_281_W_957.50` + `Band_282_W_959.70` + `Band_287_W_969.10`) / 4.0) - ((`Band_270_W_935.50` + `Band_276_W_947.60` + `Band_298_W_991.10` + `Band_301_W_997.10`) / 4.0)) / (((`Band_280_W_955.40` + `Band_281_W_957.50` + `Band_282_W_959.70` + `Band_287_W_969.10`) / 4.0) + ((`Band_270_W_935.50` + `Band_276_W_947.60` + `Band_298_W_991.10` + `Band_301_W_997.10`) / 4.0) + 1e-6), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "smooth_single_hump_confidence",
+      "type": "judgment",
+      "description": "Numeric assessor score from 0.0 to 1.0; high values indicate a coherent single visible hump with smooth flanks and low high-frequency ripple, while low values indicate irregular or multimodal spectral morphology. Assess only from the row spectrum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_morphology",
+      "expected_model_benefit": "Adds a compact morphology cue that can combine linearly with ratio features when raw bands are noisy.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "acquisition_artifact_severity",
+      "type": "judgment",
+      "description": "Numeric assessor rating from 0.0 to 10.0 of acquisition artifacts, considering repeated zero-like tail readings, isolated tall spikes, or implausible discontinuities relative to neighboring bands. Assess only from the row spectrum.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_quality",
+      "expected_model_benefit": "Allows a linear margin to account for sensor-quality variation without assigning many separate weights to narrow artifacts.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cached_raw_normalized",
+  "metadata": {}
+}

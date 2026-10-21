@@ -1,0 +1,190 @@
+{
+  "dataset_name": "airlines",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "departure_time_norm",
+      "type": "formula",
+      "description": "Scheduled departure minute scaled from observed training-fold bounds of 15 to 1439.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "schedule_timing",
+      "expected_model_benefit": "Provides a monotone timing coordinate that a linear SVM can weight directly.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Time - 15.0) / 1424.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "scheduled_length_norm",
+      "type": "formula",
+      "description": "Scheduled flight duration scaled from observed training-fold bounds of 25 to 560 minutes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "duration_scale",
+      "expected_model_benefit": "Captures broad trip-duration effects with a stable unitless scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Length - 25.0) / 535.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_length_norm",
+      "type": "formula",
+      "description": "Compressed duration score that reduces the influence of very long itineraries while preserving order.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "duration_scale",
+      "expected_model_benefit": "Adds a concave duration basis so a linear margin can model diminishing changes with trip length.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(Length - 25.0, 0.0)) / np.log1p(535.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "trip_end_day_fraction",
+      "type": "formula",
+      "description": "Scheduled departure plus duration expressed as fractions of a day; values above 1 indicate carryover past midnight.",
+      "value_range": [
+        0.0,
+        1.4
+      ],
+      "feature_family": "schedule_timing",
+      "expected_model_benefit": "Combines timing and duration into an approximate linear projection of schedule position and end-of-day pressure.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Time + Length) / 1440.0, 0.0, 1.4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "late_day_pressure",
+      "type": "formula",
+      "description": "Piecewise-linear score increasing after 15:00 and saturating by 21:00.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "schedule_timing",
+      "expected_model_benefit": "Lets the linear SVM assign a direct weight to later-day schedule accumulation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Time - 900.0) / 360.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "commute_peak_score",
+      "type": "formula",
+      "description": "Triangular score around morning 08:00 and evening 17:00 peak operating windows with a three-hour half-width.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "schedule_timing",
+      "expected_model_benefit": "Adds a smooth peak-window basis for non-monotone time-of-day effects.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0.0, 1.0 - (np.minimum(np.abs(Time - 480.0), np.abs(Time - 1020.0)) / 180.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "airline_activity_score",
+      "type": "judgment",
+      "description": "Semantic metadata lookup: map Airline to log-scaled training-fold frequency divided by the largest airline frequency; unseen codes receive 0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_activity",
+      "expected_model_benefit": "Turns carrier identity into a dense scalar reflecting network scale and operational footprint.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "flight_number_recurrence_score",
+      "type": "judgment",
+      "description": "Semantic metadata lookup: map Flight to log-scaled frequency in the training fold divided by the largest flight-number frequency; unseen values receive 0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_recurrence",
+      "expected_model_benefit": "Separates one-off flight numbers from recurring services without sparse one-hot dependence.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "origin_airport_activity_score",
+      "type": "judgment",
+      "description": "Semantic metadata lookup: map AirportFrom to log-scaled departure count in the training fold divided by the largest origin-airport count; unseen airports receive 0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "airport_activity",
+      "expected_model_benefit": "Represents origin-side traffic density in a single smooth coordinate for linear weighting.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "destination_airport_activity_score",
+      "type": "judgment",
+      "description": "Semantic metadata lookup: map AirportTo to log-scaled arrival count in the training fold divided by the largest destination-airport count; unseen airports receive 0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "airport_activity",
+      "expected_model_benefit": "Represents destination-side traffic density in a single smooth coordinate for linear weighting.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "route_pair_activity_score",
+      "type": "judgment",
+      "description": "Semantic metadata lookup: map the AirportFrom-AirportTo pair to log-scaled pair frequency in the training fold divided by the most frequent pair count; unseen pairs receive 0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "route_activity",
+      "expected_model_benefit": "Captures common-route structure and network familiarity as a dense scalar.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "day_of_week_service_density_score",
+      "type": "judgment",
+      "description": "Semantic metadata lookup: map DayOfWeek to its training-fold frequency divided by the busiest observed weekday frequency.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weekly_schedule",
+      "expected_model_benefit": "Encodes service-density variation across the weekly cycle with one continuous value.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    }
+  ],
+  "prompt_hash": "18e0454925649461",
+  "metadata": {}
+}

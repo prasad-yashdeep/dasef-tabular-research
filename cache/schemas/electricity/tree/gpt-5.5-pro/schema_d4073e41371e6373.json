@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "date_four_bucket",
+      "type": "formula",
+      "description": "Ordinal quarter of the normalized date value, using equal-width bins over the training-fold date scale.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "temporal_bucket",
+      "expected_model_benefit": "Creates coarse chronological regimes that trees can split on without relying on many fine date thresholds.",
+      "leakage_risk": "low",
+      "formula": "np.where(date < 0.25, 0, np.where(date < 0.5, 1, np.where(date < 0.75, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "period_six_bucket",
+      "type": "formula",
+      "description": "Ordinal time segment from normalized period, using six equal-width bins.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "temporal_bucket",
+      "expected_model_benefit": "Captures recurring intra-day structure through an ordered bucket that is easy for a tree to branch on.",
+      "leakage_risk": "low",
+      "formula": "np.where(period < 0.1666666667, 0, np.where(period < 0.3333333333, 1, np.where(period < 0.5, 2, np.where(period < 0.6666666667, 3, np.where(period < 0.8333333333, 4, 5)))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "regional_price_spike_indicator",
+      "type": "formula",
+      "description": "Boolean flag set when either regional price exceeds its own training-fold mean plus two standard deviations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_threshold",
+      "expected_model_benefit": "Supplies a direct rare-price-level split, reducing depth needed for trees to isolate extreme price regimes.",
+      "leakage_risk": "low",
+      "formula": "np.where((nswprice > 0.14401500914758046) | (vicprice > 0.010435544816581702), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_vic_price_gap",
+      "type": "formula",
+      "description": "Signed gap between NSW and VIC normalized prices.",
+      "value_range": [
+        -0.218789,
+        1.0
+      ],
+      "feature_family": "price_difference",
+      "expected_model_benefit": "Makes cross-region price direction and magnitude directly available for single-split decisions.",
+      "leakage_risk": "low",
+      "formula": "(nswprice - vicprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_gap",
+      "type": "formula",
+      "description": "Signed gap between NSW and VIC normalized demand.",
+      "value_range": [
+        -0.99881,
+        0.927521
+      ],
+      "feature_family": "demand_difference",
+      "expected_model_benefit": "Exposes demand-side regional asymmetry as a signed quantity for threshold splits.",
+      "leakage_risk": "low",
+      "formula": "(nswdemand - vicdemand)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_demand",
+      "type": "formula",
+      "description": "Sum of normalized NSW and VIC demand.",
+      "value_range": [
+        0.029932,
+        1.956263
+      ],
+      "feature_family": "demand_aggregate",
+      "expected_model_benefit": "Summarizes system load so trees can use aggregate demand thresholds.",
+      "leakage_risk": "low",
+      "formula": "(nswdemand + vicdemand)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_imbalance_ratio",
+      "type": "formula",
+      "description": "Scale-adjusted absolute demand imbalance between regions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demand_balance",
+      "expected_model_benefit": "Normalizes imbalance by load level, giving stable splits across low-load and high-load rows.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs(nswdemand - vicdemand) / (nswdemand + vicdemand + 0.000001)), 0, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_to_total_demand",
+      "type": "formula",
+      "description": "Transfer volume scaled by total regional demand, with a small denominator guard.",
+      "value_range": [
+        0.0,
+        32.0
+      ],
+      "feature_family": "transfer_pressure",
+      "expected_model_benefit": "Highlights transfer intensity after accounting for demand scale, useful for capacity-pressure branches.",
+      "leakage_risk": "low",
+      "formula": "np.clip((transfer / (nswdemand + vicdemand + 0.000001)), 0, 32)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "dual_high_demand_indicator",
+      "type": "formula",
+      "description": "Boolean flag for simultaneous elevated demand in both regions, using mean plus one standard deviation thresholds from the training fold.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demand_threshold_interaction",
+      "expected_model_benefit": "Lets trees isolate joint high-load regimes with one split rather than a two-step path.",
+      "leakage_risk": "low",
+      "formula": "np.where((nswdemand > 0.5948799463032367) & (vicdemand > 0.5476761455436556), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_gap_transfer_interaction",
+      "type": "formula",
+      "description": "Interaction between signed price gap and transfer centered by its training-fold mean.",
+      "value_range": [
+        -0.5,
+        0.45
+      ],
+      "feature_family": "price_transfer_interaction",
+      "expected_model_benefit": "Provides a precomputed nonlinear interaction between regional price separation and transfer level.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((nswprice - vicprice) * (transfer - 0.49903293883209154)), -0.5, 0.45)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_tightness_score",
+      "type": "judgment",
+      "description": "Expert ordinal score from 0 to 4 using only the row: 0 indicates relaxed conditions and 4 indicates extreme tightness. Raise the score when total demand is high, transfer is high within the observed normalized scale, and either regional price is unusually elevated.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_ordinal_regime",
+      "expected_model_benefit": "Gives trees a compact ordered regime signal combining demand, price, and transfer cues that would otherwise require multiple branches.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "regional_coupling_score",
+      "type": "judgment",
+      "description": "Expert ordinal score from 0 to 3 using only the row: 0 indicates strong regional decoupling and 3 indicates strong coupling. Raise the score when NSW and VIC demand levels are similar and price levels are not far apart.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_ordinal_regime",
+      "expected_model_benefit": "Provides a tree-friendly ordinal summary of synchronized versus divergent regional states.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d4073e41371e6373",
+  "metadata": {}
+}

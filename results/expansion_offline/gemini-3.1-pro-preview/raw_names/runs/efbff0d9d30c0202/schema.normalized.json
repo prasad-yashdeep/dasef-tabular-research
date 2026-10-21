@@ -1,0 +1,190 @@
+{
+  "dataset_name": "employee_turnover_at_techco",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "tenure_distance_ratio",
+      "type": "formula",
+      "description": "Ratio of employee tenure to commute distance, capturing the trade-off between investment in the company and commute friction.",
+      "value_range": [
+        0.3,
+        390.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a continuous, non-linear interaction term that linear SVMs can use to establish a margin based on commute tolerance over time.",
+      "leakage_risk": "low",
+      "formula": "time / (distance + 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_composite",
+      "type": "formula",
+      "description": "Sum of logical and verbal scores to represent overall cognitive assessment performance.",
+      "value_range": [
+        -12.0,
+        29.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a single, smooth linear projection of cognitive ability, reducing dimensionality and improving margin stability.",
+      "leakage_risk": "low",
+      "formula": "logical_score + verbal_score",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "training_literacy_interaction",
+      "type": "formula",
+      "description": "Interaction between training score and average literacy, scaled down for numerical stability.",
+      "value_range": [
+        1.3,
+        5.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear model to capture the synergistic effect of baseline literacy and training performance.",
+      "leakage_risk": "low",
+      "formula": "training_score * avg_literacy / 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cultural_alignment_index",
+      "type": "formula",
+      "description": "Normalized score of similar language, representing cultural or linguistic alignment with the location.",
+      "value_range": [
+        0.0125,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Scales a percentage into a [0, 1] range, which is optimal for SVM weight regularization.",
+      "leakage_risk": "low",
+      "formula": "similar_language / 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "commute_burden",
+      "type": "formula",
+      "description": "Distance weighted by the log of tenure, representing the accumulated burden of commuting over time.",
+      "value_range": [
+        0.0,
+        11.9
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Provides a continuous severity measure of commute fatigue that scales logarithmically, fitting well with linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "distance * np.log1p(time)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_balance",
+      "type": "formula",
+      "description": "Absolute difference between logical and verbal scores, indicating the skew in cognitive skill sets.",
+      "value_range": [
+        0.0,
+        24.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Extracts a non-linear relationship (skill imbalance) into a linear feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": "np.abs(logical_score - verbal_score)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_tenure_diff",
+      "type": "formula",
+      "description": "The number of years the location has existed prior to the employee joining, floored at zero.",
+      "value_range": [
+        0.0,
+        27.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Captures whether the employee joined a mature office or a new one, providing a continuous contextual feature.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0, location_age - time)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_training_score",
+      "type": "formula",
+      "description": "Z-score approximation of the training score using training set mean and standard deviation.",
+      "value_range": [
+        -4.15,
+        1.45
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Standardizes the feature scale, which is critical for SVMs to apply uniform regularization penalties.",
+      "leakage_risk": "low",
+      "formula": "(training_score - 4.49) / 0.43",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "literacy_language_alignment",
+      "type": "formula",
+      "description": "Product of normalized literacy and similar language scores.",
+      "value_range": [
+        0.006,
+        0.97
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Creates a composite index of communication ease, providing a smooth continuous feature for the linear margin.",
+      "leakage_risk": "low",
+      "formula": "(avg_literacy / 100.0) * (similar_language / 100.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "early_tenure_high_distance",
+      "type": "formula",
+      "description": "Indicator for employees with less than 12 months tenure and a commute distance greater than 1.5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Isolates a specific high-risk demographic segment, allowing the linear model to assign a direct weight to this condition.",
+      "leakage_risk": "low",
+      "formula": "np.where((time < 12) & (distance > 1.5), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cognitive_training_efficiency",
+      "type": "formula",
+      "description": "Ratio of shifted cognitive composite to training score, measuring how baseline skills translate to training outcomes.",
+      "value_range": [
+        0.58,
+        16.3
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a continuous efficiency metric that helps the SVM separate over-performers from under-performers linearly.",
+      "leakage_risk": "low",
+      "formula": "(logical_score + verbal_score + 15.0) / training_score",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_engagement_estimate",
+      "type": "judgment",
+      "description": "A semantic assessment of the employee's overall engagement and stability based on commute distance, tenure, and cultural fit, outputting a continuous score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Injects domain knowledge about employee stability into a single continuous score, providing a strong linear predictor for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a7ca767d251f458c",
+  "metadata": {}
+}

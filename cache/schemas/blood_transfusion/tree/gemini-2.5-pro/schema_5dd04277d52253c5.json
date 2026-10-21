@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "tree",
+  "schema_generator": "gemini-2.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "avg_donation_volume",
+      "type": "formula",
+      "description": "The average volume of blood donated per donation event (in c.c.).",
+      "value_range": [
+        5.68,
+        11000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes total volume by frequency, providing a rate that may be more stable and discriminative than the raw volume.",
+      "leakage_risk": "low",
+      "formula": "V3 / V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate_per_month",
+      "type": "formula",
+      "description": "The number of donations per month, averaged over the donor's entire history.",
+      "value_range": [
+        0.01,
+        22.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the intensity of donation activity. A tree can easily find thresholds on this rate.",
+      "leakage_risk": "low",
+      "formula": "V2 / V4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_consistency_months",
+      "type": "formula",
+      "description": "The average number of months between donations. Lower values indicate more consistent donors.",
+      "value_range": [
+        0.04,
+        98.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides an alternative view of donation frequency that may capture different patterns.",
+      "leakage_risk": "low",
+      "formula": "V4 / V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_very_recent_donor",
+      "type": "formula",
+      "description": "Indicator that the last donation was within the last 3 months.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Creates a simple, powerful binary split for the model based on a key recency threshold.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 <= 3, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_highly_frequent_donor",
+      "type": "formula",
+      "description": "Indicator for donors with more than 10 total donations, identifying the most active group.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Isolates a potentially distinct group of highly committed donors for the tree model to split on.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 > 10, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_long_term_donor",
+      "type": "formula",
+      "description": "Indicator for a donation history longer than 4 years (48 months).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Creates a binary feature separating donors with a long history from newer ones.",
+      "leakage_risk": "low",
+      "formula": "np.where(V4 > 48, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_period_months",
+      "type": "formula",
+      "description": "The total duration in months between the first and last donation.",
+      "value_range": [
+        -21.0,
+        97.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the active lifespan of a donor, which can be a useful signal.",
+      "leakage_risk": "low",
+      "formula": "V4 - V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overdue_indicator",
+      "type": "formula",
+      "description": "Indicator that the time since last donation is greater than the donor's historical average time between donations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Creates a binary feature identifying donors who may have lapsed based on their own past behavior.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 > (V4 / V2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_total_volume",
+      "type": "formula",
+      "description": "Log-transformed total volume donated to reduce the effect of outliers and skewness.",
+      "value_range": [
+        5.52,
+        9.31
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Compresses the range of the monetary feature, which can sometimes help tree models find better split points.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_product",
+      "type": "formula",
+      "description": "An interaction term multiplying recency and frequency.",
+      "value_range": [
+        1.0,
+        1012.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly models the interaction between two important variables, which can save the tree model from having to learn it through multiple splits.",
+      "leakage_risk": "low",
+      "formula": "V1 * V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_profile_quadrant",
+      "type": "judgment",
+      "description": "Categorizes donors into four quadrants based on donation history length and frequency, using training set means as thresholds (V4 mean ~35, V2 mean ~5). 1: New/Infrequent, 2: Established/Frequent, 3: Established/Infrequent, 4: New/Frequent.",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "categorical",
+      "expected_model_benefit": "Provides a single categorical feature that summarizes a donor's high-level profile, allowing the tree to create rules for these distinct segments.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_recency_status",
+      "type": "judgment",
+      "description": "Ordinal status based on months since last donation. 1: Active (<= 4 months), 2: Cooling Off (5-12 months), 3: Lapsed (> 12 months).",
+      "value_range": [
+        1.0,
+        3.0
+      ],
+      "feature_family": "ordinal",
+      "expected_model_benefit": "Buckets the recency variable into interpretable, ordered groups that are easy for a tree model to split on.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "5dd04277d52253c5",
+  "metadata": {}
+}

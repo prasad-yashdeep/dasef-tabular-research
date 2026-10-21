@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "high_glucose_indicator",
+      "type": "formula",
+      "description": "Binary indicator for elevated plasma glucose levels above 140.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "clinical_threshold",
+      "expected_model_benefit": "Provides a direct split for tree models to isolate elevated glucose levels, reducing tree depth.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas > 140.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_age_interaction",
+      "type": "formula",
+      "description": "Product of body mass index and age, capturing the combined effect of aging and body mass.",
+      "value_range": [
+        0.0,
+        3571.2
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows tree models to capture the nonlinear interaction between age and BMI in a single split.",
+      "leakage_risk": "low",
+      "formula": "mass * age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_glucose_ratio",
+      "type": "formula",
+      "description": "Ratio of serum insulin to plasma glucose, indicating insulin response relative to circulating glucose.",
+      "value_range": [
+        0.0,
+        600.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Exposes the relative relationship between insulin and glucose, which trees cannot easily compute via orthogonal splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas > 0.0, insu / plas, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_zero_insulin",
+      "type": "formula",
+      "description": "Binary indicator for zero values in the insulin column, which often represent missing measurements.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "missingness_indicator",
+      "expected_model_benefit": "Explicitly flags potential missing data, allowing the tree to treat zero values differently from true low values.",
+      "leakage_risk": "low",
+      "formula": "np.where(insu == 0.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_zero_skin_fold",
+      "type": "formula",
+      "description": "Binary indicator for zero values in the triceps skin fold thickness column.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "missingness_indicator",
+      "expected_model_benefit": "Helps the tree model isolate rows with unrecorded skin fold thickness without searching for the zero threshold.",
+      "leakage_risk": "low",
+      "formula": "np.where(skin == 0.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_risk_bucket",
+      "type": "formula",
+      "description": "Ordinal bucketing of the diabetes pedigree function into low, medium, and high tiers.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Groups continuous pedigree scores into discrete risk tiers, simplifying the decision boundary for tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(pedi > 0.8, 2.0, np.where(pedi > 0.4, 1.0, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_category",
+      "type": "formula",
+      "description": "Categorizes diastolic blood pressure into low (<60), normal (60-90), and high (>90).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "clinical_threshold",
+      "expected_model_benefit": "Provides pre-computed clinical thresholds for blood pressure, reducing the number of splits needed to isolate abnormal ranges.",
+      "leakage_risk": "low",
+      "formula": "np.where(pres < 60.0, 0.0, np.where(pres > 90.0, 2.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pregnancy_age_ratio",
+      "type": "formula",
+      "description": "Number of pregnancies divided by age, representing the frequency of pregnancies over the patient's lifetime.",
+      "value_range": [
+        0.0,
+        0.62
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes pregnancy count by age, providing a rate that is more comparable across different age groups.",
+      "leakage_risk": "low",
+      "formula": "preg / age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_syndrome_score",
+      "type": "formula",
+      "description": "Composite score counting the presence of high BMI (>30), high blood pressure (>85), and high glucose (>130).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregates multiple risk factors into a single monotonic feature, allowing the tree to split on cumulative metabolic risk.",
+      "leakage_risk": "low",
+      "formula": "np.where(mass > 30.0, 1.0, 0.0) + np.where(pres > 85.0, 1.0, 0.0) + np.where(plas > 130.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_bmi_product",
+      "type": "formula",
+      "description": "Product of plasma glucose and body mass index.",
+      "value_range": [
+        0.0,
+        9820.8
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the synergistic effect of elevated glucose and high BMI, which a tree would otherwise need multiple deep splits to approximate.",
+      "leakage_risk": "low",
+      "formula": "plas * mass",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Ordinal bucketing of age into young adult (<30), middle-aged (30-50), and older adult (>50).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Discretizes age into demographic groups, helping tree models generalize across broad age brackets.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 30.0, 0.0, np.where(age < 50.0, 1.0, 2.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "health_status_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall metabolic health based on the combination of glucose, BMI, blood pressure, and age, scored from 0 (optimal) to 10 (severe risk).",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, non-linear evaluation of patient health that captures complex clinical patterns beyond simple arithmetic combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d0cee4b5c7fe1dec",
+  "metadata": {}
+}

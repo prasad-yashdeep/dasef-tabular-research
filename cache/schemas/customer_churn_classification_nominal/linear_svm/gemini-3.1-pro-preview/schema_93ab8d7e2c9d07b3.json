@@ -1,0 +1,190 @@
+{
+  "dataset_name": "customer_churn_classification_nominal",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_scaled",
+      "type": "formula",
+      "description": "Standardized age feature to provide a smooth normalized score.",
+      "value_range": [
+        -3.0,
+        7.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Improves convergence and margin optimization in linear models by centering and scaling the age distribution.",
+      "leakage_risk": "low",
+      "formula": "(age - 38.07) / 8.99",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "balance_salary_ratio",
+      "type": "formula",
+      "description": "Ratio of account balance to estimated salary, clipped to handle extreme outliers.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Provides a continuous severity measure of financial concentration, clipped to prevent extreme outliers from distorting the linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(balance / (estimatedsalary + 1.0), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_scaled",
+      "type": "formula",
+      "description": "Standardized credit score feature.",
+      "value_range": [
+        -4.0,
+        3.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Ensures the credit score contributes proportionally to the SVM margin without dominating due to its large raw magnitude.",
+      "leakage_risk": "low",
+      "formula": "(creditscore - 656.52) / 81.13",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "activity_product_interaction",
+      "type": "formula",
+      "description": "Interaction term between active member status and the number of products.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "engagement",
+      "expected_model_benefit": "Creates a weighted composite of engagement, scaling the number of products by the active status to highlight highly engaged users.",
+      "leakage_risk": "low",
+      "formula": "isactivemember * numofproducts",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_scaled",
+      "type": "formula",
+      "description": "Min-max scaled tenure feature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement",
+      "expected_model_benefit": "Scales the tenure feature to a [0, 1] range, ensuring smooth linear projections.",
+      "leakage_risk": "low",
+      "formula": "tenure / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "wealth_age_ratio",
+      "type": "formula",
+      "description": "Ratio of balance to age, representing a proxy for wealth accumulation rate.",
+      "value_range": [
+        0.0,
+        15000.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Represents wealth accumulation rate as a continuous ratio, offering a distinct financial metric for the linear model.",
+      "leakage_risk": "low",
+      "formula": "balance / (age + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "product_utilization_scaled",
+      "type": "formula",
+      "description": "Min-max scaled number of products.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement",
+      "expected_model_benefit": "Normalizes the discrete product count into a smooth [0, 1] score, ideal for linear SVM feature scaling.",
+      "leakage_risk": "low",
+      "formula": "(numofproducts - 1.0) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "germany_female_segment",
+      "type": "formula",
+      "description": "Binary interaction feature identifying female customers from Germany.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Captures a specific demographic intersection as a linear projection, allowing the SVM to assign a distinct weight to this subgroup.",
+      "leakage_risk": "low",
+      "formula": "germany * female",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "balance_credit_ratio",
+      "type": "formula",
+      "description": "Ratio of balance to credit score.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Combines balance and credit score into a single continuous ratio, providing a proxy for credit utilization.",
+      "leakage_risk": "low",
+      "formula": "balance / (creditscore + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "salary_scaled",
+      "type": "formula",
+      "description": "Standardized estimated salary feature.",
+      "value_range": [
+        -3.0,
+        2.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Centers and scales the salary distribution, preventing it from overwhelming other features in the SVM margin calculation.",
+      "leakage_risk": "low",
+      "formula": "(estimatedsalary - 112463.55) / 51244.23",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_engagement_index",
+      "type": "judgment",
+      "description": "Semantic assessment of the customer's overall financial engagement level, synthesizing their balance, salary, and product holdings into a single continuous score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "engagement",
+      "expected_model_benefit": "Provides a holistic, expert-like evaluation of financial involvement that a linear model can use as a strong, monotonic predictor.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_retention_score",
+      "type": "judgment",
+      "description": "Semantic evaluation of the customer's demographic profile (age, geography, gender) and its typical association with long-term account retention.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Encapsulates complex demographic interactions into a single continuous severity measure, simplifying the linear projection for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "93ab8d7e2c9d07b3",
+  "metadata": {}
+}

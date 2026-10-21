@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_water_quality_nys_20260406",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recent_heavy_rainfall_impact",
+      "type": "formula",
+      "description": "Measures the combined effect of recent 3-day precipitation and current turbidity, capturing potential runoff events.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "weather_water_interaction",
+      "expected_model_benefit": "Provides a continuous severity measure of recent runoff, which is highly relevant for linear models assessing water quality impacts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(precip_1d + precip_2d + precip_3d, 0.0, 5.0) * np.log1p(turb)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "livestock_proximity_density_index",
+      "type": "formula",
+      "description": "Ratio of combined livestock density to the distance of the nearest livestock facility, indicating proximity-weighted agricultural intensity.",
+      "value_range": [
+        0.0,
+        40.0
+      ],
+      "feature_family": "agricultural_intensity",
+      "expected_model_benefit": "Creates a smooth, normalized score representing agricultural pressure, allowing the SVM to easily weight proximity-based risks.",
+      "leakage_risk": "low",
+      "formula": "(cattle_density + livestock_poultry_density + livestock_pigs_density) / np.clip(anylivestock_min, 0.1, 20.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "human_source_risk_score",
+      "type": "formula",
+      "description": "Combines septic system density with the presence of wastewater infrastructure, stormwater outfalls, and human-specific bacteroides markers.",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "anthropogenic_sources",
+      "expected_model_benefit": "Aggregates multiple human-source indicators into a single weighted composite, reducing feature sparsity and improving linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(septic_adj_sepden_m2) * (wastewater_pa + stormwateroutfalls_pa + HF183_pa)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "environmental_survival_factor",
+      "type": "formula",
+      "description": "Ratio of water temperature to recent solar radiation, representing environmental conditions conducive to microbial persistence.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "environmental_conditions",
+      "expected_model_benefit": "Offers a continuous environmental suitability metric, helping the model capture non-linear survival dynamics through a simple ratio.",
+      "leakage_risk": "low",
+      "formula": "np.clip(w_t, 10.0, 30.0) / np.clip(avg_solar_1d + avg_solar_2d, 0.1, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "flow_turbidity_interaction",
+      "type": "formula",
+      "description": "Interaction between water flow and turbidity, highlighting conditions of active sediment transport.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "hydrology",
+      "expected_model_benefit": "Captures the synergistic effect of flow and suspended solids, providing a strong linear projection for transport mechanisms.",
+      "leakage_risk": "low",
+      "formula": "flow * np.sqrt(turb)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "developed_land_runoff_potential",
+      "type": "formula",
+      "description": "Product of impervious cover and 5-day precipitation, estimating the potential for urban or developed surface runoff.",
+      "value_range": [
+        0.0,
+        40.0
+      ],
+      "feature_family": "land_use_weather",
+      "expected_model_benefit": "Combines land use and weather into a single continuous feature, allowing the model to directly weight developed runoff events.",
+      "leakage_risk": "low",
+      "formula": "impcvr_idw_mean * np.log1p(precip_5d)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "agricultural_land_buffer_ratio",
+      "type": "formula",
+      "description": "Ratio of agricultural land cover (pasture and crops) to forested and wetland areas within a 60-meter buffer.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "land_cover_ratios",
+      "expected_model_benefit": "Provides a normalized ratio of contrasting land uses, offering a stable, scale-invariant feature for linear margins.",
+      "leakage_risk": "low",
+      "formula": "(buffer_60m_idw_X81 + buffer_60m_idw_X82) / np.clip(buffer_60m_idw_forwet, 1.0, 100.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "water_quality_degradation_index",
+      "type": "formula",
+      "description": "Composite index of water quality stress, penalizing low dissolved oxygen and deviations from neutral pH.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Creates a continuous penalty score for poor water quality, simplifying the model's ability to identify degraded conditions.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0.0, 8.0 - do) + np.abs(ph - 7.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "chronic_wetness_indicator",
+      "type": "formula",
+      "description": "Ratio of 30-day precipitation to estimated 30-day solar radiation, indicating prolonged wet and cloudy conditions.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "long_term_weather",
+      "expected_model_benefit": "Captures long-term climatic context as a smooth ratio, helping the model adjust baseline expectations for wetness.",
+      "leakage_risk": "low",
+      "formula": "precip_30d / np.clip(avg_solar_30d * 30.0, 1.0, 40.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ruminant_contamination_severity",
+      "type": "formula",
+      "description": "Scales the presence of ruminant-specific markers by the local density of cattle, sheep, and goats.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "microbial_source_tracking",
+      "expected_model_benefit": "Combines a binary marker with continuous density, creating a severity-weighted feature that improves margin resolution.",
+      "leakage_risk": "low",
+      "formula": "Rum2Bac_pa * np.log1p(cattle_density + livestock_goatsheep_density)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_site_vulnerability_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of the site's overall vulnerability based on surrounding land use, infrastructure, and historical water quality parameters.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_risk",
+      "expected_model_benefit": "Integrates complex, multi-faceted site characteristics into a single continuous score, providing a holistic risk assessment for the model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "seasonal_weather_risk_judgment",
+      "type": "judgment",
+      "description": "Semantic evaluation of the combined effect of seasonality, recent temperature trends, and precipitation patterns on environmental risk.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_risk",
+      "expected_model_benefit": "Synthesizes temporal and meteorological variables into a unified risk metric, simplifying the model's interpretation of weather patterns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ceb83e1bd6def9df",
+  "metadata": {}
+}

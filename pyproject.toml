@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dasef-tabular-research"
+version = "0.1.0"
+description = "Downstream-Aware Semantic Feature Engineering for tabular learning"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "python-dotenv>=1.0.1",
+  "pydantic>=2.7",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "scikit-learn>=1.4",
+  "scipy>=1.12",
+  "pyarrow>=15",
+  "openml>=0.14",
+  "xgboost>=2.0",
+  "lightgbm>=4.3",
+  "catboost>=1.2",
+  "matplotlib>=3.8",
+  "seaborn>=0.13",
+  "requests>=2.31",
+  "tenacity>=8.2",
+  "tqdm>=4.66",
+  "pyyaml>=6.0",
+  "tabulate>=0.9"
+]
+
+[project.optional-dependencies]
+baselines = [
+  "openfe>=0.0.12",
+  "autofeat>=2.1",
+  "featuretools>=1.31"
+]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.4",
+  "mypy>=1.9"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[project.scripts]
+dasef = "dasef.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

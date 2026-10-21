@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_zscore",
+      "type": "formula",
+      "description": "Z-score normalized recency of last donation (V1), centering and scaling for distance computation",
+      "value_range": [
+        -1.2,
+        2.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes V1 to unit variance so it contributes proportionally in Euclidean distance calculations",
+      "leakage_risk": "low",
+      "formula": "(V1 - 9.120805369127517) / 6.971574838386195",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_zscore",
+      "type": "formula",
+      "description": "Z-score normalized frequency of donations (V2), centering and scaling for distance computation",
+      "value_range": [
+        -0.87,
+        6.9
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes V2 to unit variance so it contributes proportionally in Euclidean distance calculations",
+      "leakage_risk": "low",
+      "formula": "(V2 - 5.771812080536913) / 5.544355380216525",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_zscore",
+      "type": "formula",
+      "description": "Z-score normalized total blood donated in cc (V3), centering and scaling for distance computation",
+      "value_range": [
+        -0.86,
+        6.9
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes V3 to unit variance so it contributes proportionally in Euclidean distance calculations",
+      "leakage_risk": "low",
+      "formula": "(V3 - 1442.9530201342282) / 1386.0888450541315",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_zscore",
+      "type": "formula",
+      "description": "Z-score normalized months since first donation (V4), centering and scaling for distance computation",
+      "value_range": [
+        -1.38,
+        2.6
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes V4 to unit variance so it contributes proportionally in Euclidean distance calculations",
+      "leakage_risk": "low",
+      "formula": "(V4 - 35.25503355704698) / 24.100782343372842",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mahalanobis_approx",
+      "type": "formula",
+      "description": "Approximate Mahalanobis distance from the training centroid using diagonal covariance (sum of squared z-scores)",
+      "value_range": [
+        0.01,
+        60.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures how far a point is from the overall data center in a scale-invariant way, improving neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "((V1 - 9.120805369127517) / 6.971574838386195) ** 2 + ((V2 - 5.771812080536913) / 5.544355380216525) ** 2 + ((V3 - 1442.9530201342282) / 1386.0888450541315) ** 2 + ((V4 - 35.25503355704698) / 24.100782343372842) ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate",
+      "type": "formula",
+      "description": "Ratio of donation frequency to total tenure (V2 / V4), representing average donation rate over time",
+      "value_range": [
+        0.01,
+        1.5
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Captures behavioral intensity as a single normalized ratio, reducing redundancy between V2 and V4 for distance metrics",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_total_donated",
+      "type": "formula",
+      "description": "Log-transformed total blood donated (log1p of V3), compressing the heavy right tail for better distance behavior",
+      "value_range": [
+        5.5,
+        9.3
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Reduces skewness in V3 so large donors do not dominate distance calculations disproportionately",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_ratio",
+      "type": "formula",
+      "description": "Ratio of recency (V1) to frequency (V2), indicating how long since last donation relative to total donations",
+      "value_range": [
+        0.02,
+        23.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Encodes the recency-frequency interaction as a single feature, improving separation in KNN neighborhood",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V2, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cc_per_donation",
+      "type": "formula",
+      "description": "Average blood volume per donation (V3 / V2), representing consistency of donation amount",
+      "value_range": [
+        200.0,
+        260.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Captures per-donation volume consistency; donors with similar per-donation volumes cluster together",
+      "leakage_risk": "low",
+      "formula": "V3 / np.maximum(V2, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_tenure_ratio",
+      "type": "formula",
+      "description": "Ratio of recency (V1) to total tenure (V4), indicating how recently donated relative to total history length",
+      "value_range": [
+        0.01,
+        1.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes recency by tenure length, creating a relative recency measure that improves neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_activity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of overall donor activity level combining recency, frequency, and volume signals into a composite score from 0 (inactive) to 1 (highly active)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a holistic activity signal that helps KNN identify similar behavioral profiles across multiple dimensions",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_regularity_index",
+      "type": "judgment",
+      "description": "Semantic assessment of how regular and consistent the donation pattern is, based on the relationship between frequency, tenure, and recency; scored 0 (irregular) to 1 (very regular)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Captures regularity patterns that group similar donors together in KNN space, improving neighborhood purity",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "7019cd525482bf23",
+  "metadata": {}
+}

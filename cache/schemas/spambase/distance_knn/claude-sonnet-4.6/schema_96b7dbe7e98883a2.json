@@ -1,0 +1,190 @@
+{
+  "dataset_name": "spambase",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "word_freq_l2_norm",
+      "type": "formula",
+      "description": "L2 norm of all 48 word frequency features, capturing overall word frequency magnitude for scale-normalized distance computation",
+      "value_range": [
+        0.0,
+        35.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Normalizes word frequency space for KNN distance calculations, reducing bias from high-magnitude outliers",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(word_freq_0**2 + word_freq_1**2 + word_freq_2**2 + word_freq_3**2 + word_freq_4**2 + word_freq_5**2 + word_freq_6**2 + word_freq_7**2 + word_freq_8**2 + word_freq_9**2 + word_freq_10**2 + word_freq_11**2 + word_freq_12**2 + word_freq_13**2 + word_freq_14**2 + word_freq_15**2 + word_freq_16**2 + word_freq_17**2 + word_freq_18**2 + word_freq_19**2 + word_freq_20**2 + word_freq_21**2 + word_freq_22**2 + word_freq_23**2 + word_freq_24**2 + word_freq_25**2 + word_freq_26**2 + word_freq_27**2 + word_freq_28**2 + word_freq_29**2 + word_freq_30**2 + word_freq_31**2 + word_freq_32**2 + word_freq_33**2 + word_freq_34**2 + word_freq_35**2 + word_freq_36**2 + word_freq_37**2 + word_freq_38**2 + word_freq_39**2 + word_freq_40**2 + word_freq_41**2 + word_freq_42**2 + word_freq_43**2 + word_freq_44**2 + word_freq_45**2 + word_freq_46**2 + word_freq_47**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "char_freq_l2_norm",
+      "type": "formula",
+      "description": "L2 norm of all 6 character frequency features, capturing punctuation and special character usage intensity",
+      "value_range": [
+        0.0,
+        35.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a compact distance-relevant summary of character-level features for KNN neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(char_freq_0**2 + char_freq_1**2 + char_freq_2**2 + char_freq_3**2 + char_freq_4**2 + char_freq_5**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_run_log_average",
+      "type": "formula",
+      "description": "Log-transformed average capital run length to compress the heavy-tailed distribution for better distance metrics",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Reduces the influence of extreme capital run length outliers in KNN distance calculations",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_average)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_run_log_longest",
+      "type": "formula",
+      "description": "Log-transformed longest capital run length to normalize the highly skewed distribution",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes extreme values in longest capital run for improved KNN distance geometry",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_longest)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_run_log_total",
+      "type": "formula",
+      "description": "Log-transformed total capital run length to normalize the highly skewed distribution",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes total capital run count for improved KNN distance geometry",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_total)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "word_freq_sparsity",
+      "type": "formula",
+      "description": "Fraction of word frequency features that are exactly zero, measuring how sparse the word usage is",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Captures sparsity structure that differentiates email types in KNN neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "(np.where(word_freq_0 == 0, 1, 0) + np.where(word_freq_1 == 0, 1, 0) + np.where(word_freq_2 == 0, 1, 0) + np.where(word_freq_3 == 0, 1, 0) + np.where(word_freq_4 == 0, 1, 0) + np.where(word_freq_5 == 0, 1, 0) + np.where(word_freq_6 == 0, 1, 0) + np.where(word_freq_7 == 0, 1, 0) + np.where(word_freq_8 == 0, 1, 0) + np.where(word_freq_9 == 0, 1, 0) + np.where(word_freq_10 == 0, 1, 0) + np.where(word_freq_11 == 0, 1, 0) + np.where(word_freq_12 == 0, 1, 0) + np.where(word_freq_13 == 0, 1, 0) + np.where(word_freq_14 == 0, 1, 0) + np.where(word_freq_15 == 0, 1, 0) + np.where(word_freq_16 == 0, 1, 0) + np.where(word_freq_17 == 0, 1, 0) + np.where(word_freq_18 == 0, 1, 0) + np.where(word_freq_19 == 0, 1, 0) + np.where(word_freq_20 == 0, 1, 0) + np.where(word_freq_21 == 0, 1, 0) + np.where(word_freq_22 == 0, 1, 0) + np.where(word_freq_23 == 0, 1, 0) + np.where(word_freq_24 == 0, 1, 0) + np.where(word_freq_25 == 0, 1, 0) + np.where(word_freq_26 == 0, 1, 0) + np.where(word_freq_27 == 0, 1, 0) + np.where(word_freq_28 == 0, 1, 0) + np.where(word_freq_29 == 0, 1, 0) + np.where(word_freq_30 == 0, 1, 0) + np.where(word_freq_31 == 0, 1, 0) + np.where(word_freq_32 == 0, 1, 0) + np.where(word_freq_33 == 0, 1, 0) + np.where(word_freq_34 == 0, 1, 0) + np.where(word_freq_35 == 0, 1, 0) + np.where(word_freq_36 == 0, 1, 0) + np.where(word_freq_37 == 0, 1, 0) + np.where(word_freq_38 == 0, 1, 0) + np.where(word_freq_39 == 0, 1, 0) + np.where(word_freq_40 == 0, 1, 0) + np.where(word_freq_41 == 0, 1, 0) + np.where(word_freq_42 == 0, 1, 0) + np.where(word_freq_43 == 0, 1, 0) + np.where(word_freq_44 == 0, 1, 0) + np.where(word_freq_45 == 0, 1, 0) + np.where(word_freq_46 == 0, 1, 0) + np.where(word_freq_47 == 0, 1, 0)) / 48.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "char_to_word_ratio",
+      "type": "formula",
+      "description": "Ratio of total character frequency signal to total word frequency signal, capturing relative punctuation density",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures the balance between character-level and word-level features as a discriminative ratio for KNN",
+      "leakage_risk": "low",
+      "formula": "(char_freq_0 + char_freq_1 + char_freq_2 + char_freq_3 + char_freq_4 + char_freq_5) / np.maximum(0.01, word_freq_0 + word_freq_1 + word_freq_2 + word_freq_3 + word_freq_4 + word_freq_5 + word_freq_6 + word_freq_7 + word_freq_8 + word_freq_9 + word_freq_10 + word_freq_11 + word_freq_12 + word_freq_13 + word_freq_14 + word_freq_15 + word_freq_16 + word_freq_17 + word_freq_18 + word_freq_19 + word_freq_20 + word_freq_21 + word_freq_22 + word_freq_23 + word_freq_24 + word_freq_25 + word_freq_26 + word_freq_27 + word_freq_28 + word_freq_29 + word_freq_30 + word_freq_31 + word_freq_32 + word_freq_33 + word_freq_34 + word_freq_35 + word_freq_36 + word_freq_37 + word_freq_38 + word_freq_39 + word_freq_40 + word_freq_41 + word_freq_42 + word_freq_43 + word_freq_44 + word_freq_45 + word_freq_46 + word_freq_47)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_burst_ratio",
+      "type": "formula",
+      "description": "Ratio of longest capital run to average capital run length, indicating burstiness of capitalization",
+      "value_range": [
+        1.0,
+        200.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Captures capitalization burstiness pattern as a discriminative distance feature for KNN",
+      "leakage_risk": "low",
+      "formula": "np.clip(capital_run_length_longest / np.maximum(1.0, capital_run_length_average), 1.0, 200.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_freq_word_count",
+      "type": "formula",
+      "description": "Count of word frequency features exceeding 1.0 percent, indicating how many words appear frequently",
+      "value_range": [
+        0.0,
+        48.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a cluster indicator for emails with many high-frequency words, improving KNN neighborhood separation",
+      "leakage_risk": "low",
+      "formula": "np.where(word_freq_0 > 1.0, 1, 0) + np.where(word_freq_1 > 1.0, 1, 0) + np.where(word_freq_2 > 1.0, 1, 0) + np.where(word_freq_3 > 1.0, 1, 0) + np.where(word_freq_4 > 1.0, 1, 0) + np.where(word_freq_5 > 1.0, 1, 0) + np.where(word_freq_6 > 1.0, 1, 0) + np.where(word_freq_7 > 1.0, 1, 0) + np.where(word_freq_8 > 1.0, 1, 0) + np.where(word_freq_9 > 1.0, 1, 0) + np.where(word_freq_10 > 1.0, 1, 0) + np.where(word_freq_11 > 1.0, 1, 0) + np.where(word_freq_12 > 1.0, 1, 0) + np.where(word_freq_13 > 1.0, 1, 0) + np.where(word_freq_14 > 1.0, 1, 0) + np.where(word_freq_15 > 1.0, 1, 0) + np.where(word_freq_16 > 1.0, 1, 0) + np.where(word_freq_17 > 1.0, 1, 0) + np.where(word_freq_18 > 1.0, 1, 0) + np.where(word_freq_19 > 1.0, 1, 0) + np.where(word_freq_20 > 1.0, 1, 0) + np.where(word_freq_21 > 1.0, 1, 0) + np.where(word_freq_22 > 1.0, 1, 0) + np.where(word_freq_23 > 1.0, 1, 0) + np.where(word_freq_24 > 1.0, 1, 0) + np.where(word_freq_25 > 1.0, 1, 0) + np.where(word_freq_26 > 1.0, 1, 0) + np.where(word_freq_27 > 1.0, 1, 0) + np.where(word_freq_28 > 1.0, 1, 0) + np.where(word_freq_29 > 1.0, 1, 0) + np.where(word_freq_30 > 1.0, 1, 0) + np.where(word_freq_31 > 1.0, 1, 0) + np.where(word_freq_32 > 1.0, 1, 0) + np.where(word_freq_33 > 1.0, 1, 0) + np.where(word_freq_34 > 1.0, 1, 0) + np.where(word_freq_35 > 1.0, 1, 0) + np.where(word_freq_36 > 1.0, 1, 0) + np.where(word_freq_37 > 1.0, 1, 0) + np.where(word_freq_38 > 1.0, 1, 0) + np.where(word_freq_39 > 1.0, 1, 0) + np.where(word_freq_40 > 1.0, 1, 0) + np.where(word_freq_41 > 1.0, 1, 0) + np.where(word_freq_42 > 1.0, 1, 0) + np.where(word_freq_43 > 1.0, 1, 0) + np.where(word_freq_44 > 1.0, 1, 0) + np.where(word_freq_45 > 1.0, 1, 0) + np.where(word_freq_46 > 1.0, 1, 0) + np.where(word_freq_47 > 1.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "exclamation_dollar_intensity",
+      "type": "formula",
+      "description": "Combined log-transformed intensity of exclamation mark and dollar sign character frequencies, which are strong indicators of promotional content",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures high-signal character patterns in a scale-normalized form for improved KNN distance discrimination",
+      "leakage_risk": "low",
+      "formula": "np.log1p(char_freq_3 + char_freq_4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_feature_magnitude",
+      "type": "formula",
+      "description": "Semantic judgment score estimating the overall intensity of email features combining word frequencies, character frequencies, and capital run statistics into a unified magnitude score",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a holistic distance anchor for KNN by summarizing the overall feature intensity in a single interpretable score",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.sqrt(word_freq_0**2 + word_freq_1**2 + word_freq_2**2 + word_freq_3**2 + word_freq_4**2 + word_freq_5**2 + word_freq_6**2 + word_freq_7**2 + word_freq_8**2 + word_freq_9**2 + word_freq_10**2 + word_freq_11**2 + word_freq_12**2 + word_freq_13**2 + word_freq_14**2 + word_freq_15**2 + word_freq_16**2 + word_freq_17**2 + word_freq_18**2 + word_freq_19**2 + word_freq_20**2 + word_freq_21**2 + word_freq_22**2 + word_freq_23**2 + word_freq_24**2 + word_freq_25**2 + word_freq_26**2 + word_freq_27**2 + word_freq_28**2 + word_freq_29**2 + word_freq_30**2 + word_freq_31**2 + word_freq_32**2 + word_freq_33**2 + word_freq_34**2 + word_freq_35**2 + word_freq_36**2 + word_freq_37**2 + word_freq_38**2 + word_freq_39**2 + word_freq_40**2 + word_freq_41**2 + word_freq_42**2 + word_freq_43**2 + word_freq_44**2 + word_freq_45**2 + word_freq_46**2 + word_freq_47**2) + np.sqrt(char_freq_0**2 + char_freq_1**2 + char_freq_2**2 + char_freq_3**2 + char_freq_4**2 + char_freq_5**2) + np.log1p(capital_run_length_total) / 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "email_formality_score",
+      "type": "judgment",
+      "description": "Semantic assessment of email formality based on the balance between capital run intensity, punctuation density, and word frequency diversity. Higher scores indicate more formal, structured emails with moderate capitalization and lower punctuation density. Lower scores indicate informal or promotional emails with high capitalization bursts and heavy punctuation.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a human-interpretable cluster indicator that separates formal from informal email styles, improving KNN neighborhood coherence",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "96b7dbe7e98883a2",
+  "metadata": {}
+}

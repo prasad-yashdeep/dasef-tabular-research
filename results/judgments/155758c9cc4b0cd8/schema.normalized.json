@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_cost_score",
+      "type": "formula",
+      "description": "Sum of buying price and maintenance cost ordinals; higher means more expensive overall.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "cost_aggregate",
+      "expected_model_benefit": "Allows trees to split on overall affordability in a single threshold.",
+      "leakage_risk": "low",
+      "formula": "buying + maint",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_imbalance",
+      "type": "formula",
+      "description": "Absolute difference between buying and maintenance cost ordinals; captures mismatched pricing profiles.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cost_aggregate",
+      "expected_model_benefit": "Trees can isolate cars where buying and maintenance diverge sharply.",
+      "leakage_risk": "low",
+      "formula": "np.abs(buying - maint)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "utility_score",
+      "type": "formula",
+      "description": "Combined practical utility from passenger capacity, luggage capacity, and safety.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "utility_aggregate",
+      "expected_model_benefit": "Single split captures overall practicality of the vehicle.",
+      "leakage_risk": "low",
+      "formula": "persons + lug_boot + safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_unsafe",
+      "type": "formula",
+      "description": "Indicator that safety rating is at the lowest level (0).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety_indicator",
+      "expected_model_benefit": "Low safety is a strong disqualifier; explicit boolean aids tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(safety == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_two_person",
+      "type": "formula",
+      "description": "Indicator that the car only fits 2 persons (persons == 0).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capacity_indicator",
+      "expected_model_benefit": "Two-person capacity is a major usability constraint; explicit flag accelerates tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(persons == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_safety_flag",
+      "type": "formula",
+      "description": "Indicator that safety is rated at the top level (2).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety_indicator",
+      "expected_model_benefit": "High safety often required for top evaluations; boolean simplifies splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(safety == 2, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_safety_interaction",
+      "type": "formula",
+      "description": "Product of persons and safety, capturing that both are needed for usability.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Nonlinear interaction; zero when either is absent, high when both are high.",
+      "leakage_risk": "low",
+      "formula": "persons * safety",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "affordability_utility_interaction",
+      "type": "formula",
+      "description": "Utility score divided by (1 + total cost); higher means more utility per cost unit.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures value-for-money trade-off useful for ordinal evaluations.",
+      "leakage_risk": "low",
+      "formula": "(persons + lug_boot + safety) / (1 + buying + maint)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expensive_flag",
+      "type": "formula",
+      "description": "Indicator that both buying and maintenance are in the top two cost tiers (>=2).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cost_indicator",
+      "expected_model_benefit": "Identifies uniformly expensive cars in one boolean split.",
+      "leakage_risk": "low",
+      "formula": "np.where((buying >= 2) & (maint >= 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "premium_practical_flag",
+      "type": "formula",
+      "description": "Indicator that the car has high safety, can carry 4+ persons, and has a big boot.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "utility_indicator",
+      "expected_model_benefit": "Captures combinations associated with very good evaluations in a single feature.",
+      "leakage_risk": "low",
+      "formula": "np.where((safety == 2) & (persons >= 1) & (lug_boot >= 1), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "min_practical_dimension",
+      "type": "formula",
+      "description": "Minimum among persons, lug_boot, and safety; the weakest practical dimension dominates.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "utility_aggregate",
+      "expected_model_benefit": "Bottleneck logic: if any practical attribute is 0, overall usability is constrained.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(np.minimum(persons, lug_boot), safety)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_desirability_judgment",
+      "type": "judgment",
+      "description": "Semantic ordinal grouping of car desirability based on the combination of low cost, sufficient capacity, and safety. Encoded as 0=poor (unsafe or 2-person), 1=mediocre (adequate but expensive or unbalanced), 2=acceptable (balanced utility and cost), 3=excellent (low cost, high utility, high safety).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a coarse ordinal bucket trees can split decisively without exploring many feature combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "19000dd15738d03f",
+  "metadata": {}
+}

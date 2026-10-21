@@ -1,0 +1,190 @@
+{
+  "dataset_name": "kr_vs_kp",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "black_king_confinement_score",
+      "type": "formula",
+      "description": "Weighted 0-1 severity of black-king confinement from row flags for blockage, lack of safe moves, edge or corner placement, separation, contact, and distant opposition.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "king_confinement_composite",
+      "expected_model_benefit": "Gives a dense monotone coordinate from sparse binary endgame flags, helping a linear/SVM margin reflect escalating confinement.",
+      "leakage_risk": "low",
+      "formula": "(1.2*np.where(bkblk == 't', 1.0, 0.0) + 1.0*np.where(bknwy == 't', 1.0, 0.0) + 0.8*np.where(bkon8 == 't', 1.0, 0.0) + 0.7*np.where(bkona == 't', 1.0, 0.0) + 0.9*np.where(bkspr == 't', 1.0, 0.0) + 0.6*np.where(cntxt == 't', 1.0, 0.0) + 0.8*np.where(dsopp == 't', 1.0, 0.0)) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "king_contact_threat_score",
+      "type": "formula",
+      "description": "Normalized density of direct contact or capture-related row flags around the kings, pawn, queen square, and rook.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "contact_threat_composite",
+      "expected_model_benefit": "Linearizes several sparse contact events into a continuous threat axis for smoother margin placement.",
+      "leakage_risk": "low",
+      "formula": "(0.9*np.where(bkxbq == 't', 1.0, 0.0) + 0.9*np.where(bkxcr == 't', 1.0, 0.0) + 1.0*np.where(bkxwp == 't', 1.0, 0.0) + 0.8*np.where(blxwp == 't', 1.0, 0.0) + 0.8*np.where(bxqsq == 't', 1.0, 0.0) + 0.8*np.where(rkxwp == 't', 1.0, 0.0) + 0.8*np.where(rxmsq == 't', 1.0, 0.0) + 0.5*np.where(qxmsq == 't', 1.0, 0.0)) / 6.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "white_king_support_score",
+      "type": "formula",
+      "description": "Weighted activity and support score for the white king from contact, near-a8, checking, overlap, position, and edge-turn indicators.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "king_support_composite",
+      "expected_model_benefit": "Captures a smooth support gradient rather than several independent switches, aiding linear/SVM margins.",
+      "leakage_risk": "low",
+      "formula": "(0.9*np.where(wkcti == 't', 1.0, 0.0) + 0.8*np.where(wkna8 == 't', 1.0, 0.0) + 0.8*np.where(wknck == 't', 1.0, 0.0) + 1.0*np.where(wkovl == 't', 1.0, 0.0) + 1.0*np.where(wkpos == 't', 1.0, 0.0) + 0.6*np.where(wtoeg == 't', 1.0, 0.0)) / 5.1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rook_activity_alignment_score",
+      "type": "formula",
+      "description": "Rook activity and alignment score from rank, restriction, immobilization, pawn attack, queen-square control, and skewer cues.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "rook_alignment_composite",
+      "expected_model_benefit": "Creates an ordered rook-pressure coordinate that a linear/SVM margin can weight directly.",
+      "leakage_risk": "low",
+      "formula": "(0.9*np.where(r2ar8 == 't', 1.0, 0.0) + 0.8*np.where(reskr == 't', 1.0, 0.0) + 0.9*np.where(rimmx == 't', 1.0, 0.0) + 0.7*np.where(rkxwp == 't', 1.0, 0.0) + 0.7*np.where(rxmsq == 't', 1.0, 0.0) + 0.8*np.where(skewr == 't', 1.0, 0.0) + 0.6*np.where(skrxp == 't', 1.0, 0.0)) / 5.4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "promotion_path_pressure_score",
+      "type": "formula",
+      "description": "Promotion-path pressure around eighth-rank, a-file, queen-square, white-king-near-a8, and rook-to-a8 cues.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "promotion_path_composite",
+      "expected_model_benefit": "Converts several geometry flags into one bounded path-pressure coordinate for linear separation.",
+      "leakage_risk": "low",
+      "formula": "(0.9*np.where(bkon8 == 't', 1.0, 0.0) + 0.8*np.where(bkona == 't', 1.0, 0.0) + 0.8*np.where(bxqsq == 't', 1.0, 0.0) + 0.9*np.where(qxmsq == 't', 1.0, 0.0) + 0.8*np.where(rxmsq == 't', 1.0, 0.0) + 0.7*np.where(wkna8 == 't', 1.0, 0.0) + 0.6*np.where(r2ar8 == 't', 1.0, 0.0)) / 5.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "simplification_trap_pressure_score",
+      "type": "formula",
+      "description": "Severity of simplification, stalemate, checking, multiple-check, and skewer-trap motifs.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "tactical_trap_composite",
+      "expected_model_benefit": "Provides a rare-event severity axis so linear/SVM margins can react to tactical traps without many isolated coefficients.",
+      "leakage_risk": "low",
+      "formula": "(0.9*np.where(simpl == 't', 1.0, 0.0) + 1.0*np.where(stlmt == 't', 1.0, 0.0) + 0.8*np.where(thrsk == 't', 1.0, 0.0) + 0.8*np.where(mulch == 't', 1.0, 0.0) + 0.7*np.where(hdchk == 't', 1.0, 0.0) + 0.8*np.where(skach == 't', 1.0, 0.0) + 0.7*np.where(reskd == 't', 1.0, 0.0)) / 5.7",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rarity_weighted_tactical_density",
+      "type": "formula",
+      "description": "Training-fold frequency weighted density of rare tactical t states, using only allowed frequency metadata and current row flags.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "rarity_weighted_sparse_events",
+      "expected_model_benefit": "Helps linear/SVM margins assign stable influence to sparse motifs while keeping the feature bounded and smooth.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(958.0 / 5.0)*np.where(hdchk == 't', 1.0, 0.0) + np.log1p(958.0 / 3.0)*np.where(skach == 't', 1.0, 0.0) + np.log1p(958.0 / 9.0)*np.where(reskd == 't', 1.0, 0.0) + np.log1p(958.0 / 23.0)*np.where(stlmt == 't', 1.0, 0.0) + np.log1p(958.0 / 25.0)*np.where(qxmsq == 't', 1.0, 0.0) + np.log1p(958.0 / 34.0)*np.where(thrsk == 't', 1.0, 0.0) + np.log1p(958.0 / 46.0)*np.where(rxmsq == 't', 1.0, 0.0) + np.log1p(958.0 / 49.0)*np.where(mulch == 't', 1.0, 0.0)) / (np.log1p(958.0 / 5.0) + np.log1p(958.0 / 3.0) + np.log1p(958.0 / 9.0) + np.log1p(958.0 / 23.0) + np.log1p(958.0 / 25.0) + np.log1p(958.0 / 34.0) + np.log1p(958.0 / 46.0) + np.log1p(958.0 / 49.0))",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "tri_state_position_projection",
+      "type": "formula",
+      "description": "Signed projection of the non-binary descriptors: king-attack relation, pawn-distance code, and edge-turn code.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "multi_state_projection",
+      "expected_model_benefit": "Preserves ordinal contrast from multi-state descriptors as one nearly linear axis.",
+      "leakage_risk": "low",
+      "formula": "(np.where(katri == 'w', 1.0, np.where(katri == 'b', -1.0, 0.0)) + 0.5*np.where(dwipd == 'g', 1.0, -1.0) + 0.3*np.where(wtoeg == 't', 1.0, -1.0)) / 1.8",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_support_balance",
+      "type": "formula",
+      "description": "Signed balance between white-king support cues and immediate pawn or queen-square contact cues.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "signed_balance",
+      "expected_model_benefit": "Provides an interpretable contrast feature that a linear margin can use without inferring the subtraction from separate sparse flags.",
+      "leakage_risk": "low",
+      "formula": "(np.where(wkcti == 't', 1.0, 0.0) + np.where(wknck == 't', 1.0, 0.0) + np.where(wkovl == 't', 1.0, 0.0) + np.where(wkpos == 't', 1.0, 0.0)) / 4.0 - (np.where(bkxwp == 't', 1.0, 0.0) + np.where(blxwp == 't', 1.0, 0.0) + np.where(rkxwp == 't', 1.0, 0.0) + np.where(bxqsq == 't', 1.0, 0.0)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "net_to_escape_ratio",
+      "type": "formula",
+      "description": "Bounded ratio-like measure comparing containment cues with escape, capture, simplification, and stalemate resources.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "bounded_ratio",
+      "expected_model_benefit": "Transforms nonlinear competition between containment and release cues into a single bounded coordinate.",
+      "leakage_risk": "low",
+      "formula": "(1.0*np.where(bkblk == 't', 1.0, 0.0) + 1.0*np.where(bknwy == 't', 1.0, 0.0) + 0.8*np.where(bkspr == 't', 1.0, 0.0) + 0.7*np.where(cntxt == 't', 1.0, 0.0) + 0.7*np.where(dsopp == 't', 1.0, 0.0) + 0.8*np.where(rimmx == 't', 1.0, 0.0) + 0.7*np.where(wkpos == 't', 1.0, 0.0)) / (1.0*np.where(bkblk == 't', 1.0, 0.0) + 1.0*np.where(bknwy == 't', 1.0, 0.0) + 0.8*np.where(bkspr == 't', 1.0, 0.0) + 0.7*np.where(cntxt == 't', 1.0, 0.0) + 0.7*np.where(dsopp == 't', 1.0, 0.0) + 0.8*np.where(rimmx == 't', 1.0, 0.0) + 0.7*np.where(wkpos == 't', 1.0, 0.0) + 1.0*np.where(bkxwp == 't', 1.0, 0.0) + 0.8*np.where(bxqsq == 't', 1.0, 0.0) + 0.8*np.where(simpl == 't', 1.0, 0.0) + 0.8*np.where(stlmt == 't', 1.0, 0.0) + 0.7*np.where(reskd == 't', 1.0, 0.0) + 0.7*np.where(reskr == 't', 1.0, 0.0) + 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_forcing_plan_coherence",
+      "type": "judgment",
+      "description": "Expert or language-model score from 0.0 to 1.0 assessing how coherent the row's forcing plan appears after reading the 36 descriptors; high when confinement, rook activity, and support cues reinforce one another.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_plan_assessment",
+      "expected_model_benefit": "Adds a smooth expert-prior coordinate for high-order motif agreement that simple additive formulas may miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_defensive_resilience",
+      "type": "judgment",
+      "description": "Expert or language-model score from 0.0 to 1.0 assessing defensive resilience from escape, capture, simplification, stalemate, and checking cues in the same row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_resilience_assessment",
+      "expected_model_benefit": "Supplies a monotone counter-pressure coordinate for complex holding resources, useful as an interpretable axis in a linear/SVM margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f6a77690850ad9cc",
+  "metadata": {}
+}

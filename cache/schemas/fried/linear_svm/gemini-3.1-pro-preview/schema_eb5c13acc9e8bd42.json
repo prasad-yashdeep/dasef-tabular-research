@@ -1,0 +1,190 @@
+{
+  "dataset_name": "fried",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "x1_x2_product",
+      "type": "formula",
+      "description": "Product of X1 and X2, capturing their linear interaction.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear SVM to capture the multiplicative interaction between X1 and X2 without requiring a non-linear kernel.",
+      "leakage_risk": "low",
+      "formula": "X1 * X2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_squared_deviation",
+      "type": "formula",
+      "description": "Squared deviation of X3 from its center point of 0.5.",
+      "value_range": [
+        0.0,
+        0.25
+      ],
+      "feature_family": "polynomial",
+      "expected_model_benefit": "Transforms the U-shaped relationship of X3 around its center into a linear feature, enabling the SVM to fit it with a single weight.",
+      "leakage_risk": "low",
+      "formula": "(X3 - 0.5)**2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_x5_sum",
+      "type": "formula",
+      "description": "Sum of X4 and X5.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Combines two potentially additive features into a single smooth composite, reducing the dimensionality and stabilizing the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "X4 + X5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_squared",
+      "type": "formula",
+      "description": "Squared value of X1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "polynomial",
+      "expected_model_benefit": "Provides a quadratic transformation of X1, allowing the linear model to approximate non-linear curves along this dimension.",
+      "leakage_risk": "low",
+      "formula": "X1 ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x2_squared",
+      "type": "formula",
+      "description": "Squared value of X2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "polynomial",
+      "expected_model_benefit": "Provides a quadratic transformation of X2, allowing the linear model to approximate non-linear curves along this dimension.",
+      "leakage_risk": "low",
+      "formula": "X2 ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x2_interaction_squared",
+      "type": "formula",
+      "description": "Squared product of X1 and X2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "polynomial_interaction",
+      "expected_model_benefit": "Higher-order interaction term that gives the linear SVM flexibility to fit steeper non-linear gradients in the X1-X2 plane.",
+      "leakage_risk": "low",
+      "formula": "(X1 * X2) ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_abs_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of X3 from its center point of 0.5.",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Creates a V-shaped continuous severity measure from the center of X3, useful for margin-based linear classifiers.",
+      "leakage_risk": "low",
+      "formula": "np.abs(X3 - 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_x5_product",
+      "type": "formula",
+      "description": "Product of X4 and X5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the interaction between X4 and X5, providing an additional orthogonal feature for the linear SVM.",
+      "leakage_risk": "low",
+      "formula": "X4 * X5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "signal_features_mean",
+      "type": "formula",
+      "description": "Mean of the first five features (X1 to X5).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Averaged composite of the first five features, providing a smooth, normalized score that can act as a strong linear baseline.",
+      "leakage_risk": "low",
+      "formula": "(X1 + X2 + X3 + X4 + X5) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "noise_features_mean",
+      "type": "formula",
+      "description": "Mean of the last five features (X6 to X10).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Averaged composite of the last five features, which can help the model identify and potentially down-weight background noise.",
+      "leakage_risk": "low",
+      "formula": "(X6 + X7 + X8 + X9 + X10) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "signal_complexity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the non-linear interaction potential among the first five features, evaluating their combined magnitude and variance.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic, non-formulaic measure of signal complexity that can help the SVM adjust its margin in dense regions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "noise_level_estimate",
+      "type": "judgment",
+      "description": "Semantic evaluation of the background noise level based on the last five features, assessing their deviation from expected uniform behavior.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Acts as a continuous severity measure for noise, allowing the linear SVM to potentially regularize or adapt its confidence.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "eb5c13acc9e8bd42",
+  "metadata": {}
+}

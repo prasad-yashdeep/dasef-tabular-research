@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "donation_frequency_ratio",
+      "type": "formula",
+      "description": "Ratio of total donations (V2) to months since first donation (V1), capturing donation rate over time",
+      "value_range": [
+        0.04,
+        21.0
+      ],
+      "feature_family": "donation_behavior",
+      "expected_model_benefit": "Captures donation intensity; frequent donors relative to tenure may differ in transfusion likelihood",
+      "leakage_risk": "low",
+      "formula": "V2 / V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of recency (V1): 1=very recent (1-3), 2=recent (4-8), 3=moderate (9-15), 4=distant (16+)",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "recency",
+      "expected_model_benefit": "Tree-splittable ordinal encoding of recency for direct threshold splits",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 <= 3, 1, np.where(V1 <= 8, 2, np.where(V1 <= 15, 3, 4)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_per_donation",
+      "type": "formula",
+      "description": "Average blood volume donated per visit (V3 / V2), measuring per-donation volume consistency",
+      "value_range": [
+        100.0,
+        1500.0
+      ],
+      "feature_family": "donation_volume",
+      "expected_model_benefit": "Normalizes total volume by frequency; consistent donors cluster around 250cc per donation",
+      "leakage_risk": "low",
+      "formula": "V3 / V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_deviation_from_standard",
+      "type": "formula",
+      "description": "Absolute deviation of average volume per donation from standard 250cc unit",
+      "value_range": [
+        0.0,
+        1250.0
+      ],
+      "feature_family": "donation_volume",
+      "expected_model_benefit": "Flags donors whose per-donation volume deviates from standard, indicating data anomalies or irregular donations",
+      "leakage_risk": "low",
+      "formula": "np.abs(V3 / V2 - 250.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_to_recency_ratio",
+      "type": "formula",
+      "description": "Ratio of time since last donation (V1) to time since first donation (V4), measuring recency relative to tenure",
+      "value_range": [
+        0.01,
+        1.0
+      ],
+      "feature_family": "temporal_pattern",
+      "expected_model_benefit": "Low ratio means donor donated recently relative to their history; high ratio means lapsed donor",
+      "leakage_risk": "low",
+      "formula": "V1 / V4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_recent_donor",
+      "type": "formula",
+      "description": "Binary flag: 1 if last donation was within 6 months (V1 <= 6), else 0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency",
+      "expected_model_benefit": "Direct boolean split for tree models on recency threshold",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 <= 6, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_frequency_donor",
+      "type": "formula",
+      "description": "Binary flag: 1 if total donations (V2) >= 5, indicating habitual donor behavior",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "donation_behavior",
+      "expected_model_benefit": "Separates habitual from occasional donors for tree splits",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 >= 5, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_total_volume",
+      "type": "formula",
+      "description": "Log-transformed total blood volume donated (V3) to compress skewed distribution",
+      "value_range": [
+        5.5,
+        8.6
+      ],
+      "feature_family": "donation_volume",
+      "expected_model_benefit": "Reduces skewness in V3 for better tree splits across volume range",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_gap_months",
+      "type": "formula",
+      "description": "Average months between donations: (V4 - V1) / np.maximum(V2 - 1, 1), estimating inter-donation interval",
+      "value_range": [
+        0.0,
+        96.0
+      ],
+      "feature_family": "temporal_pattern",
+      "expected_model_benefit": "Captures regularity of donation schedule; shorter gaps indicate committed donors",
+      "leakage_risk": "low",
+      "formula": "(V4 - V1) / np.maximum(V2 - 1, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_interaction",
+      "type": "formula",
+      "description": "Product of recency bucket and frequency (V2), capturing joint effect of when and how often donated",
+      "value_range": [
+        1.0,
+        84.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Nonlinear interaction term for tree models to capture combined recency-frequency signal",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 <= 3, 1, np.where(V1 <= 8, 2, np.where(V1 <= 15, 3, 4))) * V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "long_tenure_low_frequency",
+      "type": "judgment",
+      "description": "Semantic score (0-3) assessing donor who has long history but few donations: 0=not applicable, 1=mild, 2=moderate, 3=strong lapsed pattern. Based on V4 > 24 and V2 < 4 and V1 > 12 combinations",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "donor_profile",
+      "expected_model_benefit": "Identifies lapsed donors with long history but infrequent recent activity, a distinct behavioral segment",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_loyal_donor_score",
+      "type": "judgment",
+      "description": "Composite loyalty score (0-4) based on semantic assessment of recency (V1 low), frequency (V2 high), volume (V3 high), and tenure (V4 high) together indicating an active loyal donor",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "donor_profile",
+      "expected_model_benefit": "Aggregates multiple signals into a loyalty index that tree models can split on directly",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "673516bac3e6037c",
+  "metadata": {}
+}

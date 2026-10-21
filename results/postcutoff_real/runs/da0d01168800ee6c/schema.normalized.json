@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_water_quality_nys_20260406",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "norm_temp_diff",
+      "type": "formula",
+      "description": "Normalized difference between air and water temperature, creating a scale-invariant distance metric for thermal conditions.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "environmental_similarity",
+      "expected_model_benefit": "Provides a bounded, normalized feature that prevents large temperature magnitudes from dominating the KNN distance metric.",
+      "leakage_risk": "low",
+      "formula": "np.abs(a_t - w_t) / np.maximum(w_t, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_precip_intensity",
+      "type": "formula",
+      "description": "Ratio of 1-day precipitation to 5-day precipitation, representing the temporal concentration of recent rainfall.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weather_dynamics",
+      "expected_model_benefit": "Creates a bounded ratio that groups sites with similar recent weather patterns, improving neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "precip_1d / np.maximum(precip_5d, 0.01)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "livestock_proximity_score",
+      "type": "formula",
+      "description": "Inverse distance to any livestock, converting an unbounded distance into a bounded proximity score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_proximity",
+      "expected_model_benefit": "Inverts distance to create a bounded proximity score, preventing large spatial distances from skewing the KNN metric.",
+      "leakage_risk": "low",
+      "formula": "1.0 / (anylivestock_min + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "human_impact_index",
+      "type": "formula",
+      "description": "Aggregated indicator of human impact based on the presence of wastewater, stormwater outfalls, and trailers.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "land_use_cluster",
+      "expected_model_benefit": "Aggregates binary indicators into a discrete ordinal scale, grouping similar sites in the feature space.",
+      "leakage_risk": "low",
+      "formula": "wastewater_pa + stormwateroutfalls_pa + trailer_pa",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "water_quality_anomaly",
+      "type": "formula",
+      "description": "Euclidean distance from typical pH (7.8) and DO (8.0) values, acting as an unsupervised prototype distance.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Computes a distance from a generic unsupervised prototype, providing a continuous similarity metric for water quality.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((ph - 7.8)**2 + (do - 8.0)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "solar_radiation_trend",
+      "type": "formula",
+      "description": "Ratio of short-term (1-day) to long-term (30-day) solar radiation.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "weather_dynamics",
+      "expected_model_benefit": "Normalizes short-term solar radiation against the long-term baseline, providing a stable similarity metric.",
+      "leakage_risk": "low",
+      "formula": "avg_solar_1d / np.maximum(avg_solar_30d, 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "developed_land_ratio",
+      "type": "formula",
+      "description": "Ratio of developed land cover (X21, X22) to forest and wetland cover (forwet) in the watershed.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "land_cover_composition",
+      "expected_model_benefit": "Creates a scale-normalized ratio of developed to natural land cover, improving neighborhood geometry by focusing on relative composition.",
+      "leakage_risk": "low",
+      "formula": "(idw_X21 + idw_X22) / np.maximum(idw_forwet, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "buffer_development_intensity",
+      "type": "formula",
+      "description": "Ratio of developed land cover to forest and wetland cover within a 60m buffer.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "land_cover_composition",
+      "expected_model_benefit": "Provides a fine-grained spatial similarity metric by normalizing local land cover composition.",
+      "leakage_risk": "low",
+      "formula": "(buffer_60m_idw_X21 + buffer_60m_idw_X22) / np.maximum(buffer_60m_idw_forwet, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "microbial_source_presence",
+      "type": "formula",
+      "description": "Sum of human (HF183) and ruminant (Rum2Bac) microbial source tracking markers.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "biological_indicators",
+      "expected_model_benefit": "Aggregates sparse binary markers into a single ordinal feature, reducing dimensionality and improving distance calculations.",
+      "leakage_risk": "low",
+      "formula": "HF183_pa + Rum2Bac_pa",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "turbidity_flow_interaction",
+      "type": "formula",
+      "description": "Interaction term between turbidity and flow, capturing the combined effect of water movement and suspended particles.",
+      "value_range": [
+        0.0,
+        2.5
+      ],
+      "feature_family": "physical_water_properties",
+      "expected_model_benefit": "Captures the non-linear relationship between flow and turbidity in a single continuous feature, useful for identifying similar flush events.",
+      "leakage_risk": "low",
+      "formula": "turb * flow",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_site_vulnerability",
+      "type": "judgment",
+      "description": "Semantic assessment of the overall vulnerability of the site based on land use, soil type, and proximity to potential contamination sources.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a semantic similarity axis for KNN, grouping sites with similar holistic vulnerability profiles.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_weather_flush_potential",
+      "type": "judgment",
+      "description": "Semantic assessment of the likelihood of a recent flush event based on precipitation history, solar radiation, and temperature trends.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Groups sites with similar recent weather patterns, providing a complex temporal similarity metric that is difficult to capture with simple formulas.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f29c5f5de80fede7",
+  "metadata": {}
+}

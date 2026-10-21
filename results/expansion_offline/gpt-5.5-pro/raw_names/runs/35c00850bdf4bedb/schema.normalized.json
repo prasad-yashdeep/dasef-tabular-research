@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mozilla4",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "id_position_norm",
+      "type": "formula",
+      "description": "Row identifier scaled to the observed training-fold identifier range, representing coarse sequence order.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sequence_order",
+      "expected_model_benefit": "Provides an approximately linear chronology signal that can help the SVM margin when collection order reflects process drift.",
+      "leakage_risk": "medium",
+      "formula": "np.clip((id - 1.0) / 4087.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "start_position_norm",
+      "type": "formula",
+      "description": "Start offset scaled by the largest observed training-fold start offset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_position",
+      "expected_model_benefit": "Captures early-to-late location on a bounded scale suitable for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(start / 1936311.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "end_position_norm",
+      "type": "formula",
+      "description": "End offset scaled by the largest observed training-fold end offset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_position",
+      "expected_model_benefit": "Complements start position by representing completion location on the same bounded scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(end / 1965726.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interval_span_log_norm",
+      "type": "formula",
+      "description": "Log-normalized nonnegative span between end and start.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interval_magnitude",
+      "expected_model_benefit": "Compresses long-tail span magnitudes into a smooth severity score for stable SVM weights.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.maximum(end - start, 0.0)) / np.log1p(1965726.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "span_to_end_ratio",
+      "type": "formula",
+      "description": "Fraction of the end offset occupied by the nonnegative span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interval_shape",
+      "expected_model_benefit": "Highlights intervals that consume a large share of their position, adding a ratio signal beyond raw offsets.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.maximum(end - start, 0.0) / (end + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_log_norm",
+      "type": "formula",
+      "description": "Log-normalized size scaled by the largest observed training-fold size.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_and_tail",
+      "expected_model_benefit": "Converts heavy-tailed size into a bounded continuous score that is easier for a linear SVM to weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(size) / np.log1p(12363.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_relative_z_clipped",
+      "type": "formula",
+      "description": "Size centered by the training-fold mean and scaled by the training-fold standard deviation, with tail clipping.",
+      "value_range": [
+        -0.5,
+        5.0
+      ],
+      "feature_family": "scale_and_tail",
+      "expected_model_benefit": "Adds an approximately standardized size projection while limiting the influence of extreme large values.",
+      "leakage_risk": "low",
+      "formula": "np.clip((size - 439.1803559939953) / 952.8333687210348, -0.5, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_per_span_log_norm",
+      "type": "formula",
+      "description": "Log-scaled size density per unit of nonnegative span, with one added to avoid division by zero.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "density_ratio",
+      "expected_model_benefit": "Separates compact high-size rows from broad low-density rows through a bounded ratio feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(size / (np.maximum(end - start, 0.0) + 1.0)) / np.log1p(12363.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "event_centered",
+      "type": "formula",
+      "description": "Event flag centered at its training-fold mean.",
+      "value_range": [
+        -0.5719493888054901,
+        0.4280506111945099
+      ],
+      "feature_family": "event_signal",
+      "expected_model_benefit": "Centers the binary event input so its coefficient can act as a direct margin shift.",
+      "leakage_risk": "low",
+      "formula": "np.clip(event, 0.0, 1.0) - 0.5719493888054901",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "event_span_size_composite",
+      "type": "formula",
+      "description": "Weighted row load combining event presence, log-normalized span, and log-normalized size.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Gives one smooth projection for joint event, span, and size burden that a linear SVM can use directly.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.40 * np.clip(event, 0.0, 1.0)) + (0.30 * np.clip(np.log1p(np.maximum(end - start, 0.0)) / np.log1p(1965726.0), 0.0, 1.0)) + (0.30 * np.clip(np.log1p(size) / np.log1p(12363.0), 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "operation_burden_semantic_score",
+      "type": "judgment",
+      "description": "Numeric 0 to 1 expert or LLM assessment of how heavy the operation appears, considering span length, size magnitude, and event value relative to the provided fold ranges; 0 means brief and compact, 1 means unusually large or long.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_severity",
+      "expected_model_benefit": "Supplies a smooth severity summary that can align nonlinear combinations of span, size, and event into one margin-friendly signal.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sequence_irregularity_semantic_score",
+      "type": "judgment",
+      "description": "Numeric 0 to 1 judgment of how irregular the row looks, using only the row's id, start, end, size, and event values compared with the provided fold ranges; 0 means typical, 1 means highly atypical.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_irregularity",
+      "expected_model_benefit": "Adds a calibrated outlier-style cue for unusual timing-size patterns that may not be captured by single ratios.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "db9f697e466b4067",
+  "metadata": {}
+}

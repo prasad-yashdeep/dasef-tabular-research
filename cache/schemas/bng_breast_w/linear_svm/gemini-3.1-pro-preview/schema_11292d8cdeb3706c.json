@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bng_breast_w",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "cell_uniformity_score",
+      "type": "formula",
+      "description": "Average of cell size and shape uniformity, providing a smooth composite feature for linear margins.",
+      "value_range": [
+        0.9,
+        12.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Creates a stable, linearly separable dimension by combining highly correlated uniformity metrics.",
+      "leakage_risk": "low",
+      "formula": "(Cell_Size_Uniformity + Cell_Shape_Uniformity) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_shape_discrepancy",
+      "type": "formula",
+      "description": "Absolute difference between cell size and shape uniformity.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Captures non-linear interactions between size and shape uniformity that a linear SVM might otherwise miss.",
+      "leakage_risk": "low",
+      "formula": "np.abs(Cell_Size_Uniformity - Cell_Shape_Uniformity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_abnormality_index",
+      "type": "formula",
+      "description": "Unweighted average of all nine cytological characteristics.",
+      "value_range": [
+        0.5,
+        13.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a strong, continuous severity measure that acts as a primary axis for linear separation.",
+      "leakage_risk": "low",
+      "formula": "(Clump_Thickness + Cell_Size_Uniformity + Cell_Shape_Uniformity + Marginal_Adhesion + Single_Epi_Cell_Size + Bare_Nuclei + Bland_Chromatin + Normal_Nucleoli + Mitoses) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nuclear_severity_composite",
+      "type": "formula",
+      "description": "Average of nuclear-specific features: Bare Nuclei, Normal Nucleoli, and Bland Chromatin.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Isolates nuclear abnormalities into a single continuous feature, improving margin clarity for the SVM.",
+      "leakage_risk": "low",
+      "formula": "(Bare_Nuclei + Normal_Nucleoli + Bland_Chromatin) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mitosis_to_thickness_ratio",
+      "type": "formula",
+      "description": "Ratio of mitoses to clump thickness, smoothed by adding 1 to the denominator.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights cases with disproportionately high mitotic activity relative to clump thickness.",
+      "leakage_risk": "low",
+      "formula": "Mitoses / (Clump_Thickness + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adhesion_to_size_ratio",
+      "type": "formula",
+      "description": "Ratio of marginal adhesion to cell size uniformity, smoothed by adding 1 to the denominator.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Exposes the relationship between cell adhesion loss and size irregularity as a continuous feature.",
+      "leakage_risk": "low",
+      "formula": "Marginal_Adhesion / (Cell_Size_Uniformity + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "max_cell_irregularity",
+      "type": "formula",
+      "description": "The maximum value between cell size uniformity and cell shape uniformity.",
+      "value_range": [
+        0.8,
+        13.0
+      ],
+      "feature_family": "extreme_value",
+      "expected_model_benefit": "Ensures that the most severe uniformity metric drives the linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(Cell_Size_Uniformity, Cell_Shape_Uniformity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_bare_nuclei",
+      "type": "formula",
+      "description": "Log-transformed bare nuclei score to reduce the impact of extreme values.",
+      "value_range": [
+        0.0,
+        2.7
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Normalizes the distribution of bare nuclei, making it more suitable for linear SVM weights.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(Bare_Nuclei, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "clump_thickness_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of clump thickness from its training set mean.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Captures abnormal clump thickness in either direction as a positive magnitude.",
+      "leakage_risk": "low",
+      "formula": "np.abs(Clump_Thickness - 4.364)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_severity_feature_count",
+      "type": "formula",
+      "description": "Count of key features (Clump Thickness, Cell Size Uniformity, Bare Nuclei) exceeding typical normal thresholds.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "count",
+      "expected_model_benefit": "Provides a robust, step-wise severity indicator that complements continuous features.",
+      "leakage_risk": "low",
+      "formula": "np.where(Clump_Thickness > 5.0, 1.0, 0.0) + np.where(Cell_Size_Uniformity > 4.0, 1.0, 0.0) + np.where(Bare_Nuclei > 4.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_cellular_abnormality_risk",
+      "type": "judgment",
+      "description": "Assesses the overall risk of severe cellular abnormality based on the combination of cell characteristics, providing a continuous risk score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Captures complex, non-linear expert judgments about cell morphology that simple formulas might miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_proliferation_potential",
+      "type": "judgment",
+      "description": "Assesses the potential for rapid cell division and tissue invasion based on Mitoses, Single Epithelial Cell Size, and Clump Thickness.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a holistic evaluation of growth potential, offering a distinct semantic axis for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "11292d8cdeb3706c",
+  "metadata": {}
+}

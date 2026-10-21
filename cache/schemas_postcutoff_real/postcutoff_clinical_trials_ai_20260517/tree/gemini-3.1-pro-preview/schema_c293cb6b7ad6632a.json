@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_clinical_trials_ai_20260517",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_advanced_ai_trial",
+      "type": "formula",
+      "description": "Indicates if the trial explicitly mentions advanced AI techniques like machine learning or deep learning.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Allows tree models to easily split on trials utilizing more complex AI methodologies.",
+      "leakage_risk": "low",
+      "formula": "np.where((mentions_machine_learning > 0) | (mentions_deep_learning > 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "trial_complexity_score",
+      "type": "formula",
+      "description": "An additive score representing the structural complexity of the trial based on randomization, blinding, and international scope.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Provides a single continuous-like feature summarizing trial rigor, which trees can split at various thresholds.",
+      "leakage_risk": "low",
+      "formula": "has_randomization + has_blinding + international_trial",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ai_evidence_interaction",
+      "type": "formula",
+      "description": "Interaction between the real-world deployment score and the evidence strength score.",
+      "value_range": [
+        0.0,
+        0.9
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Captures the synergistic effect of having both high real-world applicability and strong evidence, saving the tree from having to approximate this multiplication.",
+      "leakage_risk": "low",
+      "formula": "real_world_deployment_score * evidence_strength_score",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "global_scale_indicator",
+      "type": "formula",
+      "description": "Binary indicator for trials conducted in more than one country.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Creates a clean binary split for multi-national trials, which often have different operational characteristics.",
+      "leakage_risk": "low",
+      "formula": "np.where(country_count > 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tech_stack_diversity",
+      "type": "formula",
+      "description": "Counts the number of distinct technology types mentioned (software, mobile app, wearable).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Aggregates sparse technology mentions into a denser ordinal feature for more effective tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(mentions_software, 0) + np.maximum(mentions_mobile_app, 0) + np.maximum(mentions_wearable, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vulnerable_population_included",
+      "type": "formula",
+      "description": "Flags trials that include either children or older adults.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Groups specific demographic inclusions into a broader category of vulnerable populations.",
+      "leakage_risk": "low",
+      "formula": "np.where((includes_children > 0) | (includes_older_adults > 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rigorous_design_flag",
+      "type": "formula",
+      "description": "Indicates if a trial is both randomized and blinded.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Explicitly models the logical AND of two key trial design elements, providing a direct split for high-quality trial designs.",
+      "leakage_risk": "low",
+      "formula": "np.where((has_randomization > 0) & (has_blinding > 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ai_safety_privacy_focus",
+      "type": "formula",
+      "description": "Flags trials that explicitly mention safety, privacy, or bias in the context of their AI application.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Consolidates ethical and safety concerns into a single feature, reducing sparsity.",
+      "leakage_risk": "low",
+      "formula": "np.where((mentions_safety > 0) | (mentions_privacy > 0) | (mentions_bias > 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "phase_enrollment_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between trial phase and enrollment size buckets.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Helps the model identify large, late-stage trials versus small, early-stage trials using a single continuous feature.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(trial_phase_bucket, 0) * np.maximum(enrollment_bucket, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_evidence_late_phase",
+      "type": "formula",
+      "description": "Flags trials that are in phase 3 or higher and have an evidence strength score above 0.5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Provides a direct boolean split for mature trials with solid evidence backing.",
+      "leakage_risk": "low",
+      "formula": "np.where((evidence_strength_score > 0.5) & (trial_phase_bucket >= 3), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_commercial_viability",
+      "type": "judgment",
+      "description": "Assesses the likelihood that the trial's AI application has direct commercial viability based on the disease area, AI use type, and real-world deployment score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Captures nuanced, non-linear relationships between clinical domain and technology readiness that are hard to express via simple formulas.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_regulatory_readiness",
+      "type": "judgment",
+      "description": "Evaluates the trial's readiness for regulatory submission based on evidence strength, safety mentions, and trial phase.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a holistic assessment of regulatory maturity, offering a powerful continuous feature for tree splits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c293cb6b7ad6632a",
+  "metadata": {}
+}

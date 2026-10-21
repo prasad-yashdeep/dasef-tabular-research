@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_water_quality_nys_20260406",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "recent_runoff_rain_score",
+      "type": "formula",
+      "description": "Weighted 0.0-1.0 score for runoff-relevant rainfall over the prior five days, emphasizing the most recent day and using training-fold precipitation maxima for log scaling.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weather_recent",
+      "expected_model_benefit": "Provides a smooth rainfall-loading axis that a linear SVM can weight directly, reducing reliance on several correlated raw rain columns.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.40*np.log1p(precip_1d)/np.log1p(1.524) + 0.25*np.log1p(precip_2d)/np.log1p(1.524) + 0.15*np.log1p(precip_3d)/np.log1p(0.8636) + 0.12*np.log1p(precip_4d)/np.log1p(1.8034) + 0.08*np.log1p(precip_5d)/np.log1p(3.7592)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "antecedent_wetness_score",
+      "type": "formula",
+      "description": "Bounded antecedent wetness score from 10, 20, and 30 day precipitation totals; higher values indicate sustained wet conditions before sampling.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weather_antecedent",
+      "expected_model_benefit": "Summarizes longer moisture memory into one continuous input, helping the margin represent chronic runoff readiness.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.50*np.log1p(precip_10d)/np.log1p(5.5626) + 0.30*np.log1p(precip_20d)/np.log1p(7.7724) + 0.20*np.log1p(precip_30d)/np.log1p(9.8298)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "solar_inactivation_deficit",
+      "type": "formula",
+      "description": "Score for reduced recent solar exposure, with larger values when the five-day weighted solar average is below a moderate training-fold reference.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "light",
+      "expected_model_benefit": "Adds a monotone die-off-related dimension that is easier for a linear model to use than multiple solar lag columns.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.85 - (0.40*avg_solar_1d + 0.25*avg_solar_2d + 0.15*avg_solar_3d + 0.12*avg_solar_4d + 0.08*avg_solar_5d)) / 0.85, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "thermal_growth_score",
+      "type": "formula",
+      "description": "Normalized warmth composite from water, air, and recent-average temperatures; higher values represent warmer microbial growth conditions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temperature",
+      "expected_model_benefit": "Creates an approximate linear projection of temperature suitability across several thermal measurements.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.55*((w_t - 12.1)/(27.3 - 12.1)) + 0.25*((a_t - 13.0)/(34.5 - 13.0)) + 0.20*((avg_temp_0_to_5d - 12.81712963)/(28.93518519 - 12.81712963))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stagnant_low_oxygen_score",
+      "type": "formula",
+      "description": "Composite for still, oxygen-poor, warm water using low flow, dissolved oxygen deficit, and water temperature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "hydrology_chemistry",
+      "expected_model_benefit": "Captures stagnation and oxygen stress as one severity measure, useful for separating hydrologic states with a single coefficient.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.45*(1.0 - flow) + 0.35*np.clip((8.0 - do)/(8.0 - 3.23), 0.0, 1.0) + 0.20*np.clip((w_t - 18.0)/(27.3 - 18.0), 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "turbidity_sediment_score",
+      "type": "formula",
+      "description": "Bounded sediment disturbance score combining turbidity, flow, and observed bottom condition severity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sediment",
+      "expected_model_benefit": "Turns skewed turbidity and categorical bottom severity into a bounded resuspension signal for the margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.55*np.log1p(turb)/np.log1p(2.164352856) + 0.25*flow + 0.20*np.clip(bottom_collapsed/3.0, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "livestock_source_pressure",
+      "type": "formula",
+      "description": "Livestock source pressure from animal density, presence, and proximity, log-scaled and bounded for stable linear use.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "animal_sources",
+      "expected_model_benefit": "Compresses sparse livestock indicators into one continuous source-gradient feature with distance decay.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.30*np.log1p(anylivestock_density)/np.log1p(3.04) + 0.22*np.log1p(cattle_density)/np.log1p(2.9) + 0.18*anylivestock_pa + 0.12*cattle_pa + 0.10/(1.0 + anylivestock_min) + 0.08/(1.0 + cattle_min)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "human_waste_septic_pressure",
+      "type": "formula",
+      "description": "Human waste and septic pressure from septic density, wastewater indicators, trailers, camps, and proximity cues.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "human_sources",
+      "expected_model_benefit": "Gives the SVM a compact human-source gradient while retaining interpretability of septic, wastewater, camp, and trailer inputs.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.25*((septic_adj_sepden_m2 - 59.5)/(251.0 - 59.5)) + 0.20*np.log1p(wastewater_density)/np.log1p(0.231) + 0.15*wastewater_pa + 0.15/(1.0 + wastewater_min) + 0.10*np.log1p(trailer_density)/np.log1p(2.35) + 0.08*camp_pa + 0.07/(1.0 + camp_min)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stormwater_infrastructure_pressure",
+      "type": "formula",
+      "description": "Stormwater and conveyance pressure from road adjacency, ditches, culverts, intersections, and outfall indicators.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "infrastructure",
+      "expected_model_benefit": "Projects several infrastructure and conveyance indicators onto one runoff-access axis suitable for linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.25*rdparallel + 0.20*outfall_ditch + 0.15*culverts_pa + 0.12/(1.0 + culverts_min) + 0.12/(1.0 + roadsinterx_min) + 0.10*stormwateroutfalls_pa + 0.06/(1.0 + stormwateroutfalls_min)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "impervious_buffer_deficit",
+      "type": "formula",
+      "description": "Contrasts impervious or developed land proxies with forest-wetland buffering in upstream and 60 m zones.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "land_cover",
+      "expected_model_benefit": "Balances development pressure against natural buffering, producing a continuous land-cover severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.35*np.log1p(impcvr_idw_mean)/np.log1p(19.67561276) + 0.20*idw_X21/33.88697538 + 0.15*buffer_60m_idw_X21/52.29704721 + 0.15*(1.0 - buffer_60m_idw_forwet/81.926242) + 0.15*(1.0 - idw_forwet/72.57420514)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hydromet_mobilization_semantic_score",
+      "type": "judgment",
+      "description": "A 0.0-1.0 expert score, assigned only from the row, rating how strongly weather and hydraulic context favor pollutant mobilization: recent rain bursts, persistent wetness, high turbidity or flow, low solar, warm water, and low oxygen increase the score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_hydrometeorology",
+      "expected_model_benefit": "Adds a human-readable synthesis of interacting weather cues that may be more linear than the raw row values.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fecal_source_context_semantic_score",
+      "type": "judgment",
+      "description": "A 0.0-1.0 expert score, assigned only from the row, rating source plausibility from animal operations, septic or wastewater indicators, camps or trailers, stormwater conveyance, source-marker presence, and short source distances.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_source_context",
+      "expected_model_benefit": "Converts many sparse source cues into a smooth ordinal severity input that supports a linear margin without using any supervised grouping.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0ac8505506974be3",
+  "metadata": {}
+}

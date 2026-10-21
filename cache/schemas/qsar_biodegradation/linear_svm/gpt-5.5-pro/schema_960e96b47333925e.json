@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "topological_size_projection",
+      "type": "formula",
+      "description": "Training-fold standardized average of V1, V15, V36, and V39, capturing overall molecular size and topology intensity.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "standardized_size_composite",
+      "expected_model_benefit": "Creates a compact continuous axis for broad scale effects, easier for a linear/SVM margin than several correlated raw descriptors.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V1 - 4.776870253164557) / 0.5484442083033194 + (V15 - 9.926072784810128) / 0.9416685859234286 + (V36 - 3.793189873417722) / 0.6994267422293443 + (V39 - 8.485860759493672) / 1.0072770097063506) / 4.0, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composition_polarity_contrast",
+      "type": "formula",
+      "description": "Signed contrast of composition/topological descriptors V8, V13, and V37 against local-polarity V14, centered with training-fold summary values.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "normalized_composition_contrast",
+      "expected_model_benefit": "Condenses composition balance into one signed projection, reducing collinearity while preserving direction.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V8 - 37.062658227848104) / 9.299336332500504 + (V13 - 3.430072784810126) / 0.5570211496505924 + (V37 - 2.527870253164557) / 0.5972420678386097 - (V14 - 1.3344050632911393) / 0.8124814353320162) / 4.0, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hetero_fragment_log_load",
+      "type": "formula",
+      "description": "Log-scaled combined load of common hetero and fragment-count descriptors V5, V6, V9, V10, V11, V16, V33, V34, V35, and V38.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "log_count_composite",
+      "expected_model_benefit": "Smooths sparse counts and exposes cumulative polar/reactive chemistry as a near-linear signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(V5 + V6 + V9 + V10 + V11 + V16 + V33 + V34 + V35 + V38) - np.log1p(13.098101265822785)) / 1.0, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heavy_halogen_log_burden",
+      "type": "formula",
+      "description": "Log-scaled burden of heavy/halogen-related descriptors V3, V21, V24, V25, V29, and V41 relative to the training-fold average.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "log_count_composite",
+      "expected_model_benefit": "Represents rare high-mass substitution patterns without allowing a single extreme count to dominate the margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(V3 + V21 + V24 + V25 + V29 + V41) - np.log1p(1.4430379746835442)) / 1.0, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "oxygen_donor_to_heavy_ratio",
+      "type": "formula",
+      "description": "Additively smoothed ratio of oxygen/donor counts V10 and V35 to nitrogen/halogen-heavy counts V38, V3, and V41.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "smoothed_descriptor_ratio",
+      "expected_model_benefit": "Captures a compositional trade-off as a continuous ratio that a linear/SVM margin can weight directly.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V10 + V35 + 1.0) / (V38 + V3 + V41 + 1.0), 0.0, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cyclic_branch_density",
+      "type": "formula",
+      "description": "Count density of cyclic/branched fragment descriptors V7, V16, V23, V32, V33, and V34 adjusted by carbon-scale V8.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "size_adjusted_count_density",
+      "expected_model_benefit": "Rescales fragment counts by molecular size so the model sees congestion rather than only absolute count.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V7 + V16 + V23 + V32 + V33 + V34) / (1.0 + V8 / 10.0), 0.0, 12.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_alert_sqrt_load",
+      "type": "formula",
+      "description": "Square-root load of infrequent structural alert indicators V4, V19, V20, V21, V24, V25, V26, V29, and V40.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "sparse_alert_severity",
+      "expected_model_benefit": "Turns sparse on/off and small-count events into a smooth severity feature with less dominance from large raw counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(V4 + V19 + V20 + V21 + V24 + V25 + V26 + V29 + V40), 0.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "electronic_extremity_z",
+      "type": "formula",
+      "description": "Average absolute standardized departure for electronic/topological continuous descriptors V12, V28, and V31.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "robust_deviation_score",
+      "expected_model_benefit": "Provides symmetric extremeness measurement so both high and low unusual values can influence a linear/SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs((V12 + 0.19317088607594934) / 0.7583518245414135) + np.abs((V28 + 0.00595253164556962) / 0.1665658372131037) + np.abs((V31 - 2.642208860759494) / 2.2649071852159874)) / 3.0, 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "shape_compactness_mismatch",
+      "type": "formula",
+      "description": "Absolute mismatch between standardized compactness/shape descriptors V17, V18, V22, and V27.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "descriptor_consistency_gap",
+      "expected_model_benefit": "Highlights internally inconsistent geometry profiles that may be weak when each raw column is used alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs((V17 - 1.0101518987341773) / 0.044033097047962856 - (V18 - 1.1312943037974685) / 0.02889798894424369) + 0.5 * np.abs((V22 - 1.2384050632911392) / 0.09362938911478945 - (V27 - 2.215224683544304) / 0.22989479602379848), 0.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "training_profile_distance",
+      "type": "formula",
+      "description": "Root-mean-square standardized departure from training-fold means for eight broad continuous descriptors.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "unsupervised_profile_deviation",
+      "expected_model_benefit": "Gives an unsupervised outlier-severity axis that helps the linear/SVM margin handle atypical chemistry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((((V1 - 4.776870253164557) / 0.5484442083033194) ** 2 + ((V2 - 3.0600427215189874) / 0.8117726883249491) ** 2 + ((V8 - 37.062658227848104) / 9.299336332500504) ** 2 + ((V13 - 3.430072784810126) / 0.5570211496505924) ** 2 + ((V15 - 9.926072784810128) / 0.9416685859234286) ** 2 + ((V30 - 8.652316455696203) / 11.968861908073771) ** 2 + ((V36 - 3.793189873417722) / 0.6994267422293443) ** 2 + ((V39 - 8.485860759493672) / 1.0072770097063506) ** 2) / 8.0), 0.0, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expert_microbial_accessibility_score",
+      "type": "judgment",
+      "description": "A 0.0 to 1.0 expert numeric assessment from the row's descriptor pattern; high values reflect moderate overall size, balanced polarity, and limited halogen/rare-alert burden.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_domain_score",
+      "expected_model_benefit": "Supplies a smooth domain-informed ordering when many individual cues are weak but coherent.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expert_recalcitrance_alert_score",
+      "type": "judgment",
+      "description": "A 0.0 to 1.0 expert numeric assessment of structural resistance cues from the row; high values reflect bulky cyclic fragments, high heavy-substitution burden, and electronic extremity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_domain_score",
+      "expected_model_benefit": "Adds an interpretable severity axis for sparse chemistry patterns that are hard for a purely linear combination of raw columns to summarize.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "960e96b47333925e",
+  "metadata": {}
+}

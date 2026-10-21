@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_new_customer",
+      "type": "formula",
+      "description": "Boolean indicator for whether the customer has not been contacted in a previous campaign.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Tree models can easily split on this boolean indicator to separate completely new prospects from existing ones.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays == 999, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_intensity",
+      "type": "formula",
+      "description": "Ratio of current campaign contacts to previous campaign contacts.",
+      "value_range": [
+        0.0,
+        56.0
+      ],
+      "feature_family": "behavioral",
+      "expected_model_benefit": "Captures the relative intensity of the current campaign compared to historical interactions, providing a continuous feature for tree splits.",
+      "leakage_risk": "low",
+      "formula": "campaign / np.maximum(previous, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_loan_status",
+      "type": "formula",
+      "description": "Categorical grouping combining housing and personal loan status into a single integer representation.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "financial",
+      "expected_model_benefit": "Combines two related financial indicators into a single categorical feature, reducing the number of splits needed by the tree model to capture debt profiles.",
+      "leakage_risk": "low",
+      "formula": "housing + (loan * 3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_group_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket for age groups (under 30, 30-59, 60 and over).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Pre-binned ordinal feature that simplifies tree splitting logic for non-linear age-related patterns.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 30, 0, np.where(age < 60, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_month_interaction",
+      "type": "formula",
+      "description": "Interaction between the contact communication type and the month of the year.",
+      "value_range": [
+        0.0,
+        19.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures seasonal variations in communication channel effectiveness, providing a combined categorical feature for tree models.",
+      "leakage_risk": "low",
+      "formula": "contact * 10 + month",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the customer's financial stability based on job, marital status, education, default history, housing, and loan status.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Aggregates multiple categorical and financial indicators into a single ordinal score, reducing tree depth required to capture overall financial health.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_contact_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for whether the customer was contacted recently (pdays < 999).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a direct boolean split for tree models to isolate customers with recent historical interactions.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays < 999, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_fatigue",
+      "type": "formula",
+      "description": "Boolean indicator for customers contacted more than 3 times in the current campaign.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "behavioral",
+      "expected_model_benefit": "Highlights potential over-contacting, allowing tree models to easily identify fatigue thresholds without deep splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(campaign > 3, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macro_economic_cluster",
+      "type": "judgment",
+      "description": "Semantic grouping of the macroeconomic environment based on employment variation rate, consumer price index, consumer confidence index, and euribor 3 month rate.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Translates complex, highly correlated macroeconomic indicators into a simplified categorical grouping that tree models can efficiently split on.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_previous_contact",
+      "type": "formula",
+      "description": "Boolean indicator for whether the customer was contacted in any previous campaign.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "behavioral",
+      "expected_model_benefit": "Simple binary feature that allows tree models to immediately distinguish between completely new and historically engaged customers.",
+      "leakage_risk": "low",
+      "formula": "np.where(previous > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pdays_decay",
+      "type": "formula",
+      "description": "Inverse decay function of the number of days since the customer was last contacted, with 0 for never contacted.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Transforms the raw days into a bounded decay score, emphasizing recent contacts more heavily and providing a smooth gradient for tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays == 999, 0.0, 1.0 / (1.0 + pdays))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "customer_profile_complexity",
+      "type": "judgment",
+      "description": "Semantic assessment of the customer's demographic and financial profile complexity, evaluating the uniqueness of their combined attributes.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides an ordinal measure of profile rarity or complexity, helping tree models isolate niche customer segments that might otherwise require deep, complex branches.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f810dd0779f36e51",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "coil2000_insurance_policies",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_insurance_policies",
+      "type": "formula",
+      "description": "Sum of all policy counts across different insurance types.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a continuous measure of overall customer engagement and insurance footprint, useful for linear scaling.",
+      "leakage_risk": "low",
+      "formula": "numberOfPrivateThirdPartyInsurance + numberOfThirdPartyInsuranceFirms + numberOfThirdPartyInsuranceAgriculture + numberOfCarPolicies + numberOfDeliveryVanPolicies + numberOfMotorcycleScooterPolicies + numberOfLorryPolicies + numberOfTrailerPolicies + numberOfTractorPolicies + numberOfAgriculturalMachinesPolicies + numberOfMopedPolicies + numberOfLifeInsurances + numberOfPrivateAccidentInsurancePolicies + numberOfFamilyAccidentsInsurancePolicies + numberOfDisabilityInsurancePolicies + numberOfFirePolicies + numberOfSurfboardPolicies + numberOfBoatPolicies + numberOfBicyclePolicies + numberOfPropertyInsurancePolicies + numberOfSocialSecurityInsurancePolicies",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "car_policy_ratio",
+      "type": "formula",
+      "description": "Ratio of car policies to total policies, indicating focus on auto insurance.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes car policy count against total engagement, creating a smooth bounded feature ideal for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "numberOfCarPolicies / np.maximum(1, numberOfPrivateThirdPartyInsurance + numberOfThirdPartyInsuranceFirms + numberOfThirdPartyInsuranceAgriculture + numberOfCarPolicies + numberOfDeliveryVanPolicies + numberOfMotorcycleScooterPolicies + numberOfLorryPolicies + numberOfTrailerPolicies + numberOfTractorPolicies + numberOfAgriculturalMachinesPolicies + numberOfMopedPolicies + numberOfLifeInsurances + numberOfPrivateAccidentInsurancePolicies + numberOfFamilyAccidentsInsurancePolicies + numberOfDisabilityInsurancePolicies + numberOfFirePolicies + numberOfSurfboardPolicies + numberOfBoatPolicies + numberOfBicyclePolicies + numberOfPropertyInsurancePolicies + numberOfSocialSecurityInsurancePolicies)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fire_policy_ratio",
+      "type": "formula",
+      "description": "Ratio of fire policies to total policies.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights customers whose primary insurance relationship is property/fire-related.",
+      "leakage_risk": "low",
+      "formula": "numberOfFirePolicies / np.maximum(1, numberOfPrivateThirdPartyInsurance + numberOfThirdPartyInsuranceFirms + numberOfThirdPartyInsuranceAgriculture + numberOfCarPolicies + numberOfDeliveryVanPolicies + numberOfMotorcycleScooterPolicies + numberOfLorryPolicies + numberOfTrailerPolicies + numberOfTractorPolicies + numberOfAgriculturalMachinesPolicies + numberOfMopedPolicies + numberOfLifeInsurances + numberOfPrivateAccidentInsurancePolicies + numberOfFamilyAccidentsInsurancePolicies + numberOfDisabilityInsurancePolicies + numberOfFirePolicies + numberOfSurfboardPolicies + numberOfBoatPolicies + numberOfBicyclePolicies + numberOfPropertyInsurancePolicies + numberOfSocialSecurityInsurancePolicies)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_income_indicator",
+      "type": "formula",
+      "description": "Composite score of higher income brackets.",
+      "value_range": [
+        0.0,
+        18.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Aggregates sparse high-income categories into a single continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "income45To75k + income75To122k + incomeAbove123k",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_size_density",
+      "type": "formula",
+      "description": "Ratio of average household size to number of houses.",
+      "value_range": [
+        0.1,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures living density, providing a continuous projection of household structure.",
+      "leakage_risk": "low",
+      "formula": "avgSizeHousehold / np.maximum(1, numberOfHouses)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_class_ab_composite",
+      "type": "formula",
+      "description": "Sum of social class A, B1, and B2 indicators.",
+      "value_range": [
+        0.0,
+        27.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a linear projection of upper/middle social class standing.",
+      "leakage_risk": "low",
+      "formula": "socialClassA + socialClassB1 + socialClassB2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "home_ownership_margin",
+      "type": "formula",
+      "description": "Difference between home owners and rented house indicators.",
+      "value_range": [
+        -9.0,
+        9.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Provides a signed continuous margin representing the tilt towards home ownership vs renting.",
+      "leakage_risk": "low",
+      "formula": "homeOwners - rentedHouse",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vehicle_ownership_score",
+      "type": "formula",
+      "description": "Weighted composite of car ownership.",
+      "value_range": [
+        0.0,
+        23.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Linearly scales vehicle ownership severity, penalizing no car and rewarding multiple cars.",
+      "leakage_risk": "low",
+      "formula": "oneCar + (2 * twoCars) - noCar",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_level_index",
+      "type": "formula",
+      "description": "Weighted index of education levels.",
+      "value_range": [
+        -9.0,
+        18.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Projects categorical-like ordinal education data onto a continuous linear axis.",
+      "leakage_risk": "low",
+      "formula": "(2 * highLevelEducation) + mediumLevelEducation - lowerLevelEducation",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "life_stage_stability_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of life stability based on customerMainType, customerSubtype, and avgAge.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures non-linear interactions between age, family type, and social status that indicate settled lifestyles.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insurance_purchasing_power_alignment",
+      "type": "judgment",
+      "description": "Semantic evaluation of whether the customer's purchasingPowerClass aligns with their current insurance portfolio complexity.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Identifies under-insured or over-insured profiles relative to their means, useful for margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rural_vs_urban_lifestyle_tilt",
+      "type": "judgment",
+      "description": "Semantic judgment of rural/agricultural lifestyle vs urban lifestyle based on occupation (farmer), vehicle types (tractor, moped), and customer subtypes.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides a continuous geographic/lifestyle projection that linear models can easily weight.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "fc1ef94385bb7509",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "v1_recency_scaled",
+      "type": "formula",
+      "description": "V1 scaled by the training-fold maximum; larger values indicate a longer elapsed period since the most recent donation event.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency_normalization",
+      "expected_model_benefit": "Gives the linear margin a normalized recency axis without relying on raw month scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / 72.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_frequency_log_scaled",
+      "type": "formula",
+      "description": "Log-scaled cumulative donation count V2, mapped from the training-fold count range 1 to 44 into a bounded score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "frequency_normalization",
+      "expected_model_benefit": "Compresses the long-tailed count signal so large counts remain useful without dominating a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(V2) - np.log1p(1.0)) / (np.log1p(44.0) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v4_tenure_log_scaled",
+      "type": "formula",
+      "description": "Log-scaled elapsed history length V4, mapped from the training-fold range 2 to 98 into a bounded score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "tenure_normalization",
+      "expected_model_benefit": "Provides a smooth history-length dimension and reduces sensitivity to very long tenures.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(V4) - np.log1p(2.0)) / (np.log1p(98.0) - np.log1p(2.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v4_inactivity_history_share",
+      "type": "formula",
+      "description": "Fraction of observed donor history represented by the elapsed time since the most recent donation, using a stabilized V4 denominator.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency_tenure_ratio",
+      "expected_model_benefit": "Turns recency and history into a bounded inactivity severity score that a linear separator can weight directly.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / np.maximum(V4 + 1.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v4_active_span_scaled",
+      "type": "formula",
+      "description": "Normalized span between first and most recent recorded donation events, clipped to handle any ordering anomalies.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "activity_span",
+      "expected_model_benefit": "Captures breadth of actual activity beyond raw tenure, adding an interpretable interaction for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V4 - V1) / 98.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_v4_donation_density_scaled",
+      "type": "formula",
+      "description": "Cumulative donation count per elapsed history month, capped at one donation per month.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "rate_ratio",
+      "expected_model_benefit": "Approximates activity rate as a bounded ratio, often more linear than raw count or duration.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V2 / np.maximum(V4 + 1.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_recency_per_donation_scaled",
+      "type": "formula",
+      "description": "Elapsed time since most recent donation divided by cumulative donation count and scaled by the maximum V1 value.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "recency_frequency_ratio",
+      "expected_model_benefit": "Measures dormancy burden per repeat activity, a simple ratio that can improve linear ordering.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / (72.0 * np.maximum(V2, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_v4_frequency_tenure_residual",
+      "type": "formula",
+      "description": "Difference between unsupervised z-scored V2 and unsupervised z-scored V4, clipped to reduce outlier influence.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "unsupervised_z_projection",
+      "expected_model_benefit": "Highlights unusually high or low count relative to history length as an approximate linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V2 - 5.741071428571429) / 5.407081229597849) - ((V4 - 34.879464285714285) / 23.75335930525278), -6.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v1_recent_volume_momentum",
+      "type": "formula",
+      "description": "Product of log-scaled cumulative blood volume V3 and recentness from V1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "volume_recency_interaction",
+      "expected_model_benefit": "Adds a smooth interaction between cumulative volume and recency that a purely linear model would not form by itself.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.clip((np.log1p(V3) - np.log1p(250.0)) / (np.log1p(11000.0) - np.log1p(250.0)), 0.0, 1.0) * (1.0 - np.clip(V1 / 72.0, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_engagement_index",
+      "type": "formula",
+      "description": "Weighted bounded index combining recentness, log-scaled count, and log-scaled history length with fixed unsupervised weights.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Offers a compact monotone engagement score that can stabilize the margin when individual axes are noisy.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.50 * (1.0 - np.clip(V1 / 72.0, 0.0, 1.0))) + (0.30 * np.clip((np.log1p(V2) - np.log1p(1.0)) / (np.log1p(44.0) - np.log1p(1.0)), 0.0, 1.0)) + (0.20 * np.clip((np.log1p(V4) - np.log1p(2.0)) / (np.log1p(98.0) - np.log1p(2.0)), 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_donation_continuity_score",
+      "type": "judgment",
+      "description": "Score from 0.0 to 1.0 assigned using only V1, V2, V3, and V4: higher for repeated donations spread across a meaningful history with no long dormant tail; lower for one-off, very sparse, or highly dormant patterns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_continuity",
+      "expected_model_benefit": "Adds a qualitative continuity assessment that can capture row-level patterns not fully represented by simple ratios.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_operational_readiness_score",
+      "type": "judgment",
+      "description": "Score from 0.0 to 1.0 judging current engagement readiness from the row values: high when recentness, repeated donation count, cumulative volume, and history length jointly look strong; low when activity is old or sparse.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_engagement",
+      "expected_model_benefit": "Provides a smooth expert-style signal for cases where formula features give conflicting evidence.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6f2106593e7e8bff",
+  "metadata": {}
+}

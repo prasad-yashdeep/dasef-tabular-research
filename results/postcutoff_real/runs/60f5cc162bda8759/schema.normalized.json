@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_salmonella_serovar_20260401",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "green_red_ratio",
+      "type": "formula",
+      "description": "Ratio of the green band (550.90 nm) to the red band (650.80 nm), capturing the relative reflectance peak often associated with specific biological or chemical compositions.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "spectral_ratio",
+      "expected_model_benefit": "Tree models can easily split on this ratio to isolate samples with distinct pigmentation or structural characteristics.",
+      "leakage_risk": "low",
+      "formula": "Band_77_W_550.90 / (Band_127_W_650.80 + 1e-5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nir_red_difference",
+      "type": "formula",
+      "description": "Difference between the near-infrared band (800.40 nm) and the red band (650.80 nm), serving as a proxy for structural scattering versus absorption.",
+      "value_range": [
+        -4500.0,
+        200.0
+      ],
+      "feature_family": "spectral_difference",
+      "expected_model_benefit": "Provides a direct linear combination that trees can use to separate samples based on their red-edge transition magnitude.",
+      "leakage_risk": "low",
+      "formula": "Band_202_W_800.40 - Band_127_W_650.80",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blue_band_intensity_bucket",
+      "type": "judgment",
+      "description": "Categorize the blue band (451.10 nm) intensity into ordinal buckets (0=low, 1=medium, 2=high, 3=very high) based on typical spectral responses.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Reduces noise and provides a robust ordinal feature that tree models can split on to group similar baseline reflectances.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_high_green_peak",
+      "type": "formula",
+      "description": "Boolean indicator for whether the green band (550.90 nm) exceeds a high intensity threshold of 1500.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Creates a hard split for tree models to immediately partition highly reflective samples from darker ones.",
+      "leakage_risk": "low",
+      "formula": "np.where(Band_77_W_550.90 > 1500.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "red_edge_slope",
+      "type": "formula",
+      "description": "Approximation of the red-edge slope by taking the difference between 700.70 nm and 650.80 nm.",
+      "value_range": [
+        -4500.0,
+        2400.0
+      ],
+      "feature_family": "spectral_derivative",
+      "expected_model_benefit": "Captures the rate of change in reflectance, which is highly discriminative for biological materials in tree-based splits.",
+      "leakage_risk": "low",
+      "formula": "Band_152_W_700.70 - Band_127_W_650.80",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_flatness_nir",
+      "type": "formula",
+      "description": "Absolute difference between two NIR bands (800.40 nm and 899.90 nm) to measure the flatness of the spectrum in this region.",
+      "value_range": [
+        0.0,
+        250.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Helps the model identify samples with flat vs. sloping NIR responses, providing a nonlinear interaction feature.",
+      "leakage_risk": "low",
+      "formula": "np.abs(Band_202_W_800.40 - Band_252_W_899.90)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_brightness_proxy",
+      "type": "formula",
+      "description": "Average intensity across three representative visible bands (blue, green, red) to estimate overall sample brightness.",
+      "value_range": [
+        80.0,
+        4000.0
+      ],
+      "feature_family": "spectral_summary",
+      "expected_model_benefit": "Provides a baseline intensity feature, allowing the tree to normalize or condition subsequent splits on overall brightness.",
+      "leakage_risk": "low",
+      "formula": "(Band_27_W_451.10 + Band_77_W_550.90 + Band_127_W_650.80) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "green_peak_prominence",
+      "type": "formula",
+      "description": "Measures how much the green band (550.90 nm) stands out above the maximum of the blue (451.10 nm) and red (650.80 nm) bands.",
+      "value_range": [
+        -4400.0,
+        6100.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Directly quantifies the local maximum shape, which is a strong nonlinear feature for tree models to exploit.",
+      "leakage_risk": "low",
+      "formula": "Band_77_W_550.90 - np.maximum(Band_27_W_451.10, Band_127_W_650.80)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "uv_blue_dropoff",
+      "type": "formula",
+      "description": "Difference between the shortest available wavelength (401.00 nm) and the blue band (451.10 nm).",
+      "value_range": [
+        -1250.0,
+        1860.0
+      ],
+      "feature_family": "spectral_difference",
+      "expected_model_benefit": "Captures absorption characteristics in the near-UV region, providing a distinct splitting criterion.",
+      "leakage_risk": "low",
+      "formula": "Band_2_W_401.00 - Band_27_W_451.10",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nir_noise_indicator",
+      "type": "judgment",
+      "description": "Assess whether the NIR region (800-1000nm) exhibits high noise or scattering by evaluating the variance and sudden spikes in the bands, returning a boolean-like indicator.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "data_quality",
+      "expected_model_benefit": "Allows the tree to route noisy or highly scattered samples into separate leaf nodes, improving overall robustness.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "red_absorption_depth",
+      "type": "formula",
+      "description": "Calculates the depth of the red absorption feature by taking the positive difference between the green peak and the red trough.",
+      "value_range": [
+        0.0,
+        6100.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Provides a rectified, non-negative magnitude of absorption that trees can use to threshold specific material properties.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0.0, Band_77_W_550.90 - Band_127_W_650.80)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_difference_green_red",
+      "type": "formula",
+      "description": "Normalized difference between the green (550.90 nm) and red (650.80 nm) bands, scaling the difference by their sum.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spectral_index",
+      "expected_model_benefit": "Offers an illumination-invariant index that tree models can use to split on relative spectral shape regardless of absolute intensity.",
+      "leakage_risk": "low",
+      "formula": "(Band_77_W_550.90 - Band_127_W_650.80) / (Band_77_W_550.90 + Band_127_W_650.80 + 1e-5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "3b4942ac044a8260",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_tracker_radar_20260316",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_high_fingerprinting",
+      "type": "formula",
+      "description": "Boolean indicator if the domain or any of its resources have a fingerprinting score of 2 or higher.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "fingerprinting",
+      "expected_model_benefit": "Provides a direct split for tree models to isolate domains with aggressive fingerprinting behavior.",
+      "leakage_risk": "low",
+      "formula": "np.where((fingerprinting_score >= 2) | (max_resource_fingerprinting >= 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_retention_days_clipped",
+      "type": "formula",
+      "description": "Maximum cookie TTL in days, clipped to 365 days to handle extreme outliers and focus on practical retention periods.",
+      "value_range": [
+        0.0,
+        365.0
+      ],
+      "feature_family": "cookies",
+      "expected_model_benefit": "Reduces the impact of extreme outliers in cookie expiration dates, allowing tree models to split more effectively on typical retention periods.",
+      "leakage_risk": "low",
+      "formula": "np.clip(max_cookie_ttl_days, 0.0, 365.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "script_to_resource_ratio",
+      "type": "formula",
+      "description": "Ratio of script resources to total resources, indicating how script-heavy the domain's footprint is.",
+      "value_range": [
+        0.0,
+        2500.0
+      ],
+      "feature_family": "resources",
+      "expected_model_benefit": "Captures the composition of resources, helping models identify domains that primarily serve executable code rather than static assets.",
+      "leakage_risk": "low",
+      "formula": "script_count / np.maximum(resource_count, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "api_diversity_score",
+      "type": "formula",
+      "description": "Log-scaled product of distinct API count and mean API weight, representing the breadth and depth of API usage.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "api_usage",
+      "expected_model_benefit": "Creates a nonlinear interaction feature that highlights domains using many different, heavily-weighted APIs.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(distinct_api_count * mean_api_weight)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_suspicious_api_combo",
+      "type": "formula",
+      "description": "Boolean indicator if the domain uses a combination of canvas, navigator, and screen APIs, often associated with device identification.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "api_usage",
+      "expected_model_benefit": "Provides a strong categorical grouping for tree models based on known combinations of APIs used for device profiling.",
+      "leakage_risk": "low",
+      "formula": "np.where((canvas_api_count > 0) & (navigator_api_count > 0) & (screen_api_count > 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "domain_prevalence_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket categorizing the prevalence of the domain across the web.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "metadata",
+      "expected_model_benefit": "Discretizes a highly skewed continuous variable into ordinal buckets, which tree models can split on more robustly.",
+      "leakage_risk": "low",
+      "formula": "np.where(prevalence > 0.1, 3, np.where(prevalence > 0.01, 2, np.where(prevalence > 0.001, 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cookie_intensity",
+      "type": "formula",
+      "description": "Log-scaled sum of total cookies sent and total first-party cookies, measuring the overall cookie footprint.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cookies",
+      "expected_model_benefit": "Combines multiple cookie metrics into a single, well-distributed feature that captures the intensity of stateful tracking.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(total_cookies_sent + total_first_party_cookies)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "owner_privacy_transparency",
+      "type": "formula",
+      "description": "Boolean indicator if the domain has both an identified owner and a privacy policy.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "metadata",
+      "expected_model_benefit": "Groups domains by their level of transparency and accountability, providing a clear categorical split.",
+      "leakage_risk": "low",
+      "formula": "np.where((has_owner == 1) & (has_privacy_policy == 1), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "subdomain_sprawl",
+      "type": "formula",
+      "description": "Log-scaled count of subdomains, indicating the complexity of the domain's infrastructure.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "infrastructure",
+      "expected_model_benefit": "Normalizes a skewed count variable, helping models identify domains that use extensive subdomain generation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(subdomain_count)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_fp_per_site",
+      "type": "formula",
+      "description": "Ratio of weighted fingerprinting score to the number of sites the domain appears on.",
+      "value_range": [
+        0.0,
+        20000.0
+      ],
+      "feature_family": "fingerprinting",
+      "expected_model_benefit": "Normalizes fingerprinting activity by the domain's reach, highlighting domains that are highly aggressive relative to their footprint.",
+      "leakage_risk": "low",
+      "formula": "weighted_fp_score / np.maximum(sites, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_behavior_profile",
+      "type": "judgment",
+      "description": "Judgment feature assessing the overall behavior profile based on API usage patterns, cookie behavior, and fingerprinting scores.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "behavioral_analysis",
+      "expected_model_benefit": "Captures complex, non-formulaic semantic relationships between different types of web activities.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stealth_behavior_score",
+      "type": "judgment",
+      "description": "Judgment feature evaluating the likelihood of stealthy behavior, such as high API usage combined with low prevalence or CNAME cloaking.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "behavioral_analysis",
+      "expected_model_benefit": "Provides a holistic assessment of evasive techniques that are difficult to capture with simple mathematical formulas.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d75c743e1b4a3b42",
+  "metadata": {}
+}

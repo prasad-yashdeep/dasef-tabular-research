@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of first two harmonic amplitudes V1 and V2, capturing relative energy distribution between low-frequency components.",
+      "value_range": [
+        -100.0,
+        100.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Trees can split on harmonic balance which differentiates nasal vs oral phonemes.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / (np.abs(V2) + 0.1), -100.0, 100.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "energy_sum_low",
+      "type": "formula",
+      "description": "Sum of the first two amplitude features representing low-frequency energy concentration.",
+      "value_range": [
+        -3.0,
+        7.5
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a single split point for total low-frequency energy.",
+      "leakage_risk": "low",
+      "formula": "V1 + V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "energy_sum_high",
+      "type": "formula",
+      "description": "Sum of higher-frequency amplitude features V3, V4, V5 capturing upper spectral energy.",
+      "value_range": [
+        -4.5,
+        8.5
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Helps tree split on overall high-band amplitude.",
+      "leakage_risk": "low",
+      "formula": "V3 + V4 + V5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_minus_high_energy",
+      "type": "formula",
+      "description": "Difference between low-band (V1+V2) and high-band (V3+V4+V5) energy sums; indicates spectral tilt.",
+      "value_range": [
+        -12.0,
+        12.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Spectral tilt is a strong indicator for phoneme classification and offers a clean split.",
+      "leakage_risk": "low",
+      "formula": "(V1 + V2) - (V3 + V4 + V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "max_amplitude",
+      "type": "formula",
+      "description": "Maximum amplitude across all 5 harmonic features per row.",
+      "value_range": [
+        -1.7,
+        3.8
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Captures peak harmonic intensity for threshold-based splits.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.maximum(V1, V2), V3), V4), V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "min_amplitude",
+      "type": "formula",
+      "description": "Minimum amplitude across all 5 harmonic features per row.",
+      "value_range": [
+        -1.7,
+        3.6
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Identifies the weakest harmonic, useful for distinguishing voiced/unvoiced sounds.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(np.minimum(np.minimum(np.minimum(V1, V2), V3), V4), V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "amplitude_range",
+      "type": "formula",
+      "description": "Spread between maximum and minimum amplitudes across V1-V5.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Large dispersion vs small dispersion provides discriminative thresholds for trees.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.maximum(V1, V2), V3), V4), V5) - np.minimum(np.minimum(np.minimum(np.minimum(V1, V2), V3), V4), V5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monotonic_decreasing_indicator",
+      "type": "formula",
+      "description": "Boolean indicator (1/0) whether amplitudes strictly decrease from V1 through V5, a pattern in certain phoneme spectra.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Provides a direct categorical split for descending spectral shape.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 > V2) & (V2 > V3) & (V3 > V4) & (V4 > V5), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "argmax_position",
+      "type": "formula",
+      "description": "Index (1-5) of which harmonic feature has the largest amplitude.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Position of spectral peak is a strong categorical discriminator for phonemes.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 >= V2) & (V1 >= V3) & (V1 >= V4) & (V1 >= V5), 1, np.where((V2 >= V3) & (V2 >= V4) & (V2 >= V5), 2, np.where((V3 >= V4) & (V3 >= V5), 3, np.where(V4 >= V5, 4, 5))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_v1_low_v5_pattern",
+      "type": "formula",
+      "description": "Interaction indicator for strong V1 amplitude combined with weak V5, characteristic of certain vowel formants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures a specific spectral configuration as a clean binary split.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 > 1.5) & (V5 < 0.0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_centroid_proxy",
+      "type": "formula",
+      "description": "Amplitude-weighted average of harmonic positions 1-5, approximating spectral centroid for the row.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures where spectral mass concentrates; tree can threshold to distinguish phoneme groups.",
+      "leakage_risk": "low",
+      "formula": "(1.0 * np.abs(V1) + 2.0 * np.abs(V2) + 3.0 * np.abs(V3) + 4.0 * np.abs(V4) + 5.0 * np.abs(V5)) / (np.abs(V1) + np.abs(V2) + np.abs(V3) + np.abs(V4) + np.abs(V5) + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nasal_vs_oral_judgment",
+      "type": "judgment",
+      "description": "Heuristic semantic score expressing how nasal-like the spectral pattern appears: nasals typically have dominant low-frequency energy with damped higher harmonics. Score is high when V1 and V2 dominate while V3-V5 are weak.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Encodes phonetic domain knowledge as a single feature that the tree can threshold for nasal-like vs non-nasal-like rows.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "56eb2d827f1c41f5",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "checking_status_ordinal",
+      "type": "formula",
+      "description": "Ordinal encoding of checking account status from worst to best: negative balance=0, no account=1, low balance=2, adequate balance=3",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "account_status",
+      "expected_model_benefit": "Provides a monotonic ordinal split on checking account health, enabling tree to find threshold-based splits on financial stability",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == '<0', 0, np.where(checking_status == 'no checking', 1, np.where(checking_status == '0<=X<200', 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "savings_status_ordinal",
+      "type": "formula",
+      "description": "Ordinal encoding of savings account status from lowest to highest: no savings=0, <100=1, 100-500=2, 500-1000=3, >=1000=4",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "account_status",
+      "expected_model_benefit": "Enables direct threshold splits on savings wealth level, a strong predictor of creditworthiness",
+      "leakage_risk": "low",
+      "formula": "np.where(savings_status == 'no known savings', 0, np.where(savings_status == '<100', 1, np.where(savings_status == '100<=X<500', 2, np.where(savings_status == '500<=X<1000', 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_risk_score",
+      "type": "formula",
+      "description": "Risk score for credit history: no credits=0, all paid=1, delayed=2, existing paid=3, critical/other=4 (critical may indicate resourcefulness)",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "credit_history",
+      "expected_model_benefit": "Converts nominal credit history into an ordinal risk scale that tree models can split on directly",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_history == 'no credits/all paid', 0, np.where(credit_history == 'all paid', 1, np.where(credit_history == 'delayed previously', 2, np.where(credit_history == 'existing paid', 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_payment_burden",
+      "type": "formula",
+      "description": "Estimated monthly payment as credit_amount divided by duration, representing monthly financial obligation",
+      "value_range": [
+        3.47,
+        4606.0
+      ],
+      "feature_family": "payment_capacity",
+      "expected_model_benefit": "Captures the monthly cash flow burden which is more informative than raw credit amount or duration alone; enables nonlinear interaction splits",
+      "leakage_risk": "low",
+      "formula": "credit_amount / duration",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_to_credit_ratio",
+      "type": "formula",
+      "description": "Installment commitment rate multiplied by monthly payment burden, approximating total payment pressure as percentage of income proxy",
+      "value_range": [
+        3.47,
+        18424.0
+      ],
+      "feature_family": "payment_capacity",
+      "expected_model_benefit": "Combines installment rate with loan size to capture overall repayment stress; nonlinear interaction useful for tree splits",
+      "leakage_risk": "low",
+      "formula": "installment_commitment * (credit_amount / duration)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_score",
+      "type": "formula",
+      "description": "Ordinal employment stability: unemployed=0, <1 year=1, 1-4 years=2, 4-7 years=3, >=7 years=4",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "employment",
+      "expected_model_benefit": "Converts employment duration categories into a stability scale enabling direct threshold splits on job security",
+      "leakage_risk": "low",
+      "formula": "np.where(employment == 'unemployed', 0, np.where(employment == '<1', 1, np.where(employment == '1<=X<4', 2, np.where(employment == '4<=X<7', 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_risk_purpose_flag",
+      "type": "formula",
+      "description": "Binary flag indicating high-risk loan purposes: new car, education, retraining=1; otherwise=0",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loan_purpose",
+      "expected_model_benefit": "Boolean indicator for purposes historically associated with higher default risk, enabling direct boolean splits",
+      "leakage_risk": "low",
+      "formula": "np.where((purpose == 'new car') | (purpose == 'education') | (purpose == 'retraining'), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_vulnerability_index",
+      "type": "formula",
+      "description": "Composite vulnerability score combining negative checking status, low savings, and high installment commitment into a single risk index",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "financial_risk",
+      "expected_model_benefit": "Aggregates multiple financial stress signals into one feature, enabling tree to find compound risk thresholds efficiently",
+      "leakage_risk": "low",
+      "formula": "np.where(checking_status == '<0', 2, np.where(checking_status == '0<=X<200', 1, 0)) + np.where(savings_status == '<100', 2, np.where(savings_status == 'no known savings', 1, 0)) + np.where(installment_commitment >= 3, 2, np.where(installment_commitment == 2, 1, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_amount",
+      "type": "formula",
+      "description": "Log-transformed credit amount to compress right-skewed distribution and enable better threshold splits on loan size",
+      "value_range": [
+        5.52,
+        9.82
+      ],
+      "feature_family": "loan_characteristics",
+      "expected_model_benefit": "Log transformation reduces skewness of credit_amount, allowing tree splits to better separate small vs large loans",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_employment_interaction",
+      "type": "formula",
+      "description": "Product of age and employment stability score, capturing the combined effect of life stage and career stability on creditworthiness",
+      "value_range": [
+        0.0,
+        300.0
+      ],
+      "feature_family": "demographic_stability",
+      "expected_model_benefit": "Nonlinear interaction between age and employment tenure; young unemployed vs older stable employed creates meaningful splits",
+      "leakage_risk": "low",
+      "formula": "age * np.where(employment == 'unemployed', 0, np.where(employment == '<1', 1, np.where(employment == '1<=X<4', 2, np.where(employment == '4<=X<7', 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "collateral_strength_score",
+      "type": "judgment",
+      "description": "Semantic assessment of collateral quality based on property_magnitude and housing: real estate owner=4, life insurance owner=3, car owner=2, renter with property=1, no property/renting=0",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "collateral",
+      "expected_model_benefit": "Captures asset backing quality as a single ordinal score; tree can split on collateral threshold to separate secured vs unsecured risk profiles",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_creditworthiness_profile",
+      "type": "judgment",
+      "description": "Holistic semantic score (0-10) combining checking account health, savings level, employment stability, credit history, and loan purpose risk into a unified creditworthiness signal",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "composite_risk",
+      "expected_model_benefit": "Provides a single composite score that tree models can use as a primary split, capturing multi-dimensional credit risk in one feature",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f0ececaf65f10733",
+  "metadata": {}
+}

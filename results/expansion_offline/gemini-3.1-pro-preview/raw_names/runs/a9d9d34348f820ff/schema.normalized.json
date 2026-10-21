@@ -1,0 +1,190 @@
+{
+  "dataset_name": "amazon_employee_access",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_top_resource",
+      "type": "formula",
+      "description": "Indicator for the most frequently requested resources in the training set.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Provides a direct linear margin for highly common resources which may have distinct baseline approval patterns.",
+      "leakage_risk": "low",
+      "formula": "np.where((RESOURCE == 4675) | (RESOURCE == 79092) | (RESOURCE == 75078), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_top_mgr",
+      "type": "formula",
+      "description": "Indicator for the managers with the highest volume of access requests.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Allows the linear SVM to adjust the decision boundary for high-volume managers.",
+      "leakage_risk": "low",
+      "formula": "np.where((MGR_ID == 770) | (MGR_ID == 2270) | (MGR_ID == 7807), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_default_role_rollup_1",
+      "type": "formula",
+      "description": "Flags if the request belongs to the overwhelmingly dominant ROLE_ROLLUP_1 category.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Creates a strong binary feature for the most common organizational rollup, useful for establishing a baseline margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(ROLE_ROLLUP_1 == 117961, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "role_title_code_diff",
+      "type": "formula",
+      "description": "Absolute difference between ROLE_TITLE and ROLE_CODE, capturing potential hierarchical or sequential relationships in the anonymized IDs.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear SVM to capture proximity or exact matches between role title and code as a continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(ROLE_TITLE - ROLE_CODE), 0.0, 50.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_top_role_deptname",
+      "type": "formula",
+      "description": "Indicator for the most common department names.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Provides a linear shift for requests originating from the largest departments.",
+      "leakage_risk": "low",
+      "formula": "np.where((ROLE_DEPTNAME == 117878) | (ROLE_DEPTNAME == 117941), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_top_role_family",
+      "type": "formula",
+      "description": "Flags if the role family is the most frequent one in the dataset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Helps the model isolate the largest role family for a specific weight adjustment.",
+      "leakage_risk": "low",
+      "formula": "np.where(ROLE_FAMILY == 290919, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_mgr_cooccurrence_score",
+      "type": "judgment",
+      "description": "Semantic judgment of the typicality of the requested RESOURCE for the given MGR_ID, based on historical co-occurrence frequencies.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "behavioral_profile",
+      "expected_model_benefit": "Provides a continuous typicality measure that helps the SVM establish a margin based on request normality.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "role_combination_rarity",
+      "type": "judgment",
+      "description": "An anomaly score evaluating how unusual the combination of ROLE_DEPTNAME, ROLE_TITLE, and ROLE_FAMILY is, with higher values indicating rarer combinations.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "anomaly_detection",
+      "expected_model_benefit": "Acts as a continuous severity measure for unusual role configurations, which is highly effective for linear models.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "manager_team_size_estimate",
+      "type": "judgment",
+      "description": "Estimated general access broadness for the specific MGR_ID, representing how many unique resources the manager's reports typically request.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "behavioral_profile",
+      "expected_model_benefit": "Provides a normalized score representing manager scope, allowing the SVM to scale its confidence based on manager experience.",
+      "leakage_risk": "medium",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "resource_request_frequency_normalized",
+      "type": "judgment",
+      "description": "A continuous score representing the global popularity of the RESOURCE, normalized between 0 and 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "frequency_encoding",
+      "expected_model_benefit": "Transforms a high-cardinality categorical into a smooth continuous feature ideal for linear projections.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "role_rollup_hierarchy_diff",
+      "type": "formula",
+      "description": "Absolute difference between ROLE_ROLLUP_1 and ROLE_ROLLUP_2 IDs, capturing structural distance in the organizational hierarchy.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Provides a continuous distance metric between two levels of the role hierarchy for the SVM to weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(ROLE_ROLLUP_1 - ROLE_ROLLUP_2), 0.0, 1000.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_common_role_family_desc",
+      "type": "formula",
+      "description": "Indicator for the most common role family description.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Isolates the dominant role family description to provide a stable linear offset.",
+      "leakage_risk": "low",
+      "formula": "np.where(ROLE_FAMILY_DESC == 117906, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8a148e7af780319f",
+  "metadata": {}
+}

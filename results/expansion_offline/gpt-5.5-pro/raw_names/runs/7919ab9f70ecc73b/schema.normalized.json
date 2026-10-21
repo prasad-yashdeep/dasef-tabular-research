@@ -1,0 +1,190 @@
+{
+  "dataset_name": "2dplanes",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "x1_signed_axis",
+      "type": "formula",
+      "description": "Row value of x1 kept as a bounded signed coordinate. Training metadata shows this axis spans the full endpoint range, making it a compact orientation cue.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "bounded_coordinate",
+      "expected_model_benefit": "Gives a linear SVM a direct high-spread signed input for margin placement without rescaling.",
+      "leakage_risk": "low",
+      "formula": "x1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mean_axis_projection",
+      "type": "formula",
+      "description": "Average signed coordinate across all ten axes, centered by the row's own balance of high and low values.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Creates a low-noise global orientation projection that a linear margin can weight directly.",
+      "leakage_risk": "low",
+      "formula": "(x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "alternating_axis_projection",
+      "type": "formula",
+      "description": "Alternating signed average across the ordered axes, emphasizing checkerboard-style orientation.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Exposes an additional normalized direction that is complementary to the plain mean projection.",
+      "leakage_risk": "low",
+      "formula": "(x1 - x2 + x3 - x4 + x5 - x6 + x7 - x8 + x9 - x10) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "front_back_signed_ratio",
+      "type": "formula",
+      "description": "Stable normalized contrast between the x2-to-x5 block and the x6-to-x10 block; the denominator scales by total signed magnitude.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "normalized_ratio",
+      "expected_model_benefit": "Provides a scale-stable block-balance score useful for linear margin orientation.",
+      "leakage_risk": "low",
+      "formula": "(((x2 + x3 + x4 + x5) / 4.0) - ((x6 + x7 + x8 + x9 + x10) / 5.0)) / (np.abs((x2 + x3 + x4 + x5) / 4.0) + np.abs((x6 + x7 + x8 + x9 + x10) / 5.0) + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "paired_signed_contrast",
+      "type": "formula",
+      "description": "Average of within-block signed differences for adjacent coordinate pairs among x2 through x9.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "linear_contrast",
+      "expected_model_benefit": "Adds a compact measure of local directional contrast that can support a sharper separating hyperplane.",
+      "leakage_risk": "low",
+      "formula": "((x2 - x3) + (x4 - x5) + (x6 - x7) + (x8 - x9)) / 8.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_front_alignment",
+      "type": "formula",
+      "description": "Product of x1 with the average signed value of the x2-to-x5 block.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "pairwise_interaction",
+      "expected_model_benefit": "Injects a simple second-order interaction so a linear SVM can use alignment between the endpoint axis and the front block.",
+      "leakage_risk": "low",
+      "formula": "(x1 * (x2 + x3 + x4 + x5)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_back_alignment",
+      "type": "formula",
+      "description": "Product of x1 with the average signed value of the x6-to-x10 block.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "pairwise_interaction",
+      "expected_model_benefit": "Captures signed alignment between x1 and the back block as a bounded nonlinear margin cue.",
+      "leakage_risk": "low",
+      "formula": "(x1 * (x6 + x7 + x8 + x9 + x10)) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cross_block_product_alignment",
+      "type": "formula",
+      "description": "Average product alignment between matched coordinates in the front and back blocks.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "pairwise_interaction",
+      "expected_model_benefit": "Approximates a low-degree polynomial projection while remaining interpretable and bounded.",
+      "leakage_risk": "low",
+      "formula": "((x2 * x6) + (x3 * x7) + (x4 * x8) + (x5 * x9)) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "radial_energy_all_axes",
+      "type": "formula",
+      "description": "Mean squared coordinate magnitude across all ten axes.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "energy_density",
+      "expected_model_benefit": "Measures distance from the origin as a smooth severity feature, helping distinguish central rows from corner-like rows.",
+      "leakage_risk": "low",
+      "formula": "(x1**2 + x2**2 + x3**2 + x4**2 + x5**2 + x6**2 + x7**2 + x8**2 + x9**2 + x10**2) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adjacent_pair_disagreement",
+      "type": "formula",
+      "description": "Normalized average absolute difference across adjacent coordinate pairs.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "absolute_contrast",
+      "expected_model_benefit": "Adds a smooth severity measure for local sign or magnitude mismatches, enabling better separation of ordered versus fragmented plane patterns.",
+      "leakage_risk": "low",
+      "formula": "(np.abs(x1 - x2) + np.abs(x3 - x4) + np.abs(x5 - x6) + np.abs(x7 - x8) + np.abs(x9 - x10)) / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "plane_pattern_coherence_score",
+      "type": "judgment",
+      "description": "Numeric geometric judgment from 0.0 to 1.0 based only on the row: high when signs and magnitudes across coordinates appear organized into a coherent low-dimensional plane pattern; low when the row appears scattered or internally inconsistent.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_geometry_judgment",
+      "expected_model_benefit": "Supplies a compact semantic regularity score that can improve margin ordering when exact algebraic interactions are too sparse.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "geometric_boundary_ambiguity_score",
+      "type": "judgment",
+      "description": "Numeric judgment from 0.0 to 1.0 based only on the row: high when projections and energy appear near-canceling or evenly balanced, low when one geometric orientation is dominant.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_margin_judgment",
+      "expected_model_benefit": "Provides a soft ambiguity measure that can help a linear SVM place wider margins around uncertain geometric regions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "113bf7e5a9692080",
+  "metadata": {}
+}

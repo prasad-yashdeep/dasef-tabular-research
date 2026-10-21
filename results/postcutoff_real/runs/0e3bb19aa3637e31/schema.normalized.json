@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_clinical_trials_ai_20260517",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "ai_complexity_score",
+      "type": "formula",
+      "description": "Sum of positive indicators for various AI and machine learning mentions, creating a dense magnitude feature for distance calculations.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Provides a continuous scale of AI involvement, improving neighborhood resolution for trials with similar technological depth.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0, mentions_algorithm) + np.maximum(0, mentions_machine_learning) + np.maximum(0, mentions_deep_learning) + np.maximum(0, mentions_ai)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "trial_rigor_index",
+      "type": "formula",
+      "description": "Composite score of trial design rigor, combining randomization, blinding, and evidence strength.",
+      "value_range": [
+        0.0,
+        2.9
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Groups trials with similar methodological quality, which is a strong structural determinant in clinical trial spaces.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0, has_randomization) + np.maximum(0, has_blinding) + evidence_strength_score",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "global_reach_distance",
+      "type": "formula",
+      "description": "Euclidean distance from an unsupervised prototype representing a highly international trial (8 countries, international flag set).",
+      "value_range": [
+        0.0,
+        8.1
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Transforms sparse geographic indicators into a continuous distance metric, ideal for KNN geometry.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((8.0 - country_count)**2 + (1.0 - np.maximum(0, international_trial))**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tech_deployment_similarity",
+      "type": "formula",
+      "description": "Inverse distance similarity to an unsupervised prototype with maximum real-world deployment and software mentions.",
+      "value_range": [
+        0.33,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Creates a bounded similarity score that pulls together trials focused on deployed software solutions.",
+      "leakage_risk": "low",
+      "formula": "1.0 / (1.0 + np.abs(1.0 - real_world_deployment_score) + np.abs(1.0 - np.maximum(0, mentions_software)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "patient_diversity_indicator",
+      "type": "formula",
+      "description": "Sum of demographic inclusion flags (children, older adults, all sexes) to measure population breadth.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Helps KNN identify clusters of trials with similar target demographic profiles.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0, includes_children) + np.maximum(0, includes_older_adults) + sex_all",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "academic_gov_collaboration_dist",
+      "type": "formula",
+      "description": "Distance from an unsupervised prototype representing a fully academic and government-sponsored trial.",
+      "value_range": [
+        0.0,
+        1.42
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Separates trials based on their proximity to non-commercial funding structures in the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((1.0 - np.maximum(0, academic_sponsored))**2 + (1.0 - np.maximum(0, government_sponsored))**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "phase_enrollment_scale",
+      "type": "formula",
+      "description": "Normalized additive scale combining trial phase and enrollment size.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Provides a unified scale for trial maturity and size, preventing larger raw values from dominating distance metrics.",
+      "leakage_risk": "low",
+      "formula": "(np.maximum(0, trial_phase_bucket) / 5.0) + (np.maximum(0, enrollment_bucket) / 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ai_safety_privacy_focus",
+      "type": "formula",
+      "description": "Sum of mentions related to ethical and safe AI use (safety, privacy, bias).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Clusters trials that explicitly address AI risks, adding a thematic dimension to the distance calculation.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0, mentions_safety) + np.maximum(0, mentions_privacy) + np.maximum(0, mentions_bias)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "digital_health_device_proximity",
+      "type": "formula",
+      "description": "Distance to an unsupervised prototype representing a trial utilizing both wearables and mobile apps.",
+      "value_range": [
+        0.0,
+        1.42
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Groups trials by their reliance on patient-facing digital health hardware/software.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((1.0 - np.maximum(0, mentions_wearable))**2 + (1.0 - np.maximum(0, mentions_mobile_app))**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_innovation_cluster",
+      "type": "judgment",
+      "description": "Semantic assessment of whether the trial belongs to a highly innovative AI cluster, based on the intersection of disease area, AI use type, and deep learning mentions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Injects domain knowledge about what constitutes innovative combinations, creating a dense cluster center for KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_regulatory_readiness",
+      "type": "judgment",
+      "description": "Semantic evaluation of the trial's readiness for regulatory scrutiny, synthesizing evidence strength, safety/privacy mentions, and trial phase.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_score",
+      "expected_model_benefit": "Provides a continuous semantic axis that aligns trials by their maturity and compliance focus, improving neighborhood relevance.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_operational_complexity",
+      "type": "judgment",
+      "description": "Semantic judgment of the trial's operational complexity, considering international footprint, enrollment size, blinding, and randomization requirements.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_score",
+      "expected_model_benefit": "Acts as a scaling factor in distance calculations, ensuring trials with vastly different logistical burdens are separated.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "81ec5b1ff651da1b",
+  "metadata": {}
+}

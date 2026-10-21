@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "tree",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "recency_bucket_ord",
+      "type": "formula",
+      "description": "Ordinal recency bucket from V1: 0 for 0-2 months, 1 for 3-11, 2 for 12-23, 3 for 24 or more.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "recency_bucket",
+      "expected_model_benefit": "Gives a tree stable recency tiers instead of relying only on many fine V1 cuts.",
+      "leakage_risk": "low",
+      "formula": "np.where(V1 >= 24, 3, np.where(V1 >= 12, 2, np.where(V1 >= 3, 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_count_bucket_ord",
+      "type": "formula",
+      "description": "Ordinal count bucket from V2: 0 for 1 donation, 1 for 2-4, 2 for 5-9, 3 for 10 or more.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "frequency_bucket",
+      "expected_model_benefit": "Compresses skewed donation counts into stable ordered tiers that are easy to split.",
+      "leakage_risk": "low",
+      "formula": "np.where(V2 >= 10, 3, np.where(V2 >= 5, 2, np.where(V2 >= 2, 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_span_bucket_ord",
+      "type": "formula",
+      "description": "Ordinal months-since-first-donation bucket from V4: 0 for under 12, 1 for 12-35, 2 for 36-59, 3 for 60 or more.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "tenure_bucket",
+      "expected_model_benefit": "Encodes history length as coarse levels, reducing sensitivity to high-end outliers.",
+      "leakage_risk": "low",
+      "formula": "np.where(V4 >= 60, 3, np.where(V4 >= 36, 2, np.where(V4 >= 12, 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_span_months",
+      "type": "formula",
+      "description": "Nonnegative estimated months between first and most recent donation, using V4 minus V1 clipped at zero.",
+      "value_range": [
+        0.0,
+        98.0
+      ],
+      "feature_family": "time_span",
+      "expected_model_benefit": "Separates long participation spans from one-episode histories and supports interaction with count features.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V4 - V1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_density_per_month",
+      "type": "formula",
+      "description": "Donation count per recorded month, using V2 divided by V4 plus one for stability.",
+      "value_range": [
+        0.0101,
+        14.6667
+      ],
+      "feature_family": "rate_ratio",
+      "expected_model_benefit": "Adds an intensity ratio that trees can split on directly beyond raw count and span.",
+      "leakage_risk": "low",
+      "formula": "V2 / (V4 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_span_ratio_clipped",
+      "type": "formula",
+      "description": "Current gap as a clipped share of recorded span, using V1 divided by V4 plus one and capped at 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "relative_recency",
+      "expected_model_benefit": "Captures proportional staleness rather than only absolute month count.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / (V4 + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "average_months_per_donation",
+      "type": "formula",
+      "description": "Average recorded months per donation, computed as V4 divided by V2.",
+      "value_range": [
+        0.045,
+        98.0
+      ],
+      "feature_family": "cadence_ratio",
+      "expected_model_benefit": "Exposes donation cadence so a tree can split between tightly spaced and sparse histories.",
+      "leakage_risk": "low",
+      "formula": "V4 / V2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_volume_bucket_ord",
+      "type": "formula",
+      "description": "Ordinal total volume bucket from V3: 0 for under 500, 1 for 500-999, 2 for 1000-2499, 3 for 2500 or more.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "volume_bucket",
+      "expected_model_benefit": "Turns total volume into coarse interpretable tiers aligned with direct split points.",
+      "leakage_risk": "low",
+      "formula": "np.where(V3 >= 2500.0, 3, np.where(V3 >= 1000.0, 2, np.where(V3 >= 500.0, 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_regular_activity_flag",
+      "type": "formula",
+      "description": "Binary interaction indicator for short recency and repeated donations: V1 at most 6 and V2 at least 5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Represents a useful conjunction in one feature, reducing the number of splits needed.",
+      "leakage_risk": "low",
+      "formula": "np.where((V1 <= 6) & (V2 >= 5), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "long_span_sparse_activity_flag",
+      "type": "formula",
+      "description": "Binary interaction indicator for long recorded span and few donations: V4 at least 36 and V2 at most 2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Exposes sparse-history patterns that may be missed by separate span and count splits.",
+      "leakage_risk": "low",
+      "formula": "np.where((V4 >= 36) & (V2 <= 2), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_lifecycle_stage_score",
+      "type": "judgment",
+      "description": "Semantic ordinal score from 0 to 4 assigned from V1, V2, V3, and V4 only: 0 means one-off or dormant, 2 means intermittent, 4 means sustained and recently active.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_lifecycle",
+      "expected_model_benefit": "Provides a compact expert-style summary of lifecycle patterns that may require multiple raw splits.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "reactivation_window_score",
+      "type": "judgment",
+      "description": "Semantic score from 0 to 4 assigned from V1, V2, V3, and V4 only: 0 means little prior engagement or an extreme gap, 4 means substantial prior engagement with a moderate current lapse.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_reactivation",
+      "expected_model_benefit": "Adds an expert-style nonlinear grouping for comeback-like behavior by combining prior engagement and current gap length.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "7bd97b7bbcaa1ed0",
+  "metadata": {}
+}

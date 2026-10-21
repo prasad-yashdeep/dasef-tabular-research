@@ -1,0 +1,190 @@
+{
+  "dataset_name": "compass",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "age_youth_scaled",
+      "type": "formula",
+      "description": "Younger-age score scaled from the training-fold age span, with 18 mapped near 1 and 77 near 0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "age_normalization",
+      "expected_model_benefit": "Gives the linear SVM a smooth monotone age axis that can be combined directly with history counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((77.0 - age) / 59.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_mean_deviation_scaled",
+      "type": "formula",
+      "description": "Absolute deviation from the training-fold mean age, scaled by the largest observed distance from that mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "age_normalization",
+      "expected_model_benefit": "Adds a simple V-shaped age component without relying on bins.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(age - 33.740837172040855) / 43.259162827959145, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adult_prior_log_scaled",
+      "type": "formula",
+      "description": "Prior-count intensity compressed logarithmically and scaled by the training-fold maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "history_intensity",
+      "expected_model_benefit": "Reduces the impact of extreme counts while preserving ordered severity for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(priors_count) / np.log1p(43.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adult_prior_per_year_scaled",
+      "type": "formula",
+      "description": "Prior count divided by approximate adult exposure years, with stabilization for young ages.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "history_density",
+      "expected_model_benefit": "Separates dense short-history records from comparable counts accumulated over many years.",
+      "leakage_risk": "low",
+      "formula": "np.clip(priors_count / np.maximum(age - 17.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "juvenile_weighted_severity_scaled",
+      "type": "formula",
+      "description": "Weighted juvenile-history score using felony, misdemeanor, and other counts with 3:2:1 severity weights.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "juvenile_history",
+      "expected_model_benefit": "Captures composition of juvenile history in a single ordered dimension.",
+      "leakage_risk": "low",
+      "formula": "np.clip((3.0 * juv_fel_count + 2.0 * juv_misd_count + juv_other_count) / 65.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "juvenile_felony_mix_scaled",
+      "type": "formula",
+      "description": "Smoothed ratio of juvenile felony count within total juvenile history.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "juvenile_history",
+      "expected_model_benefit": "Adds severity-mix information that is not captured by total juvenile volume alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(juv_fel_count / (juv_fel_count + juv_misd_count + juv_other_count + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "juvenile_share_of_history_scaled",
+      "type": "formula",
+      "description": "Share of recorded history occurring in juvenile counts, stabilized by one count unit.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "history_composition",
+      "expected_model_benefit": "Distinguishes early-concentrated records from adult-only records through a bounded ratio.",
+      "leakage_risk": "low",
+      "formula": "np.clip((juv_fel_count + juv_misd_count + juv_other_count) / (juv_fel_count + juv_misd_count + juv_other_count + priors_count + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "history_age_composite_scaled",
+      "type": "formula",
+      "description": "Weighted composite of log priors, juvenile severity, and younger-age score, with all ingredients normalized.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Offers an approximate linear projection of age and history severity that can align with a single SVM weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * (np.log1p(priors_count) / np.log1p(43.0)) + 0.25 * ((3.0 * juv_fel_count + 2.0 * juv_misd_count + juv_other_count) / 65.0) + 0.20 * np.clip((77.0 - age) / 59.0, 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "screening_gap_abs_scaled",
+      "type": "formula",
+      "description": "Absolute gap in days between screening and arrest, scaled by the training-fold standard deviation and clipped.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "administrative_timing",
+      "expected_model_benefit": "Captures administrative timing irregularity as a smooth context signal.",
+      "leakage_risk": "medium",
+      "formula": "np.clip(np.abs(days_b_screening_arrest) / 75.04367745966188, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "screening_gap_direction_scaled",
+      "type": "formula",
+      "description": "Signed screening-to-arrest day gap centered on the training-fold average and clipped to a bounded interval.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "administrative_timing",
+      "expected_model_benefit": "Allows the margin to distinguish before-vs-after screening timing patterns beyond absolute magnitude.",
+      "leakage_risk": "medium",
+      "formula": "np.clip((days_b_screening_arrest - 4.319046665331464) / 75.04367745966188, -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "charge_context_severity_judgment",
+      "type": "judgment",
+      "description": "Semantic 0-1 rating of c_charge_degree: near 0 for minor or procedural charge contexts, near 1 for serious felony, person-harm, weapon, or high-seriousness charge contexts, with intermediate values for ambiguous entries.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "charge_semantics",
+      "expected_model_benefit": "Converts a multi-code charge field into one dense ordered axis, reducing sparse-code burden for a linear SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "record_persistence_judgment",
+      "type": "judgment",
+      "description": "Semantic 0-1 rating from age, priors_count, juv_fel_count, juv_misd_count, and juv_other_count; near 0 for no or isolated history, near 1 for persistent multi-period history or unusually dense adult history for the person's age.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "history_semantics",
+      "expected_model_benefit": "Adds a human-interpretable persistence axis that can capture escalation or life-course context not expressed by one count alone.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "7f0cf1e7c3788062",
+  "metadata": {}
+}

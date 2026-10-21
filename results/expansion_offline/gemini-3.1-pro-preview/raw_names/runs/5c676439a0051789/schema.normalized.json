@@ -1,0 +1,190 @@
+{
+  "dataset_name": "click_prediction_small",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_impression",
+      "type": "formula",
+      "description": "Log-transformed impression count to handle high skewness and provide a smooth continuous feature.",
+      "value_range": [
+        0.69,
+        8.61
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces the impact of extreme outlier impression values, allowing the linear SVM to learn a more stable weight.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(impression)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "position_depth_ratio",
+      "type": "formula",
+      "description": "Ratio of the ad's position to the total depth of the session, indicating relative placement.",
+      "value_range": [
+        0.33,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a normalized measure of ad placement that scales linearly, which is ideal for margin-based classifiers.",
+      "leakage_risk": "low",
+      "formula": "position / depth",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_top_position",
+      "type": "formula",
+      "description": "Binary indicator for whether the ad is in the very first position.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Captures the non-linear premium effect of being the first ad shown, providing a clear linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.where(position == 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_bottom_position",
+      "type": "formula",
+      "description": "Binary indicator for whether the ad is at the very bottom of the session depth.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Highlights ads placed at the end of a user's scroll, which may have distinct visibility characteristics.",
+      "leakage_risk": "low",
+      "formula": "np.where(position == depth, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_registered_user",
+      "type": "formula",
+      "description": "Binary indicator for whether the user has a valid user_id (greater than 0).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Differentiates between guest users and registered users, which often correlates with different engagement baselines.",
+      "leakage_risk": "low",
+      "formula": "np.where(user_id > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_keyword",
+      "type": "formula",
+      "description": "Binary indicator for whether the ad has an associated keyword_id.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Identifies ads that are targeted via keywords, providing a categorical split for the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(keyword_id > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_description",
+      "type": "formula",
+      "description": "Binary indicator for whether the ad has an associated description_id.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Flags ads with detailed text descriptions, which may influence user attention.",
+      "leakage_risk": "low",
+      "formula": "np.where(description_id > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_title",
+      "type": "formula",
+      "description": "Binary indicator for whether the ad has an associated title_id.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Flags ads with specific titles, contributing to the assessment of ad completeness.",
+      "leakage_risk": "low",
+      "formula": "np.where(title_id > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_reach_score",
+      "type": "formula",
+      "description": "Composite score combining log impressions and session depth to estimate effective reach.",
+      "value_range": [
+        0.23,
+        8.61
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a continuous severity measure of ad exposure that a linear model can easily weight.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(impression) / depth",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_completeness",
+      "type": "formula",
+      "description": "Sum of indicators for keyword, description, and title presence.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a linear scale of ad metadata richness, allowing the SVM to assign higher weights to fully populated ads.",
+      "leakage_risk": "low",
+      "formula": "np.where(keyword_id > 0, 1.0, 0.0) + np.where(description_id > 0, 1.0, 0.0) + np.where(title_id > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "user_engagement_potential",
+      "type": "judgment",
+      "description": "Assess the potential engagement level of the user based on the presence of user_id and the depth of the session. Score from 0.0 (low) to 1.0 (high).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures nuanced user behavior patterns that simple formulas might miss, providing a smooth probability-like feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ad_prominence_score",
+      "type": "judgment",
+      "description": "Evaluate the prominence of the ad based on its position, depth, and impression count. Score from 0.0 (hidden) to 1.0 (highly prominent).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Translates raw placement metrics into a continuous semantic score of visibility, aligning perfectly with linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c1d57b340b4f6daa",
+  "metadata": {}
+}

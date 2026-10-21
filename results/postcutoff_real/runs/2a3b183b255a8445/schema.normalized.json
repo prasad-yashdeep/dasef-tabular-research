@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_prediction_markets_20260517",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "platform_three_indicator",
+      "type": "formula",
+      "description": "Binary indicator for platform_id equal to 3.0; keeps a recurring platform grouping from being treated as an arbitrary numeric gap.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "platform_cluster_indicator",
+      "expected_model_benefit": "Adds a simple platform neighborhood anchor for distance-based matching.",
+      "leakage_risk": "low",
+      "formula": "np.where(platform_id == 3.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_id_log_scaled",
+      "type": "formula",
+      "description": "Log-scaled position of market_id between the observed training-fold minimum and maximum; useful when the identifier carries ordering or source context.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "identifier_context",
+      "expected_model_benefit": "Compresses high-cardinality identifier distances onto a bounded scale for smoother neighbor search.",
+      "leakage_risk": "medium",
+      "formula": "np.clip((np.log1p(market_id) - np.log1p(7.0)) / (np.log1p(43775102.0) - np.log1p(7.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_midpoint_scaled",
+      "type": "formula",
+      "description": "Scaled midpoint of the high-low band, using the observed price bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_level",
+      "expected_model_benefit": "Preserves price level on a bounded scale so rows with similar central prices are closer.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((high + low) / 2.0) - 0.0015) / (0.999 - 0.0015), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_spread_scaled",
+      "type": "formula",
+      "description": "High-low band width divided by the training-fold maximum possible width.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_range",
+      "expected_model_benefit": "Gives distance search a normalized range axis without raw scale dominance.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.maximum(high - low, 0.0) / 0.998, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "open_band_position",
+      "type": "formula",
+      "description": "Relative position of open within the high-low band, clipped to [0,1] for robust geometry.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_position",
+      "expected_model_benefit": "Groups rows by within-band shape, distinguishing low-edge, middle, and high-edge openings.",
+      "leakage_risk": "low",
+      "formula": "np.clip((open - low) / np.maximum(high - low, 0.001), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_center_prototype_distance",
+      "type": "formula",
+      "description": "Euclidean distance from the unsupervised training-fold price center for open, high, and low, standardized by their training-fold spreads and clipped.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Creates a generic prototype-distance coordinate so atypical price triples are farther from price-center neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((open - 0.5287599762087843) / 0.3540544512478701) ** 2 + ((high - 0.595998544461864) / 0.34125722093544103) ** 2 + ((low - 0.3938213219036954) / 0.3399546615100605) ** 2) / 3.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_volume_scaled",
+      "type": "formula",
+      "description": "Volume compressed by log1p and scaled by the training-fold maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "activity_scale",
+      "expected_model_benefit": "Reduces dominance of extreme volume values while preserving liquidity ordering.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(volume) / np.log1p(833069.887443), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_trade_count_scaled",
+      "type": "formula",
+      "description": "trade_count compressed by log1p and scaled from its observed minimum to maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "activity_scale",
+      "expected_model_benefit": "Adds a bounded transaction-activity axis for distance comparisons.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(trade_count) - np.log1p(1.0)) / (np.log1p(2074.0) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_per_trade_scaled",
+      "type": "formula",
+      "description": "Log-scaled volume per trade_count, with a denominator guard for stable row-wise evaluation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "activity_ratio",
+      "expected_model_benefit": "Separates many-small-trade patterns from fewer-large-trade patterns in neighbor geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(volume / np.maximum(trade_count, 1.0)) / np.log1p(833069.887443), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "activity_center_prototype_distance",
+      "type": "formula",
+      "description": "Euclidean distance from an unsupervised training-fold activity center using log-scaled volume and trade_count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Adds a prototype-distance coordinate for rows with jointly typical or unusual trading activity.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((np.log1p(volume) - np.log1p(3734.7362029937785)) / np.log1p(21844.677660814326)) ** 2 + ((np.log1p(trade_count) - np.log1p(10.158765708597736)) / np.log1p(35.220857791378556)) ** 2) / 2.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_context_score",
+      "type": "judgment",
+      "description": "Semantic ordinal score, supplied row-wise, summarizing apparent trading depth from volume and trade_count; 0 is very sparse and 4 is very dense.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_activity",
+      "expected_model_benefit": "Provides coarse similarity bins for activity context, reducing sensitivity to exact extreme counts in distance neighborhoods.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_structure_context_score",
+      "type": "judgment",
+      "description": "Semantic ordinal score, supplied row-wise, summarizing whether open, high, and low form a compact centered shape or a wide edge-skewed shape; 0 is compact/centered and 4 is wide/edge-skewed.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "semantic_price_structure",
+      "expected_model_benefit": "Adds an interpretable price-shape axis to group rows with similar movement patterns when exact numeric distances differ.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "39f22a9694f6acd3",
+  "metadata": {}
+}

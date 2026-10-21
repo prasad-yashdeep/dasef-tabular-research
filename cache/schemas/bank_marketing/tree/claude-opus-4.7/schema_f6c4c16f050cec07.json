@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "tree",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "duration_zero_flag",
+      "type": "formula",
+      "description": "Indicator that call duration is zero, implying no real contact occurred.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Tree can isolate trivially non-converting contacts with a single split.",
+      "leakage_risk": "low",
+      "formula": "np.where(duration <= 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket of call duration in seconds (0=<60, 1=60-180, 2=180-360, 3=360-600, 4=>600).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Compact ordinal feature aligns with strong nonlinear effect of duration on conversion.",
+      "leakage_risk": "low",
+      "formula": "np.where(duration < 60, 0, np.where(duration < 180, 1, np.where(duration < 360, 2, np.where(duration < 600, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_duration",
+      "type": "formula",
+      "description": "Log-scaled duration to compress long tail for cleaner threshold splits.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Provides monotonic compressed signal; helps tree thresholds in low-duration region.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(duration)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "never_contacted_before",
+      "type": "formula",
+      "description": "Boolean indicator that the client was never previously contacted (pdays sentinel 999).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Separates first-time contacts from repeat targets, a strong split point.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_contact_flag",
+      "type": "formula",
+      "description": "Indicator that pdays is small (<=7), meaning very recent prior contact.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Captures hot-lead recency interaction with previous campaign.",
+      "leakage_risk": "low",
+      "formula": "np.where((pdays <= 7) & (pdays >= 0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_pressure_bucket",
+      "type": "formula",
+      "description": "Bucketed contact intensity in current campaign (0=1, 1=2-3, 2=4-6, 3=>=7).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Encodes diminishing returns / fatigue from repeated contacts.",
+      "leakage_risk": "low",
+      "formula": "np.where(campaign <= 1, 0, np.where(campaign <= 3, 1, np.where(campaign <= 6, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_success_signal",
+      "type": "formula",
+      "description": "Composite signal: had previous contacts and pdays not sentinel, weighted by previous count.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Combines prior outreach history into one splittable score.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays < 999, np.clip(previous, 0, 6), 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Life-stage ordinal bucket (0=<25 young, 1=25-34, 2=35-49, 3=50-59, 4=60+ retiree).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ordinal_bucket",
+      "expected_model_benefit": "Captures non-monotonic age effect (young and retired tend to convert more).",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 25, 0, np.where(age < 35, 1, np.where(age < 50, 2, np.where(age < 60, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macro_stress_score",
+      "type": "formula",
+      "description": "Macroeconomic stress proxy combining negative emp.var.rate and high euribor3m and nr.employed.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "One axis summarizing macro climate which strongly shifts baseline conversion rate.",
+      "leakage_risk": "low",
+      "formula": "emp.var.rate + (euribor3m - 3.0) + (nr.employed - 5167.0) / 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "favorable_macro_flag",
+      "type": "formula",
+      "description": "Indicator of low-rate, contracting-employment regime historically more receptive to deposit offers.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "boolean_indicator",
+      "expected_model_benefit": "Single-split capture of macro regime favoring conversion.",
+      "leakage_risk": "low",
+      "formula": "np.where((emp.var.rate < -1.0) & (euribor3m < 2.0), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cellular_contact_flag",
+      "type": "judgment",
+      "description": "Semantic indicator that the contact channel is cellular (encoded value 0 in contact field based on observed coding), which historically yields higher response than telephone.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_grouping",
+      "expected_model_benefit": "Tree can use channel quality as a top-level split.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "client_risk_profile",
+      "type": "judgment",
+      "description": "Ordinal semantic risk profile based on combination of default, housing loan, and personal loan status: 0=clean, 1=has one obligation, 2=multiple obligations or default indication, 3=highest risk.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Combines credit-related fields into a single ordinal axis that trees can split for risk-aware segmentation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f6c4c16f050cec07",
+  "metadata": {}
+}

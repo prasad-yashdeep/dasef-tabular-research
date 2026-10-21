@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "glucose_risk_tier",
+      "type": "formula",
+      "description": "Ordinal bucket of plasma glucose into 4 clinically meaningful tiers: normal (<100), pre-diabetic (100-125), diabetic (126-199), severe (>=200 capped). Provides direct threshold splits for tree models.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "glucose_metabolism",
+      "expected_model_benefit": "Encodes nonlinear glucose thresholds as ordinal integers, enabling single-split decisions at clinically meaningful boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas < 100, 0, np.where(plas < 126, 1, np.where(plas < 200, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_obesity_tier",
+      "type": "formula",
+      "description": "Ordinal BMI category: underweight/missing (0, mass<=0), normal (1, 0<mass<25), overweight (2, 25-29.9), obese class I (3, 30-34.9), obese class II+ (4, >=35). Captures nonlinear obesity risk.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "body_composition",
+      "expected_model_benefit": "Converts continuous BMI into clinically meaningful ordinal splits that tree models can leverage directly.",
+      "leakage_risk": "low",
+      "formula": "np.where(mass <= 0, 0, np.where(mass < 25, 1, np.where(mass < 30, 2, np.where(mass < 35, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_decade_bucket",
+      "type": "formula",
+      "description": "Age grouped into decade buckets (20s=0, 30s=1, 40s=2, 50s=3, 60+=4). Captures nonlinear age-related diabetes risk progression.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Provides ordinal age groupings that align with known decade-level risk increases, enabling efficient tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 30, 0, np.where(age < 40, 1, np.where(age < 50, 2, np.where(age < 60, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_parity_indicator",
+      "type": "formula",
+      "description": "Binary flag: 1 if number of pregnancies >= 6 (above ~75th percentile), indicating high parity which is associated with gestational diabetes history.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "reproductive_history",
+      "expected_model_benefit": "Boolean threshold feature that tree models can split on directly to capture high-parity risk group.",
+      "leakage_risk": "low",
+      "formula": "np.where(preg >= 6, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_bmi_interaction",
+      "type": "formula",
+      "description": "Product of normalized glucose and BMI deviations from their training means (plas-120.9)*(mass-32.0)/1000. Captures joint metabolic risk where both elevated glucose and high BMI compound risk.",
+      "value_range": [
+        -5.0,
+        15.0
+      ],
+      "feature_family": "metabolic_interaction",
+      "expected_model_benefit": "Nonlinear interaction term that tree models can split on to identify patients with simultaneously elevated glucose and BMI.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.9) * (mass - 32.0)) / 1000.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_missing_flag",
+      "type": "formula",
+      "description": "Binary flag: 1 if insulin value is 0 (likely missing/not recorded), 0 otherwise. Zero insulin in non-type-1 diabetics is physiologically implausible and indicates data missingness.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "data_quality",
+      "expected_model_benefit": "Captures systematic missingness pattern in insulin that may correlate with measurement context and risk profile.",
+      "leakage_risk": "low",
+      "formula": "np.where(insu == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_insulin_nonzero",
+      "type": "formula",
+      "description": "Log-transformed insulin level using log1p to handle zeros. Compresses the highly right-skewed insulin distribution for better tree splits.",
+      "value_range": [
+        0.0,
+        6.8
+      ],
+      "feature_family": "glucose_metabolism",
+      "expected_model_benefit": "Reduces skewness of insulin distribution, enabling more balanced tree splits across the insulin range.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(insu)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_risk_tier",
+      "type": "formula",
+      "description": "Ordinal bucket of diabetes pedigree function into 3 tiers: low hereditary risk (<0.3), moderate (0.3-0.7), high (>=0.7). Captures nonlinear genetic predisposition.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "genetic_risk",
+      "expected_model_benefit": "Converts continuous pedigree score into ordinal risk tiers enabling direct threshold splits on hereditary risk.",
+      "leakage_risk": "low",
+      "formula": "np.where(pedi < 0.3, 0, np.where(pedi < 0.7, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "skin_bmi_ratio",
+      "type": "formula",
+      "description": "Ratio of skin thickness to BMI. Captures relative subcutaneous fat distribution independent of overall body size. Clipped to handle zero BMI edge cases.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "body_composition",
+      "expected_model_benefit": "Provides a body composition ratio feature that may reveal fat distribution patterns not captured by BMI alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(skin / np.maximum(mass, 1.0), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_risk_score",
+      "type": "formula",
+      "description": "Composite additive score combining normalized glucose tier (0-3), BMI obesity tier (0-4), and high parity flag (0-1). Ranges 0-8, summarizing multi-factor metabolic risk.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "metabolic_interaction",
+      "expected_model_benefit": "Aggregates multiple risk dimensions into a single ordinal score, enabling efficient single-split decisions on combined risk.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas < 100, 0, np.where(plas < 126, 1, np.where(plas < 200, 2, 3))) + np.where(mass <= 0, 0, np.where(mass < 25, 1, np.where(mass < 30, 2, np.where(mass < 35, 3, 4)))) + np.where(preg >= 6, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_abnormal",
+      "type": "judgment",
+      "description": "Semantic assessment of blood pressure status: 0=missing/zero (pres=0), 1=low (<60), 2=normal (60-89), 3=elevated/hypertensive (>=90). Captures clinical blood pressure categories relevant to cardiovascular-metabolic risk.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cardiovascular",
+      "expected_model_benefit": "Encodes clinical blood pressure categories as ordinal integers for direct tree splitting on hypertension risk.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_pregnancy_burden",
+      "type": "formula",
+      "description": "Ratio of pregnancies to age, scaled by 10. Captures reproductive burden relative to age - high values indicate many pregnancies at younger age, a distinct risk profile.",
+      "value_range": [
+        0.0,
+        4.5
+      ],
+      "feature_family": "reproductive_history",
+      "expected_model_benefit": "Interaction between parity and age captures age-adjusted reproductive burden, providing a nonlinear feature for tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.clip((preg / np.maximum(age, 21.0)) * 10.0, 0.0, 4.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "75c54960fb564b52",
+  "metadata": {}
+}

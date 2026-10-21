@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recency_log",
+      "type": "formula",
+      "description": "Log-scaled months since last donation, compresses long tails for linear margins.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Provides a smooth, less skewed recency signal suitable for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_log",
+      "type": "formula",
+      "description": "Log-scaled total number of donations.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Smooths frequency distribution; aligns with linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monetary_log",
+      "type": "formula",
+      "description": "Log-scaled total blood volume donated (cc).",
+      "value_range": [
+        5.0,
+        10.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Linearizes a strongly right-skewed monetary feature for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_log",
+      "type": "formula",
+      "description": "Log-scaled months since first donation (tenure).",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Captures donor tenure on a stable scale.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donations_per_active_month",
+      "type": "formula",
+      "description": "Donation frequency normalized by active span (V4 - V1 + 1).",
+      "value_range": [
+        0.0,
+        22.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Continuous engagement rate; strong linear severity indicator.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4 - V1 + 1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_to_tenure_ratio",
+      "type": "formula",
+      "description": "Fraction of tenure represented by recency gap.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalized inactivity proxy; near 1 indicates a dormant donor.",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "avg_volume_per_donation_dev",
+      "type": "formula",
+      "description": "Deviation of per-donation volume from the standard 250 cc unit.",
+      "value_range": [
+        0.0,
+        500.0
+      ],
+      "feature_family": "consistency",
+      "expected_model_benefit": "Flags data inconsistencies; near zero confirms canonical donation behavior.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V3 / np.maximum(V2, 1.0) - 250.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "inactivity_gap",
+      "type": "formula",
+      "description": "Months between expected donation cadence and current recency.",
+      "value_range": [
+        -50.0,
+        23.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Positive values indicate donor is overdue relative to their own cadence.",
+      "leakage_risk": "low",
+      "formula": "V1 - (V4 / np.maximum(V2, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_severity_score",
+      "type": "formula",
+      "description": "Clipped, normalized recency severity score in [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized",
+      "expected_model_benefit": "Bounded recency feature improving SVM margin stability.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / 24.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_intensity_score",
+      "type": "formula",
+      "description": "Normalized donation count clipped to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized",
+      "expected_model_benefit": "Bounded frequency-intensity score aligned with linear weights.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(V2) / 4.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_composite",
+      "type": "formula",
+      "description": "Weighted linear composite: low recency, high frequency and tenure indicate active donor.",
+      "value_range": [
+        -3.5,
+        9.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Pre-built linear projection that helps SVM margin separation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V2) + np.log1p(V4) - np.log1p(V1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donor_loyalty_judgment",
+      "type": "judgment",
+      "description": "Semantic loyalty score blending tenure depth, donation count, and recent activity: higher means the donor has a long, consistent, and recent donation history without relying on supervised signal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides a holistic donor-loyalty signal capturing patterns not expressible as a single ratio.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f9ffc9776802facb",
+  "metadata": {}
+}

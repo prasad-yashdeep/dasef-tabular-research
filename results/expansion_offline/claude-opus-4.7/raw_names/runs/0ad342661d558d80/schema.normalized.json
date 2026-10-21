@@ -1,0 +1,190 @@
+{
+  "dataset_name": "coil2000_insurance_policies",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_policy_contribution_intensity",
+      "type": "formula",
+      "description": "Sum of all contribution levels across non-mobile-home policy types, log-scaled for SVM stability. Captures overall insurance engagement.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "aggregate_contribution",
+      "expected_model_benefit": "Provides a smooth continuous measure of total insurance spending propensity that linear SVM can use as a strong margin signal.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(contributionThirdPartyInsuranceFirms + contributionThirdPartyInsuranceAgriculture + contributionCarPolicies + contributionDeliveryVanPolicies + contributionMotorcycleScooterPolicies + contributionLorryPolicies + contributionTrailerPolicies + contributionTractorPolicies + contributionAgriculturalMachinesPolicies + contributionMopedPolicies + contributionLifeInsurances + contributionPrivateAccidentInsurancePolicies + contributionFamilyAccidentsInsurancePolicies + contributionDisabilityInsurancePolicies + contributionFirePolicies + contributionSurfboardPolicies + contributionBoatPolicies + contributionBicyclePolicies + contributionPropertyInsurancePolicies + contributionSocialSecurityInsurancePolicies)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_policy_count_intensity",
+      "type": "formula",
+      "description": "Log-scaled total number of policies held across all categories, indicating breadth of insurance ownership.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "aggregate_count",
+      "expected_model_benefit": "Smooth count aggregation gives the linear SVM a robust feature for distinguishing high-engagement customers.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(numberOfPrivateThirdPartyInsurance + numberOfThirdPartyInsuranceFirms + numberOfThirdPartyInsuranceAgriculture + numberOfCarPolicies + numberOfDeliveryVanPolicies + numberOfMotorcycleScooterPolicies + numberOfLorryPolicies + numberOfTrailerPolicies + numberOfTractorPolicies + numberOfAgriculturalMachinesPolicies + numberOfMopedPolicies + numberOfLifeInsurances + numberOfPrivateAccidentInsurancePolicies + numberOfFamilyAccidentsInsurancePolicies + numberOfDisabilityInsurancePolicies + numberOfFirePolicies + numberOfSurfboardPolicies + numberOfBoatPolicies + numberOfBicyclePolicies + numberOfPropertyInsurancePolicies + numberOfSocialSecurityInsurancePolicies)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "affluence_composite_score",
+      "type": "formula",
+      "description": "Weighted composite of socioeconomic status indicators: income, purchasing power, high status, home ownership, and high education.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "socioeconomic_composite",
+      "expected_model_benefit": "Linear projection of correlated affluence variables into a single smooth axis useful for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "0.25*purchasingPowerClass + 0.20*averageIncome + 0.15*highStatus + 0.15*homeOwners + 0.15*highLevelEducation + 0.10*income75To122k + 0.10*incomeAbove123k",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rural_agrarian_signal",
+      "type": "formula",
+      "description": "Composite indicator combining farmer occupation, agriculture-related insurance contributions and counts to capture rural lifestyle.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "lifestyle_composite",
+      "expected_model_benefit": "Mobile home ownership tends to correlate with rural/agrarian segments; a smooth composite aids linear separation.",
+      "leakage_risk": "low",
+      "formula": "farmer + 2.0*contributionThirdPartyInsuranceAgriculture + 1.5*contributionTractorPolicies + 1.5*contributionAgriculturalMachinesPolicies + 2.0*numberOfThirdPartyInsuranceAgriculture + 1.5*numberOfTractorPolicies + 1.5*numberOfAgriculturalMachinesPolicies",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "homeownership_to_rent_ratio",
+      "type": "formula",
+      "description": "Smoothed ratio of homeowners to rented housing in customer's zone, indicating residential stability.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio features provide scale-invariant signals; smoothing avoids divide-by-zero for stable linear coefficients.",
+      "leakage_risk": "low",
+      "formula": "(homeOwners + 1.0) / (rentedHouse + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_household_score",
+      "type": "formula",
+      "description": "Composite score reflecting family-with-children household structure relative to singles/childless households.",
+      "value_range": [
+        -10.0,
+        20.0
+      ],
+      "feature_family": "household_composite",
+      "expected_model_benefit": "Captures family-orientation as a continuous axis useful for SVM margin construction.",
+      "leakage_risk": "low",
+      "formula": "householdWithChildren + married + avgSizeHousehold - singles - householdWithoutChildren - livingTogether",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "car_ownership_intensity",
+      "type": "formula",
+      "description": "Weighted car ownership level (two cars weighted higher), normalized by absence of car.",
+      "value_range": [
+        -9.0,
+        25.0
+      ],
+      "feature_family": "vehicle_profile",
+      "expected_model_benefit": "Smooth vehicle-ownership axis relevant for insurance customer profiling.",
+      "leakage_risk": "low",
+      "formula": "oneCar + 2.0*twoCars - noCar",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fire_property_policy_signal",
+      "type": "formula",
+      "description": "Combined intensity of fire and property insurance ownership (often correlated with home/mobile home insurance).",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "policy_correlate",
+      "expected_model_benefit": "Fire/property holdings are conceptually adjacent to mobile home insurance; linear combo gives discriminative margin.",
+      "leakage_risk": "low",
+      "formula": "contributionFirePolicies + contributionPropertyInsurancePolicies + 2.0*numberOfFirePolicies + 2.0*numberOfPropertyInsurancePolicies",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_status_gap",
+      "type": "formula",
+      "description": "Difference between high education+status and lower education levels, signed continuous social-class projection.",
+      "value_range": [
+        -18.0,
+        18.0
+      ],
+      "feature_family": "socioeconomic_axis",
+      "expected_model_benefit": "Signed continuous axis with both polarities helps linear SVM separate strata.",
+      "leakage_risk": "low",
+      "formula": "(highLevelEducation + highStatus) - (lowerLevelEducation + unskilledLabourers)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "houses_per_household_size",
+      "type": "formula",
+      "description": "Number of houses scaled by household size; deviation from typical 1-house-per-household norm.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures unusual housing patterns (multiple properties or large households) as a smooth signal.",
+      "leakage_risk": "low",
+      "formula": "numberOfHouses / np.maximum(avgSizeHousehold, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "religiosity_homogeneity",
+      "type": "judgment",
+      "description": "Semantic judgment of religious community concentration: higher when a single religious group dominates the customer's zone (catholic, protestant, or other) vs. mixed/secular composition. Computed as the maximum of protestant, otherReligion, and a numeric proxy for romanCatholic category divided by the sum, scaled.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic_judgment",
+      "expected_model_benefit": "Cohesive religious communities often align with traditional household choices; gives SVM a normalized smooth dimension.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lifestage_traditionalism_score",
+      "type": "judgment",
+      "description": "Semantic assessment of how 'traditional/settled' a customer's life stage is, based on avgAge band (40-70 weighted higher), customerMainType (e.g., Conservative/Retired/Family weighted higher), and married level. Continuous score reflecting traditional lifestyle.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle_judgment",
+      "expected_model_benefit": "Provides a smoothly normalized lifestyle axis combining multiple categorical and ordinal cues for linear SVM separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a9a8d661243cfde0",
+  "metadata": {}
+}

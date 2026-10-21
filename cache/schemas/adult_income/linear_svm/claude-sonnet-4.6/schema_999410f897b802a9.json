@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "education_num_normalized",
+      "type": "formula",
+      "description": "Education years normalized to [0,1] range using training min/max bounds for smooth linear margin contribution",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Provides smooth continuous education signal directly usable by linear SVM without scale distortion",
+      "leakage_risk": "low",
+      "formula": "(education_num - 1.0) / (16.0 - 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Age normalized to [0,1] using training distribution bounds for linear separability",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Smooth age signal on unit scale improves SVM margin geometry",
+      "leakage_risk": "low",
+      "formula": "(age - 17.0) / (90.0 - 17.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_net_log",
+      "type": "formula",
+      "description": "Log-transformed net capital (gain minus loss) shifted to handle negatives, capturing wealth signal on compressed scale",
+      "value_range": [
+        0.0,
+        11.52
+      ],
+      "feature_family": "capital",
+      "expected_model_benefit": "Compresses heavy-tailed capital distribution into linear-friendly range, preserving wealth ordering",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(capital_gain - capital_loss, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_deviation_from_fulltime",
+      "type": "formula",
+      "description": "Absolute deviation of hours per week from standard 40-hour full-time work week, normalized by max deviation",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "work_intensity",
+      "expected_model_benefit": "Captures non-standard work patterns; overworkers and underworkers may have distinct income profiles",
+      "leakage_risk": "low",
+      "formula": "np.abs(hours_per_week - 40.0) / 59.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_normalized",
+      "type": "formula",
+      "description": "Hours per week normalized to [0,1] range for direct linear contribution",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "work_intensity",
+      "expected_model_benefit": "Smooth work hours signal on unit scale for SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "(hours_per_week - 1.0) / (99.0 - 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_age_interaction",
+      "type": "formula",
+      "description": "Product of normalized education and normalized age capturing joint human capital accumulation effect",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "human_capital",
+      "expected_model_benefit": "Approximates a bilinear interaction term useful for linear models to capture joint education-experience effects",
+      "leakage_risk": "low",
+      "formula": "((education_num - 1.0) / 15.0) * ((age - 17.0) / 73.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "married_indicator",
+      "type": "formula",
+      "description": "Binary indicator for married-couple household status based on marital_status encoding (0=Married-civ-spouse)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "family_structure",
+      "expected_model_benefit": "Married status is a strong predictor; binary feature provides clean linear decision boundary contribution",
+      "leakage_risk": "low",
+      "formula": "np.where(marital_status == 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_activity_flag",
+      "type": "formula",
+      "description": "Binary indicator for any capital market activity (nonzero gain or loss), signaling investment participation",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capital",
+      "expected_model_benefit": "Investment activity is a strong wealth proxy; binary flag provides clean linear separability signal",
+      "leakage_risk": "low",
+      "formula": "np.where((capital_gain + capital_loss) > 0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_education_flag",
+      "type": "formula",
+      "description": "Binary indicator for college degree or higher (education_num >= 13, corresponding to Bachelors or above)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Degree attainment threshold creates strong linear boundary contribution for income prediction",
+      "leakage_risk": "low",
+      "formula": "np.where(education_num >= 13, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_capital_composite",
+      "type": "formula",
+      "description": "Weighted composite of normalized hours, education, and log capital gain capturing overall economic productivity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "economic_productivity",
+      "expected_model_benefit": "Single composite score approximates a linear projection of key income predictors, directly useful for SVM margin",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.3 * ((hours_per_week - 1.0) / 98.0) + 0.4 * ((education_num - 1.0) / 15.0) + 0.3 * (np.log1p(capital_gain) / 11.52), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "occupation_income_potential",
+      "type": "judgment",
+      "description": "Semantic score from 0 to 1 reflecting the typical income potential of the occupation category encoded in the occupation field, where higher values indicate professional/managerial roles and lower values indicate service/manual labor roles",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "occupation",
+      "expected_model_benefit": "Encodes domain knowledge about occupation income tiers into a continuous score for smooth linear margin contribution",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "socioeconomic_composite_score",
+      "type": "judgment",
+      "description": "Holistic socioeconomic status score from 0 to 1 integrating education level, occupation prestige, work hours commitment, and capital activity into a single continuous severity measure of economic standing",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic_status",
+      "expected_model_benefit": "Provides a single smooth composite score that approximates the dominant linear direction in feature space for income prediction",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "999410f897b802a9",
+  "metadata": {}
+}

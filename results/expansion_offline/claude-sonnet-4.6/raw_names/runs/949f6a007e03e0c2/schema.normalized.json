@@ -1,0 +1,190 @@
+{
+  "dataset_name": "ailerons",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_climb_rate",
+      "type": "formula",
+      "description": "Standardized climb rate using training mean and std, clipped to [-3, 3] for SVM margin stability",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Smooth normalized continuous feature directly usable by linear SVM without scale distortion",
+      "leakage_risk": "low",
+      "formula": "np.clip((climbRate - (-10.953)) / 257.114, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "roll_pitch_interaction",
+      "type": "formula",
+      "description": "Product of normalized curRoll and curPitch capturing coupled rotational dynamics",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Captures nonlinear interaction between roll and pitch axes useful as a linear projection for SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip((curRoll * curPitch) / (0.9699 * 0.3139), -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "angular_rate_magnitude",
+      "type": "formula",
+      "description": "Combined magnitude of pitch rate q and roll rate p as a composite rotational severity measure",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Continuous severity measure of rotational activity useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((p / 0.3002) ** 2 + (q / 0.1187) ** 2) / np.sqrt(2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "abs_roll_deviation",
+      "type": "formula",
+      "description": "Deviation of absRoll from its training mean, normalized by std, indicating unusual roll magnitude",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Normalized deviation feature with smooth distribution suitable for linear SVM hyperplane",
+      "leakage_risk": "low",
+      "formula": "np.clip((absRoll - (-11.029)) / 4.1246, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "climb_diff_ratio",
+      "type": "formula",
+      "description": "Ratio of diffClb to climbRate magnitude capturing relative rate of change in climb, with safe division",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Ratio feature capturing relative dynamics useful as approximate linear projection for SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip(diffClb / (np.abs(climbRate) + 10.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "se_time_spread",
+      "type": "formula",
+      "description": "Range of SeTime values across sensors 1-14 capturing variability in sensor timing",
+      "value_range": [
+        0.0,
+        0.057
+      ],
+      "feature_family": "sensor_timing",
+      "expected_model_benefit": "Continuous spread measure of sensor timing useful for detecting anomalous flight states",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(SeTime14, SeTime13), np.maximum(SeTime12, SeTime11)), np.maximum(np.maximum(SeTime10, SeTime9), np.maximum(SeTime8, SeTime7))) - np.minimum(np.minimum(np.minimum(SeTime1, SeTime2), np.minimum(SeTime3, SeTime4)), np.minimum(np.minimum(SeTime5, SeTime6), SeTime7))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mean_se_time_normalized",
+      "type": "formula",
+      "description": "Average of SeTime1 through SeTime7 normalized by training mean Se, capturing sensor timing level",
+      "value_range": [
+        0.5,
+        3.5
+      ],
+      "feature_family": "sensor_timing",
+      "expected_model_benefit": "Smooth normalized composite of sensor timing features useful for linear SVM",
+      "leakage_risk": "low",
+      "formula": "((SeTime1 + SeTime2 + SeTime3 + SeTime4 + SeTime5 + SeTime6 + SeTime7) / 7.0) / 0.022063",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "diff_se_time_activity",
+      "type": "formula",
+      "description": "Sum of absolute values of odd-indexed diffSeTime features capturing sensor timing change activity",
+      "value_range": [
+        0.0,
+        0.03
+      ],
+      "feature_family": "sensor_timing",
+      "expected_model_benefit": "Aggregate sensor activity measure providing smooth continuous input for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.abs(diffSeTime1) + np.abs(diffSeTime3) + np.abs(diffSeTime5) + np.abs(diffSeTime7) + np.abs(diffSeTime9) + np.abs(diffSeTime11) + np.abs(diffSeTime13)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "alpha_pitch_composite",
+      "type": "formula",
+      "description": "Weighted composite of alpha and curPitch normalized by their training means capturing angle of attack dynamics",
+      "value_range": [
+        -1.0,
+        5.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Linear combination of aerodynamic angle features useful as a weighted composite for SVM margin",
+      "leakage_risk": "low",
+      "formula": "0.6 * (alpha / 0.6246) + 0.4 * (curPitch / 0.6311)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sgz_normalized",
+      "type": "formula",
+      "description": "Normalized vertical acceleration Sgz clipped to [-3, 3] sigma range for SVM stability",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Smooth standardized vertical acceleration feature directly usable by linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip((Sgz - (-12.92)) / 25.146, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "roll_rate_severity",
+      "type": "judgment",
+      "description": "Semantic severity score from 0 to 1 assessing how extreme the combined roll-related signals are: high absolute curRoll, large diffRollRate, and extreme absRoll together indicate severe roll conditions. Score near 1 means highly abnormal roll state.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Interpretable severity score capturing roll instability useful as a smooth continuous SVM feature",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "flight_instability_index",
+      "type": "judgment",
+      "description": "Composite instability index from 0 to 1 integrating climb rate variability (diffClb, diffDiffClb), angular rates (p, q), and roll deviation into a single smooth severity measure. Near 1 indicates highly unstable flight conditions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "flight_dynamics",
+      "expected_model_benefit": "Single composite instability score providing a strong linear projection for SVM decision boundary",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "eb77d10057bc130e",
+  "metadata": {}
+}

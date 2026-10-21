@@ -1,0 +1,190 @@
+{
+  "dataset_name": "spambase",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "commercial_offer_intensity",
+      "type": "formula",
+      "description": "Log-normalized average of offer, transaction, removal, internet, credit, zero-number, and money vocabulary positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lexical_semantic_composite",
+      "expected_model_benefit": "Creates a smooth offer-oriented axis that a linear SVM can weight directly instead of relying on many sparse raw columns.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(word_freq_0) / np.log1p(4.54) + np.log1p(word_freq_6) / np.log1p(7.27) + np.log1p(word_freq_7) / np.log1p(4.62) + np.log1p(word_freq_8) / np.log1p(3.23) + np.log1p(word_freq_10) / np.log1p(2.61) + np.log1p(word_freq_15) / np.log1p(7.35) + np.log1p(word_freq_16) / np.log1p(5.06) + np.log1p(word_freq_19) / np.log1p(5.22) + np.log1p(word_freq_22) / np.log1p(3.38) + np.log1p(word_freq_23) / np.log1p(9.09)) / 10.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recipient_directness_intensity",
+      "type": "formula",
+      "description": "Log-normalized average of recipient-address, ownership, mail/email, future-action, people, and direct second-person wording positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lexical_semantic_composite",
+      "expected_model_benefit": "Captures recipient-directed language as a normalized projection, improving margins for messages with conversational wording.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(word_freq_1) / np.log1p(14.28) + np.log1p(word_freq_4) / np.log1p(5.0) + np.log1p(word_freq_9) / np.log1p(5.26) + np.log1p(word_freq_11) / np.log1p(6.25) + np.log1p(word_freq_12) / np.log1p(5.55) + np.log1p(word_freq_17) / np.log1p(9.09) + np.log1p(word_freq_18) / np.log1p(18.75) + np.log1p(word_freq_20) / np.log1p(8.69)) / 8.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "institutional_workflow_intensity",
+      "type": "formula",
+      "description": "Log-normalized average of technical, institutional, meeting, project, education, and conference vocabulary positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lexical_semantic_composite",
+      "expected_model_benefit": "Summarizes routine technical and workplace vocabulary into one stable low-variance dimension.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(word_freq_24) / np.log1p(16.66) + np.log1p(word_freq_25) / np.log1p(16.66) + np.log1p(word_freq_26) / np.log1p(25.0) + np.log1p(word_freq_27) / np.log1p(5.88) + np.log1p(word_freq_28) / np.log1p(10.0) + np.log1p(word_freq_29) / np.log1p(5.88) + np.log1p(word_freq_30) / np.log1p(4.76) + np.log1p(word_freq_32) / np.log1p(18.18) + np.log1p(word_freq_35) / np.log1p(7.69) + np.log1p(word_freq_40) / np.log1p(7.14) + np.log1p(word_freq_41) / np.log1p(14.28) + np.log1p(word_freq_43) / np.log1p(5.0) + np.log1p(word_freq_45) / np.log1p(15.35) + np.log1p(word_freq_47) / np.log1p(8.33)) / 14.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "numeric_code_token_intensity",
+      "type": "formula",
+      "description": "Log-normalized average of digit-like, year-like, and code-like vocabulary positions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lexical_numeric_composite",
+      "expected_model_benefit": "Separates digit-heavy token patterns from ordinary wording with log compression.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(word_freq_3) / np.log1p(7.07) + np.log1p(word_freq_22) / np.log1p(3.38) + np.log1p(word_freq_27) / np.log1p(5.88) + np.log1p(word_freq_31) / np.log1p(4.76) + np.log1p(word_freq_33) / np.log1p(4.76) + np.log1p(word_freq_34) / np.log1p(5.88) + np.log1p(word_freq_36) / np.log1p(4.54)) / 7.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "attentional_symbol_intensity",
+      "type": "formula",
+      "description": "Log-normalized blend of exclamation, currency, and hash character frequencies.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "punctuation_composite",
+      "expected_model_benefit": "Gives a bounded severity measure for attention and currency symbols, reducing skew from extreme punctuation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(char_freq_3) / np.log1p(32.478) + np.log1p(char_freq_4) / np.log1p(5.3) + np.log1p(char_freq_5) / np.log1p(13.129)) / 3.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "structural_punctuation_intensity",
+      "type": "formula",
+      "description": "Log-normalized blend of semicolon, parenthesis, and bracket character frequencies.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "punctuation_composite",
+      "expected_model_benefit": "Captures structural punctuation often tied to lists, code, or quoted fragments, giving complementary signal to attention marks.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(char_freq_0) / np.log1p(4.123) + np.log1p(char_freq_1) / np.log1p(9.752) + np.log1p(char_freq_2) / np.log1p(4.081)) / 3.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_volume_score",
+      "type": "formula",
+      "description": "Log-normalized blend of average, longest, and total capital-run measurements.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capitalization_composite",
+      "expected_model_benefit": "Compresses heavy-tailed capitalization volume into a bounded smooth score useful for large-margin scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(capital_run_length_average) / np.log1p(1021.5) + np.log1p(capital_run_length_longest) / np.log1p(9989.0) + np.log1p(capital_run_length_total) / np.log1p(10062.0)) / 3.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_burstiness_score",
+      "type": "formula",
+      "description": "Ratio of longest capital run to total capital-run size on a log scale, clipped to a bounded interval.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capitalization_ratio",
+      "expected_model_benefit": "Measures whether capitalization is concentrated in a burst versus spread across the message, a ratio not represented by raw totals alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(capital_run_length_longest) / (np.log1p(capital_run_length_total) + 0.000001), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "offer_workflow_contrast",
+      "type": "formula",
+      "description": "Difference between offer-oriented vocabulary intensity and institutional workflow intensity after the same log normalization.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "contrast_projection",
+      "expected_model_benefit": "Provides an approximate linear semantic projection contrasting offer cues with workflow cues.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((np.log1p(word_freq_0) / np.log1p(4.54) + np.log1p(word_freq_6) / np.log1p(7.27) + np.log1p(word_freq_7) / np.log1p(4.62) + np.log1p(word_freq_8) / np.log1p(3.23) + np.log1p(word_freq_10) / np.log1p(2.61) + np.log1p(word_freq_15) / np.log1p(7.35) + np.log1p(word_freq_16) / np.log1p(5.06) + np.log1p(word_freq_19) / np.log1p(5.22) + np.log1p(word_freq_22) / np.log1p(3.38) + np.log1p(word_freq_23) / np.log1p(9.09)) / 10.0) - ((np.log1p(word_freq_24) / np.log1p(16.66) + np.log1p(word_freq_25) / np.log1p(16.66) + np.log1p(word_freq_26) / np.log1p(25.0) + np.log1p(word_freq_27) / np.log1p(5.88) + np.log1p(word_freq_28) / np.log1p(10.0) + np.log1p(word_freq_29) / np.log1p(5.88) + np.log1p(word_freq_30) / np.log1p(4.76) + np.log1p(word_freq_32) / np.log1p(18.18) + np.log1p(word_freq_35) / np.log1p(7.69) + np.log1p(word_freq_40) / np.log1p(7.14) + np.log1p(word_freq_41) / np.log1p(14.28) + np.log1p(word_freq_43) / np.log1p(5.0) + np.log1p(word_freq_45) / np.log1p(15.35) + np.log1p(word_freq_47) / np.log1p(8.33)) / 14.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "salient_marker_peak",
+      "type": "formula",
+      "description": "Maximum normalized severity among free, money, zero-number wording, currency/exclamation punctuation, and long capitals.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "peak_severity",
+      "expected_model_benefit": "Highlights the strongest single high-salience cue while preserving a bounded scale for outlier control.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.maximum(np.maximum(np.maximum(np.log1p(word_freq_15) / np.log1p(7.35), np.log1p(word_freq_23) / np.log1p(9.09)), np.maximum(np.log1p(word_freq_22) / np.log1p(3.38), np.log1p(char_freq_4) / np.log1p(5.3))), np.maximum(np.log1p(char_freq_3) / np.log1p(32.478), np.log1p(capital_run_length_longest) / np.log1p(9989.0))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mass_offer_semantic_rating",
+      "type": "judgment",
+      "description": "A 0-1 assessor score of how strongly the row resembles a broad commercial solicitation, using only vocabulary-frequency, punctuation, and capitalization values; assign high values only when several semantically consistent cues co-occur.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Supplies a compact nonlinear semantic axis for a linear margin while staying grounded in the row.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "routine_workflow_semantic_rating",
+      "type": "judgment",
+      "description": "A 0-1 assessor score of routine professional or academic correspondence style, using only row values; high values reflect technical, project, meeting, and education cues with restrained attention symbols.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a human-readable counter-style axis that can improve margin placement when raw cues are sparse.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c1446b1fbdaf0cd6",
+  "metadata": {}
+}

@@ -1,0 +1,73 @@
+{
+  "dataset_name": "splice",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "v1",
+  "features": [
+    {
+      "name": "core_junction_ag",
+      "type": "formula",
+      "description": "Indicator for the presence of the 'AG' dinucleotide immediately upstream of the putative splice site.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "motif_indicator",
+      "expected_model_benefit": "Provides a strong linear margin for identifying valid splice junctions.",
+      "leakage_risk": "low",
+      "formula": "np.where((attribute_29 == 'A') & (attribute_30 == 'G'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "core_junction_gt",
+      "type": "formula",
+      "description": "Indicator for the presence of the 'GT' dinucleotide immediately downstream of the putative splice site.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "motif_indicator",
+      "expected_model_benefit": "Provides a strong linear margin for identifying valid splice junctions.",
+      "leakage_risk": "low",
+      "formula": "np.where((attribute_31 == 'G') & (attribute_32 == 'T'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "extended_ei_consensus",
+      "type": "formula",
+      "description": "Score representing the match to the extended consensus sequence around the junction.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "consensus_score",
+      "expected_model_benefit": "Aggregates multiple positional matches into a continuous severity measure suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_29 == 'A', 1.0, 0.0) + np.where(attribute_30 == 'G', 1.0, 0.0) + np.where(attribute_31 == 'G', 1.0, 0.0) + np.where(attribute_32 == 'T', 1.0, 0.0) + np.where(attribute_33 == 'A', 1.0, 0.0) + np.where(attribute_34 == 'G', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "extended_ie_consensus",
+      "type": "formula",
+      "description": "Score representing the match to the extended consensus sequence upstream of the junction.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "consensus_score",
+      "expected_model_benefit": "Aggregates multiple positional matches into a continuous severity measure suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.where(attribute_26 == 'C', 1.0, 0.0) + np.where(attribute_27 == 'A', 1.0, 0.0) + np.where(attribute_28 == 'C', 1.0, 0.0) + np.where(attribute_29 == 'A', 1.0, 0.0) + np.where(attribute_30 == 'G', 1.0, 0.0) + np.where(attribute_31 == 'G', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6b435e1f2ded0432",
+  "metadata": {
+    "salvaged_from_partial_raw": "cache/schemas/splice/linear_svm/gemini-3.1-pro-preview/schema_6b435e1f2ded0432.raw.json",
+    "n_salvaged_features": 4
+  }
+}

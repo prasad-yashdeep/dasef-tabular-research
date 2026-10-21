@@ -1,0 +1,190 @@
+{
+  "dataset_name": "jungle_chess_2pcs_raw_endgame_complete",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "strength_advantage",
+      "type": "formula",
+      "description": "Normalized difference in piece strength between white and black, scaled to [-1, 1] range. Positive values favor white, negative favor black.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "strength",
+      "expected_model_benefit": "Direct linear signal for outcome prediction based on material advantage",
+      "leakage_risk": "low",
+      "formula": "(white_piece0_strength - black_piece0_strength) / 7.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "white_strength_normalized",
+      "type": "formula",
+      "description": "White piece strength normalized to [0, 1] range using known max strength of 7.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "strength",
+      "expected_model_benefit": "Smooth normalized feature for linear margin computation",
+      "leakage_risk": "low",
+      "formula": "white_piece0_strength / 7.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "black_strength_normalized",
+      "type": "formula",
+      "description": "Black piece strength normalized to [0, 1] range using known max strength of 7.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "strength",
+      "expected_model_benefit": "Smooth normalized feature for linear margin computation",
+      "leakage_risk": "low",
+      "formula": "black_piece0_strength / 7.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "white_advancement",
+      "type": "formula",
+      "description": "White piece rank normalized to [0, 1], representing how far white has advanced toward black territory (rank 8 is most advanced).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "position",
+      "expected_model_benefit": "Positional advancement is a key strategic factor in jungle chess endgames",
+      "leakage_risk": "low",
+      "formula": "white_piece0_rank / 8.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "black_advancement",
+      "type": "formula",
+      "description": "Black piece advancement normalized to [0, 1], where higher values mean black is closer to white territory (rank 0 is most advanced for black).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "position",
+      "expected_model_benefit": "Black positional advancement as symmetric counterpart to white advancement",
+      "leakage_risk": "low",
+      "formula": "(8.0 - black_piece0_rank) / 8.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rank_distance",
+      "type": "formula",
+      "description": "Absolute rank distance between white and black pieces, normalized by board height. Smaller values indicate pieces are closer vertically.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "proximity",
+      "expected_model_benefit": "Proximity measure useful for detecting capture threats and endgame dynamics",
+      "leakage_risk": "low",
+      "formula": "np.abs(white_piece0_rank - black_piece0_rank) / 8.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "file_distance",
+      "type": "formula",
+      "description": "Absolute file distance between white and black pieces, normalized by board width. Smaller values indicate pieces are on similar columns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "proximity",
+      "expected_model_benefit": "Lateral proximity measure for detecting alignment and capture threats",
+      "leakage_risk": "low",
+      "formula": "np.abs(white_piece0_file - black_piece0_file) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "chebyshev_distance",
+      "type": "formula",
+      "description": "Chebyshev (chessboard) distance between pieces, normalized. Represents minimum moves for a king-like piece to reach the other.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "proximity",
+      "expected_model_benefit": "Compact distance metric capturing both rank and file separation for linear separation",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.abs(white_piece0_rank - black_piece0_rank), np.abs(white_piece0_file - black_piece0_file)) / 8.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "strength_position_composite_white",
+      "type": "formula",
+      "description": "Composite score for white combining normalized strength and advancement. Higher values indicate white has both material and positional advantage.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Weighted composite useful for linear SVM margins combining material and positional factors",
+      "leakage_risk": "low",
+      "formula": "0.6 * (white_piece0_strength / 7.0) + 0.4 * (white_piece0_rank / 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "strength_position_composite_black",
+      "type": "formula",
+      "description": "Composite score for black combining normalized strength and advancement toward white territory.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Symmetric composite for black enabling direct comparison with white composite",
+      "leakage_risk": "low",
+      "formula": "0.6 * (black_piece0_strength / 7.0) + 0.4 * ((8.0 - black_piece0_rank) / 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_advantage_score",
+      "type": "formula",
+      "description": "Overall advantage score combining strength difference and positional advancement difference. Positive favors white, negative favors black.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Single continuous score approximating game outcome for linear SVM decision boundary",
+      "leakage_risk": "low",
+      "formula": "0.5 * ((white_piece0_strength - black_piece0_strength) / 7.0) + 0.5 * ((white_piece0_rank - (8.0 - black_piece0_rank)) / 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positional_tension_score",
+      "type": "judgment",
+      "description": "Semantic assessment of positional tension based on piece proximity and strength balance. High tension (close to 1) when pieces are near each other with similar strengths, suggesting imminent capture or draw. Low tension (close to 0) when pieces are far apart or have large strength disparity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures non-linear interaction between proximity and strength balance that linear features may miss",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "5a24ecce82ffca7b",
+  "metadata": {}
+}

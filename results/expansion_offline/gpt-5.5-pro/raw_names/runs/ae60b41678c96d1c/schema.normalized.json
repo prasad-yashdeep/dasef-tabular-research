@@ -1,0 +1,190 @@
+{
+  "dataset_name": "loan_status",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "log_income_scaled",
+      "type": "formula",
+      "description": "Borrower income log-scaled with training-fold minimum and maximum, then clipped for outlier control.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "income_capacity",
+      "expected_model_benefit": "Supports a near-linear income capacity effect after reducing skew and extreme income leverage.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(person_income) - np.log1p(8000.0)) / (np.log1p(5545545.0) - np.log1p(8000.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_income_burden_scaled",
+      "type": "formula",
+      "description": "Loan size as a share of income, normalized by the maximum observed training-fold share.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "affordability",
+      "expected_model_benefit": "Supplies a smooth affordability severity axis useful for linear margin placement.",
+      "leakage_risk": "low",
+      "formula": "np.clip(loan_percent_income / 0.62, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_rate_scaled",
+      "type": "formula",
+      "description": "Interest rate normalized from the training-fold minimum and maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "pricing_intensity",
+      "expected_model_benefit": "Captures pricing intensity as a smooth numeric dimension with comparable scale to other features.",
+      "leakage_risk": "low",
+      "formula": "np.clip((loan_int_rate - 5.42) / 14.58, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_income_pressure_scaled",
+      "type": "formula",
+      "description": "Approximate annual interest cost divided by income, scaled by a high training-fold burden reference.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "affordability",
+      "expected_model_benefit": "Adds a rate-by-size interaction as one continuous pressure measure that a linear model could not form from raw fields alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((loan_amnt * (loan_int_rate / 100.0)) / np.maximum(person_income, 1.0)) / 0.124, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_scaled",
+      "type": "formula",
+      "description": "Credit score normalized from the training-fold minimum and maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_profile",
+      "expected_model_benefit": "Provides a compact credit quality axis with a stable numeric scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((credit_score - 418.0) / 389.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_age_share",
+      "type": "formula",
+      "description": "Credit history length divided by plausible adult financial years.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_profile",
+      "expected_model_benefit": "Represents maturity of the credit file relative to age, smoothing an important cross-field relation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(cb_person_cred_hist_length / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_age_share",
+      "type": "formula",
+      "description": "Employment experience divided by plausible adult working years.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "employment_stability",
+      "expected_model_benefit": "Represents work-experience maturity relative to age, aiding stable linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(person_emp_exp / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_default_indicator",
+      "type": "formula",
+      "description": "Binary marker for recorded previous loan defaults in the borrower file.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "credit_profile",
+      "expected_model_benefit": "Gives direct access to historical repayment friction in a one-dimensional indicator.",
+      "leakage_risk": "low",
+      "formula": "np.where(previous_loan_defaults_on_file == 'Yes', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_stability_score",
+      "type": "formula",
+      "description": "Ordinal residential stability score derived from home ownership category.",
+      "value_range": [
+        0.25,
+        1.0
+      ],
+      "feature_family": "residential_stability",
+      "expected_model_benefit": "Converts home-ownership categories into an ordered stability dimension instead of relying only on sparse binary expansions.",
+      "leakage_risk": "low",
+      "formula": "np.where(person_home_ownership == 'OWN', 1.0, np.where(person_home_ownership == 'MORTGAGE', 0.75, np.where(person_home_ownership == 'RENT', 0.25, 0.40)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_attainment_score",
+      "type": "formula",
+      "description": "Ordinal attainment score derived from education category.",
+      "value_range": [
+        0.25,
+        1.0
+      ],
+      "feature_family": "human_capital",
+      "expected_model_benefit": "Converts education categories into an ordered human-capital dimension with a monotone scale.",
+      "leakage_risk": "low",
+      "formula": "np.where(person_education == 'Doctorate', 1.0, np.where(person_education == 'Master', 0.85, np.where(person_education == 'Bachelor', 0.65, np.where(person_education == 'Associate', 0.45, 0.25))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "purpose_economic_constructiveness_score",
+      "type": "judgment",
+      "description": "Semantic score from 0.0 to 1.0 using loan_intent and row context. Higher values indicate the stated use plausibly preserves or improves earning capacity, health or education continuity, or productive assets; lower values indicate more discretionary or weakly income-linked use.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_purpose",
+      "expected_model_benefit": "Adds an ordered purpose axis so the margin can use semantic differences among intended uses without sparse intent indicators.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_plausibility_score",
+      "type": "judgment",
+      "description": "Semantic consistency score from 0.0 to 1.0 using age, employment experience, credit-history length, income, loan amount, and rate. Higher values indicate an internally coherent ordinary financial profile; lower values indicate unusual or internally inconsistent combinations such as very high age, experience exceeding plausible working years, or income and loan scale mismatch.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_consistency",
+      "expected_model_benefit": "Summarizes row coherence and outlier severity in one smooth score, helping reduce influence from rare extreme combinations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "aeaccdb7d8950fb5",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "molecular_complexity_score",
+      "type": "formula",
+      "description": "Normalized composite of ring count, branching, and heteroatom indicators scaled to unit range using training statistics. Captures overall molecular structural complexity.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Linear SVM benefits from smooth composite scores that project complex structural information onto a single axis separating biodegradable from non-biodegradable compounds.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V3 / 1.0175 + V5 / 1.968 + V7 / 1.972 + V16 / 3.926) / 4.0, 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lipophilicity_proxy",
+      "type": "formula",
+      "description": "Approximation of lipophilicity using log-based molecular descriptors V1 and V2, which relate to molecular size and polarity. Higher values suggest more hydrophobic compounds.",
+      "value_range": [
+        0.5,
+        4.0
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Lipophilicity is a key driver of biodegradability; a smooth continuous proxy helps linear SVM find a clean decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 - V2 + 3.0, 0.5, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heteroatom_density",
+      "type": "formula",
+      "description": "Ratio of heteroatom-related counts (V9, V10, V11) to molecular size proxy V8, normalized. Reflects proportion of polar functional groups relative to molecular weight.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "functional_group",
+      "expected_model_benefit": "Heteroatom density correlates with water solubility and biodegradability; ratio features provide scale-invariant signals useful for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V9 + V10 + V11) / (V8 + 1.0), 0.0, 1.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "electronic_polarity_index",
+      "type": "formula",
+      "description": "Composite of electronic descriptors V12 and V28 capturing charge distribution asymmetry. Absolute deviation from neutral combined with sign-weighted sum.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "electronic",
+      "expected_model_benefit": "Electronic polarity affects molecular reactivity and biodegradation pathways; smooth continuous index improves linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(V12) + np.abs(V28) * 2.0, 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "topological_surface_ratio",
+      "type": "formula",
+      "description": "Ratio of topological polar surface area proxy (V15) to molecular volume proxy (V13), capturing surface accessibility relative to size.",
+      "value_range": [
+        1.5,
+        8.0
+      ],
+      "feature_family": "topological",
+      "expected_model_benefit": "Surface-to-volume ratio is a key physicochemical property; normalized ratio features are well-suited for linear SVM decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V15 / (V13 + 0.5), 1.5, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aromatic_saturation_balance",
+      "type": "formula",
+      "description": "Balance between aromatic ring indicators (V23) and saturated chain indicators (V34, V35), normalized by total count. Negative values indicate more aromatic character.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Aromatic vs aliphatic balance strongly influences biodegradation rate; this signed ratio provides a linear projection useful for SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip((V34 + V35 - V23) / (V23 + V34 + V35 + 1.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_weight_normalized",
+      "type": "formula",
+      "description": "Log-transformed and standardized molecular weight proxy using V8, centered at training mean and scaled by training std.",
+      "value_range": [
+        -4.0,
+        2.0
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Normalized molecular weight provides a smooth continuous feature; log transformation reduces skewness for better linear SVM performance.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(V8) - np.log1p(36.587)) / 0.25, -4.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "connectivity_index_composite",
+      "type": "formula",
+      "description": "Weighted combination of connectivity-related descriptors V36, V37, V39 capturing molecular graph topology. Standardized using training means.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "topological",
+      "expected_model_benefit": "Connectivity indices encode molecular graph structure; weighted composite provides a smooth linear projection for SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((V36 - 3.752) / 0.707 + (V37 - 2.577) / 0.627 + (V39 - 8.387) / 0.968) / 3.0, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "functional_group_count_log",
+      "type": "formula",
+      "description": "Log-transformed total count of functional group indicators (V3, V4, V5, V6, V7) capturing overall functional group richness.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "functional_group",
+      "expected_model_benefit": "Functional group richness is a key biodegradability predictor; log transformation handles count skewness for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(V3 + V4 + V5 + V6 + V7), 0.0, 3.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "branching_complexity_ratio",
+      "type": "formula",
+      "description": "Ratio of branching descriptor V31 to linear chain proxy V30, capturing degree of molecular branching relative to chain length.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Branching affects biodegradation accessibility; ratio feature provides scale-invariant signal for linear SVM margin optimization.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V31 / (V30 + 1.0), 0.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "polarity_size_interaction",
+      "type": "judgment",
+      "description": "Semantic assessment of the interaction between molecular polarity (based on V12, V14) and molecular size (V8, V1). Score from 0 to 10 where higher values indicate large polar molecules more likely to be biodegradable due to water solubility. Assessed by combining normalized polarity and size signals.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "physicochemical",
+      "expected_model_benefit": "Interaction between polarity and size captures non-additive effects on biodegradability that a linear SVM can exploit as a pre-computed feature.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "structural_diversity_score",
+      "type": "formula",
+      "description": "Entropy-like diversity measure across multiple structural descriptor groups (ring systems, chains, heteroatoms, functional groups) normalized to 0-1 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Structural diversity captures overall molecular complexity in a single smooth score; useful for linear SVM as a summary feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((V3 / 6.0) ** 2 + (V16 / 24.0) ** 2 + (V23 / 15.0) ** 2 + (V11 / 15.0) ** 2) / np.sqrt(4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "171c32d09fccaf0f",
+  "metadata": {}
+}

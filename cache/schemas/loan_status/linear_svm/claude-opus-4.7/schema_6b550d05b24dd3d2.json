@@ -1,0 +1,190 @@
+{
+  "dataset_name": "loan_status",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "loan_to_income_ratio",
+      "type": "formula",
+      "description": "Loan amount as a fraction of annual income, capped to avoid extreme outliers. Higher values indicate greater repayment burden.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "affordability_ratio",
+      "expected_model_benefit": "Smooth continuous severity measure useful for linear margin separation of risky vs safe loans.",
+      "leakage_risk": "low",
+      "formula": "np.clip(loan_amnt / np.maximum(person_income, 1.0), 0.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_income",
+      "type": "formula",
+      "description": "Log-transformed personal income to compress heavy right tail and provide an approximately linear projection.",
+      "value_range": [
+        8.0,
+        16.0
+      ],
+      "feature_family": "scale_transform",
+      "expected_model_benefit": "Linearizes skewed income distribution, improving SVM margin scaling.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.clip(person_income, 0.0, 10000000.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_loan_amount",
+      "type": "formula",
+      "description": "Log-transformed loan amount to compress its right tail.",
+      "value_range": [
+        5.0,
+        12.0
+      ],
+      "feature_family": "scale_transform",
+      "expected_model_benefit": "Provides smoother input scale for linear projections.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.clip(loan_amnt, 0.0, 100000.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_normalized",
+      "type": "formula",
+      "description": "Credit score scaled to [0,1] using observed range bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_score",
+      "expected_model_benefit": "Provides a normalized smooth severity score ideal for linear SVM weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip((credit_score - 300.0) / 550.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_rate_normalized",
+      "type": "formula",
+      "description": "Interest rate scaled into approximate [0,1] using plausible bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_score",
+      "expected_model_benefit": "Smooth continuous risk proxy; higher rates often correlate with risk.",
+      "leakage_risk": "low",
+      "formula": "np.clip((loan_int_rate - 5.0) / 20.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "previous_default_flag",
+      "type": "formula",
+      "description": "Binary indicator of prior default presence on file.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_flag",
+      "expected_model_benefit": "Strong linear-separable signal for repayment behavior.",
+      "leakage_risk": "low",
+      "formula": "np.where(previous_loan_defaults_on_file == 'Yes', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_to_age_ratio",
+      "type": "formula",
+      "description": "Employment experience as a fraction of adult years (age minus 18), capped at 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "stability_ratio",
+      "expected_model_benefit": "Smooth stability indicator; captures career maturity for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(person_emp_exp / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_to_age_ratio",
+      "type": "formula",
+      "description": "Credit history length divided by adult years, indicating financial track record depth.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "stability_ratio",
+      "expected_model_benefit": "Smooth proxy for credit maturity, beneficial for linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(cb_person_cred_hist_length / np.maximum(person_age - 18.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_burden_weighted",
+      "type": "formula",
+      "description": "Composite of loan-to-income times interest rate, approximating annual interest cost relative to income.",
+      "value_range": [
+        0.0,
+        0.5
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Multiplicative risk composite useful as a linear margin feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip((loan_amnt / np.maximum(person_income, 1.0)) * (loan_int_rate / 100.0), 0.0, 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "renter_flag",
+      "type": "formula",
+      "description": "Indicator that the borrower rents their home, a common risk-associated tenure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_flag",
+      "expected_model_benefit": "Discrete tenure signal contributing linearly to risk margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(person_home_ownership == 'RENT', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_attainment_score",
+      "type": "judgment",
+      "description": "Ordinal mapping of education level reflecting attainment: High School=0.25, Associate=0.4, Bachelor=0.6, Master=0.8, Doctorate=1.0. Captures monotonic socioeconomic ordering.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Provides a continuous ordinal projection of education suitable for linear weighting.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_intent_risk_score",
+      "type": "judgment",
+      "description": "Semantic ordering of loan purpose by typical financial-stress association: DEBTCONSOLIDATION=0.9, MEDICAL=0.8, HOMEIMPROVEMENT=0.5, PERSONAL=0.5, EDUCATION=0.4, VENTURE=0.6. Reflects domain judgment about purpose-driven risk severity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_risk_score",
+      "expected_model_benefit": "Encodes categorical intent as smooth continuous severity for linear SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6b550d05b24dd3d2",
+  "metadata": {}
+}

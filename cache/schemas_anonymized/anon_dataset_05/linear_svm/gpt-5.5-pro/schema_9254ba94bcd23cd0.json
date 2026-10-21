@@ -1,0 +1,190 @@
+{
+  "dataset_name": "anon_dataset_05",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "z_mean_projection",
+      "type": "formula",
+      "description": "Training-fold standardized mean projection across all seven inputs, clipped to reduce extreme leverage.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "standardized_projection",
+      "expected_model_benefit": "Gives the margin a single smooth direction for overall row intensity after variance scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x001 - 0.5081442466666667) / 0.3360749901413599 + (x002 - 0.5084680960000001) / 0.28634499842095856 + (x003 - 0.05755652866666666) / 0.0297720289411137 + (x004 - 0.4365700573333334) / 0.16015636865788194 + (x005 - 0.003353690666666667) / 0.0024811425414472976 + (x006 - 0.429956692) / 0.12298255358797767 + (x007 - 0.49954282000000005) / 0.15396609059007202) / np.sqrt(7.0), -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "z_abs_dispersion",
+      "type": "formula",
+      "description": "Average absolute standardized deviation from training-fold centers across all seven inputs.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "standardized_dispersion",
+      "expected_model_benefit": "Adds a smooth atypicality magnitude that can be weighted linearly without requiring separate hard cutoffs.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs((x001 - 0.5081442466666667) / 0.3360749901413599) + np.abs((x002 - 0.5084680960000001) / 0.28634499842095856) + np.abs((x003 - 0.05755652866666666) / 0.0297720289411137) + np.abs((x004 - 0.4365700573333334) / 0.16015636865788194) + np.abs((x005 - 0.003353690666666667) / 0.0024811425414472976) + np.abs((x006 - 0.429956692) / 0.12298255358797767) + np.abs((x007 - 0.49954282000000005) / 0.15396609059007202)) / 7.0, 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "upper_tail_excess_score",
+      "type": "formula",
+      "description": "Average upper-side exceedance beyond one training-fold standard deviation, clipped for stability.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "tail_severity",
+      "expected_model_benefit": "Captures smooth upper-side severity across inputs as a compact linear margin component.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.maximum((x001 - 0.8442192368080266) / 0.3360749901413599, 0.0) + np.maximum((x002 - 0.7948130944209587) / 0.28634499842095856, 0.0) + np.maximum((x003 - 0.08732855760778036) / 0.0297720289411137, 0.0) + np.maximum((x004 - 0.5967264259912153) / 0.16015636865788194, 0.0) + np.maximum((x005 - 0.005834833208113965) / 0.0024811425414472976, 0.0) + np.maximum((x006 - 0.5529392455879776) / 0.12298255358797767, 0.0) + np.maximum((x007 - 0.6535089105900721) / 0.15396609059007202, 0.0)) / 7.0, 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lower_tail_excess_score",
+      "type": "formula",
+      "description": "Average lower-side exceedance beyond one training-fold standard deviation, clipped for stability.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "tail_severity",
+      "expected_model_benefit": "Represents smooth lower-side severity that a linear SVM can combine with upper-side and contrast features.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.maximum((0.1720692565253068 - x001) / 0.3360749901413599, 0.0) + np.maximum((0.22212309757904153 - x002) / 0.28634499842095856, 0.0) + np.maximum((0.027784499725552962 - x003) / 0.0297720289411137, 0.0) + np.maximum((0.27641368867545145 - x004) / 0.16015636865788194, 0.0) + np.maximum((0.0008725481252193693 - x005) / 0.0024811425414472976, 0.0) + np.maximum((0.3069741384120223 - x006) / 0.12298255358797767, 0.0) + np.maximum((0.34557672940992803 - x007) / 0.15396609059007202, 0.0)) / 7.0, 0.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x001_x002_contrast",
+      "type": "formula",
+      "description": "Signed broad-axis contrast between x001 and x002, clipped to a symmetric interval.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "pairwise_contrast",
+      "expected_model_benefit": "Provides a direct linear projection for imbalance between the two widest-range inputs.",
+      "leakage_risk": "low",
+      "formula": "np.clip(x001 - x002, -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x004_x006_ratio_contrast",
+      "type": "formula",
+      "description": "Scale-normalized signed contrast between x004 and x006 using their combined magnitude.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "ratio_contrast",
+      "expected_model_benefit": "Turns mid-scale imbalance into a bounded ratio that is easier for a linear margin to weight consistently.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x004 - x006) / (x004 + x006 + 0.000001), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x007_mid_bridge_residual",
+      "type": "formula",
+      "description": "Residual of x007 relative to the average of x004 and x006, scaled and clipped.",
+      "value_range": [
+        -2.0,
+        2.0
+      ],
+      "feature_family": "residual_alignment",
+      "expected_model_benefit": "Highlights whether x007 behaves like a bridge component or departs from nearby mid-scale inputs.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x007 - ((x004 + x006) / 2.0)) / 0.5, -2.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x005_log_intensity",
+      "type": "formula",
+      "description": "Log-scaled intensity of the sparse low-magnitude input x005 relative to its training-fold mean.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaled_intensity",
+      "expected_model_benefit": "Compresses rare x005 spikes into a smooth bounded score suitable for stable linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(x005 / 0.003353690666666667) / 3.258096538021482, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x005_small_channel_share",
+      "type": "formula",
+      "description": "Share of x005 within the combined low-magnitude pair x003 and x005.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "component_share",
+      "expected_model_benefit": "Exposes relative dominance of the sparse small component while remaining bounded for linear SVM scaling.",
+      "leakage_risk": "low",
+      "formula": "np.clip(x005 / (x003 + x005 + 0.000001), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "broad_mid_quadratic_energy",
+      "type": "formula",
+      "description": "Average squared energy across the broad and mid-scale inputs x001, x002, x004, x006, and x007.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "polynomial_energy",
+      "expected_model_benefit": "Adds a simple nonlinear magnitude projection that a linear SVM can use as an extra margin direction.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x001 ** 2 + x002 ** 2 + x004 ** 2 + x006 ** 2 + x007 ** 2) / 5.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "profile_coherence_judgment",
+      "type": "judgment",
+      "description": "Expert 0-to-1 assessment of whether the seven values form a coherent row shape, with aligned broad-scale and mid-scale components and no isolated low-scale spike.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Adds a compact qualitative consistency axis that may align with a linear margin when exact formulas miss shape-level cues.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "unusual_geometry_judgment",
+      "type": "judgment",
+      "description": "Expert 0-to-5 severity rating for how atypical the row geometry appears relative to training-fold ranges and centers, considering simultaneous extremes, imbalance, and small-channel spikes.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Supplies an interpretable anomaly-like severity measure that can be weighted directly by a linear SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "9254ba94bcd23cd0",
+  "metadata": {}
+}

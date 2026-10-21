@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "mahalanobis_approx_distance",
+      "type": "formula",
+      "description": "Approximate Mahalanobis-style distance from the training set centroid using per-feature z-score normalization, summed in quadrature. Captures how far a point is from the center of the feature space.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a scale-normalized distance metric from the global centroid, helping KNN identify outlier points that may be far from all neighbors.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((preg - 3.845) / 3.367) ** 2 + ((plas - 120.895) / 31.952) ** 2 + ((pres - 69.105) / 19.343) ** 2 + ((skin - 20.536) / 15.942) ** 2 + ((insu - 79.799) / 115.169) ** 2 + ((mass - 31.993) / 7.879) ** 2 + ((pedi - 0.472) / 0.331) ** 2 + ((age - 33.241) / 11.753) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "plas_zscore",
+      "type": "formula",
+      "description": "Z-score normalized plasma glucose concentration. Glucose is a primary diabetes indicator and scale normalization ensures proper distance weighting in KNN.",
+      "value_range": [
+        -3.8,
+        2.5
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Ensures glucose contributes proportionally to distance calculations without dominating due to scale differences.",
+      "leakage_risk": "low",
+      "formula": "(plas - 120.895) / 31.952",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mass_zscore",
+      "type": "formula",
+      "description": "Z-score normalized BMI. BMI is strongly associated with metabolic conditions and proper normalization improves neighborhood geometry.",
+      "value_range": [
+        -4.1,
+        4.5
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Normalizes BMI to unit variance so it contributes appropriately to KNN distance calculations.",
+      "leakage_risk": "low",
+      "formula": "(mass - 31.993) / 7.879",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Z-score normalized age. Age is a key risk factor and normalization prevents it from being overshadowed by higher-variance features.",
+      "value_range": [
+        -1.05,
+        4.06
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Ensures age contributes proportionally to KNN distance metrics.",
+      "leakage_risk": "low",
+      "formula": "(age - 33.241) / 11.753",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_bmi_interaction_norm",
+      "type": "formula",
+      "description": "Product of z-score normalized glucose and BMI, capturing the joint metabolic risk signal. High values indicate co-elevation of both risk factors.",
+      "value_range": [
+        -10.0,
+        11.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Captures interaction between two key metabolic risk factors in a scale-normalized form, improving neighborhood separation.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.895) / 31.952) * ((mass - 31.993) / 7.879)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_log_norm",
+      "type": "formula",
+      "description": "Log-transformed and z-score normalized insulin level. Insulin has high skewness and large range; log transformation reduces outlier influence on distance calculations.",
+      "value_range": [
+        -0.7,
+        3.5
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Reduces the outsized influence of extreme insulin values on KNN distance, improving neighborhood quality for typical cases.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(insu) - np.log1p(79.799)) / (np.log1p(79.799 + 115.169) - np.log1p(79.799))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedi_age_combined_risk",
+      "type": "formula",
+      "description": "Combined z-score of diabetes pedigree function and age, representing hereditary and temporal risk factors jointly normalized.",
+      "value_range": [
+        -2.5,
+        8.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Combines two independent risk dimensions into a single normalized score, helping KNN find neighbors with similar risk profiles.",
+      "leakage_risk": "low",
+      "formula": "((pedi - 0.472) / 0.331) + ((age - 33.241) / 11.753)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_syndrome_score",
+      "type": "formula",
+      "description": "Composite score of normalized glucose, BMI, and insulin as a proxy for metabolic syndrome severity. Aggregates three correlated metabolic features.",
+      "value_range": [
+        -6.0,
+        12.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a single composite metabolic feature that captures the dominant axis of variation, improving KNN cluster separation.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.895) / 31.952) + ((mass - 31.993) / 7.879) + ((np.log1p(insu) - 4.39) / 1.2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zero_feature_count",
+      "type": "formula",
+      "description": "Count of physiologically implausible zero values across plas, pres, skin, insu, and mass. Zeros in these fields likely indicate missing data and affect distance calculations.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Identifies data quality issues that affect distance reliability; rows with many zeros may cluster together artificially.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas == 0, 1, 0) + np.where(pres == 0, 1, 0) + np.where(skin == 0, 1, 0) + np.where(insu == 0, 1, 0) + np.where(mass == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_pregnancy_ratio_norm",
+      "type": "formula",
+      "description": "Ratio of pregnancies to age, normalized by expected ratio at mean values. Captures reproductive history relative to age as a lifestyle indicator.",
+      "value_range": [
+        -0.5,
+        3.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Encodes a meaningful ratio feature that captures reproductive history intensity, adding a dimension not captured by raw features.",
+      "leakage_risk": "low",
+      "formula": "(preg / np.maximum(age, 21.0) - 3.845 / 33.241) / (3.367 / 33.241)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_metabolic_risk_judgment",
+      "type": "judgment",
+      "description": "Holistic semantic assessment of overall metabolic risk based on the combination of glucose level, BMI, insulin, pedigree function, and age. Score from 0 (low risk profile) to 10 (high risk profile) based on how many risk factors are simultaneously elevated above typical thresholds.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a human-interpretable composite risk score that helps KNN identify neighbors with similar overall metabolic burden.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "data_completeness_quality_score",
+      "type": "judgment",
+      "description": "Semantic quality score from 0 to 10 assessing how complete and physiologically plausible the row's measurements are, considering whether key clinical values like glucose, BMI, blood pressure, and insulin are non-zero and within realistic human ranges.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized",
+      "expected_model_benefit": "Helps KNN weight neighbors by data reliability; rows with implausible zeros or extreme outliers should be treated differently in distance calculations.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "bc86f6ac1e1621c7",
+  "metadata": {}
+}

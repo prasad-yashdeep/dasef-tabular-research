@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "age_zscore_clipped",
+      "type": "formula",
+      "description": "Age centered and scaled with training-fold mean and standard deviation after clipping to observed bounds.",
+      "value_range": [
+        -1.631,
+        3.884
+      ],
+      "feature_family": "normalized_continuous",
+      "expected_model_benefit": "Gives the margin a normalized life-stage axis with reduced influence from extreme ages.",
+      "leakage_risk": "low",
+      "formula": "(np.clip(age, 17.0, 90.0) - 38.58764558454961) / 13.240189426697823",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_zscore_clipped",
+      "type": "formula",
+      "description": "Years of schooling centered and scaled with training-fold mean and standard deviation after clipping to observed bounds.",
+      "value_range": [
+        -3.577,
+        2.294
+      ],
+      "feature_family": "normalized_continuous",
+      "expected_model_benefit": "Provides a strong smooth skill-depth axis with scale comparable to other continuous inputs.",
+      "leakage_risk": "low",
+      "formula": "(np.clip(education_num, 1.0, 16.0) - 10.139024030664897) / 2.555008850362112",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_zscore_clipped",
+      "type": "formula",
+      "description": "Weekly work time centered and scaled with training-fold mean and standard deviation after clipping to observed bounds.",
+      "value_range": [
+        -3.366,
+        4.908
+      ],
+      "feature_family": "normalized_continuous",
+      "expected_model_benefit": "Captures broad labor-supply intensity on a conditioned numeric scale for stable margin fitting.",
+      "leakage_risk": "low",
+      "formula": "(np.clip(hours_per_week, 1.0, 99.0) - 40.86930561698364) / 11.847006422382306",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "post_school_seniority_norm",
+      "type": "formula",
+      "description": "Approximate working-life duration after subtracting schooling years and a six-year pre-school period, clipped to a 0-1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "experience_proxy",
+      "expected_model_benefit": "Adds a smooth seniority proxy that can model accumulated experience separately from raw age.",
+      "leakage_risk": "low",
+      "formula": "np.clip((age - education_num - 6.0) / 60.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_hours_interaction_norm",
+      "type": "formula",
+      "description": "Product of normalized schooling years and normalized weekly work time.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Supplies a bounded multiplicative projection for rows combining high skill depth with high work intensity.",
+      "leakage_risk": "low",
+      "formula": "((np.clip(education_num, 1.0, 16.0) - 1.0) / 15.0) * ((np.clip(hours_per_week, 1.0, 99.0) - 1.0) / 98.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overtime_intensity",
+      "type": "formula",
+      "description": "Excess weekly work effort above forty hours, scaled by maximum observed excess.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "labor_supply",
+      "expected_model_benefit": "Separates standard and high-intensity work schedules with a bounded continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip((hours_per_week - 40.0) / 59.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_hours_intensity",
+      "type": "formula",
+      "description": "Shortfall from forty weekly hours, scaled by maximum observed shortfall.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "labor_supply",
+      "expected_model_benefit": "Provides a separate bounded axis for reduced work schedules rather than forcing symmetry with overtime.",
+      "leakage_risk": "low",
+      "formula": "np.clip((40.0 - hours_per_week) / 39.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_gain_norm",
+      "type": "formula",
+      "description": "Log-scaled capital gain amount normalized by the observed maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "financial_amount",
+      "expected_model_benefit": "Turns a highly skewed monetary amount into a smooth bounded signal with less outlier dominance.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.clip(capital_gain, 0.0, 99999.0)) / np.log1p(99999.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_loss_norm",
+      "type": "formula",
+      "description": "Log-scaled capital loss amount normalized by the observed maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "financial_amount",
+      "expected_model_benefit": "Represents rare financial loss magnitudes on a bounded scale suitable for a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.clip(capital_loss, 0.0, 4356.0)) / np.log1p(4356.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_gain_loss_balance_ratio",
+      "type": "formula",
+      "description": "Signed ratio contrasting log-normalized gain and loss magnitudes, stabilized with a small denominator offset.",
+      "value_range": [
+        -0.953,
+        0.953
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Distinguishes one-sided financial events from balanced or no-event cases through a bounded directional score.",
+      "leakage_risk": "low",
+      "formula": "((np.log1p(np.clip(capital_gain, 0.0, 99999.0)) / np.log1p(99999.0)) - (np.log1p(np.clip(capital_loss, 0.0, 4356.0)) / np.log1p(4356.0))) / ((np.log1p(np.clip(capital_gain, 0.0, 99999.0)) / np.log1p(99999.0)) + (np.log1p(np.clip(capital_loss, 0.0, 4356.0)) / np.log1p(4356.0)) + 0.05)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "occupational_status_semantic_score",
+      "type": "judgment",
+      "description": "Human- or ruleset-assigned 0.0-1.0 score using occupation and work sector category meanings from preprocessing metadata; higher values indicate roles generally associated with specialized, professional, managerial, or capital-intensive work.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_occupation",
+      "expected_model_benefit": "Condenses job and sector semantics into an ordered score that can be combined linearly instead of treating arbitrary integer encodings as meaningful distances.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_role_semantic_score",
+      "type": "judgment",
+      "description": "Domain-judged 0.0-1.0 score using marital_status, relationship, age, and hours_per_week; higher values indicate greater likely household earning responsibility and stable adult household role.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_household",
+      "expected_model_benefit": "Supplies a compact social-context axis for margin placement, capturing structure not well represented by raw encoded integers.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "627aa9d5a188df89",
+  "metadata": {}
+}

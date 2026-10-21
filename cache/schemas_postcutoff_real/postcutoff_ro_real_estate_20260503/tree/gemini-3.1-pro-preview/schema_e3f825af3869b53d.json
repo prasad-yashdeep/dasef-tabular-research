@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_ro_real_estate_20260503",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "area_per_room",
+      "type": "formula",
+      "description": "Calculates the average square meters per room, providing a measure of spaciousness.",
+      "value_range": [
+        0.0,
+        181.0
+      ],
+      "feature_family": "spatial_metrics",
+      "expected_model_benefit": "Helps tree models split on property density and spaciousness, which often correlates with property value.",
+      "leakage_risk": "low",
+      "formula": "area_sqm / np.maximum(rooms, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_large_apartment",
+      "type": "formula",
+      "description": "Boolean indicator for properties larger than 80 square meters.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "size_indicators",
+      "expected_model_benefit": "Provides a direct binary split for tree models to isolate larger, potentially premium properties.",
+      "leakage_risk": "low",
+      "formula": "np.where(area_sqm > 80.0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "floor_category",
+      "type": "formula",
+      "description": "Ordinal bucketing of the floor number into basement/ground (0), low (1), mid (2), and high (3).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "location_metrics",
+      "expected_model_benefit": "Groups floors into meaningful categories, reducing the number of splits needed by the tree to capture floor-level effects.",
+      "leakage_risk": "low",
+      "formula": "np.where(floor < 0, 0, np.where(floor <= 4, 1, np.where(floor <= 10, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "room_area_interaction",
+      "type": "formula",
+      "description": "Nonlinear interaction between the number of rooms and the total area.",
+      "value_range": [
+        0.0,
+        905.0
+      ],
+      "feature_family": "interaction_terms",
+      "expected_model_benefit": "Exposes a multiplicative relationship between size and room count that might be complex for a tree to approximate with orthogonal splits.",
+      "leakage_risk": "low",
+      "formula": "rooms * area_sqm",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "location_premium_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the location's desirability based on the location ID and its typical real estate market characteristics.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_evaluation",
+      "expected_model_benefit": "Injects domain knowledge about neighborhood quality that raw location IDs cannot convey linearly.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_length_bucket",
+      "type": "formula",
+      "description": "Categorizes the title feature (likely length or encoded complexity) into short (0), medium (1), and long (2).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "text_metadata",
+      "expected_model_benefit": "Creates an ordinal feature from title metadata, allowing the tree to easily split on listing descriptiveness.",
+      "leakage_risk": "low",
+      "formula": "np.where(title < 30, 0, np.where(title < 80, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_ground_or_basement",
+      "type": "formula",
+      "description": "Binary indicator for properties located on the ground floor or in the basement.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "location_metrics",
+      "expected_model_benefit": "Isolates properties that often have distinct pricing dynamics due to accessibility, security, or natural light.",
+      "leakage_risk": "low",
+      "formula": "np.where(floor <= 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "scraped_at_seasonality",
+      "type": "formula",
+      "description": "Approximates a seasonal or monthly cyclical component from the scraped_at timestamp.",
+      "value_range": [
+        0.0,
+        12.2
+      ],
+      "feature_family": "temporal_metrics",
+      "expected_model_benefit": "Helps the model capture cyclical market trends or listing behaviors over the year.",
+      "leakage_risk": "low",
+      "formula": "(scraped_at % 365) / 30.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "area_sqm_log",
+      "type": "formula",
+      "description": "Logarithmic transformation of the area in square meters.",
+      "value_range": [
+        0.0,
+        5.5
+      ],
+      "feature_family": "size_indicators",
+      "expected_model_benefit": "Compresses the long tail of property sizes, making it easier for the tree to find stable splits in the upper range.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(area_sqm)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_floor_indicator",
+      "type": "formula",
+      "description": "Binary indicator for properties located above the 10th floor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "location_metrics",
+      "expected_model_benefit": "Provides a direct split for high-rise apartments, which often carry a premium for views or suffer penalties for elevator dependency.",
+      "leakage_risk": "low",
+      "formula": "np.where(floor > 10, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "property_type_inference",
+      "type": "judgment",
+      "description": "Infers the likely property type (e.g., studio, penthouse, standard apartment) based on the combination of rooms, area, and floor.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic_evaluation",
+      "expected_model_benefit": "Provides a high-level categorical grouping that synthesizes multiple raw features into a single, highly predictive concept.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "relative_size_for_rooms",
+      "type": "formula",
+      "description": "Measures how much larger or smaller the property is compared to a baseline expectation of 25 sqm per room.",
+      "value_range": [
+        -125.0,
+        156.0
+      ],
+      "feature_family": "spatial_metrics",
+      "expected_model_benefit": "Highlights unusually cramped or unusually spacious properties for their room count, offering a strong signal for property quality.",
+      "leakage_risk": "low",
+      "formula": "area_sqm - (rooms * 25.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e3f825af3869b53d",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "glucose_bmi_interaction",
+      "type": "formula",
+      "description": "Interaction term between plasma glucose and BMI, scaled down to prevent extreme values.",
+      "value_range": [
+        0.0,
+        10000.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Provides a linear model with a non-linear interaction term that is highly relevant to metabolic health.",
+      "leakage_risk": "low",
+      "formula": "(plas * mass) / 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_adjusted_pregnancies",
+      "type": "formula",
+      "description": "Ratio of pregnancies to age, capturing the frequency of pregnancies over the patient's lifespan.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes pregnancy count by age, creating a smoother feature for linear margins.",
+      "leakage_risk": "low",
+      "formula": "preg / age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_resistance_proxy",
+      "type": "formula",
+      "description": "A proxy for insulin resistance using glucose and insulin levels, applying log1p to handle zero values and skewness.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a continuous severity measure of metabolic dysfunction suitable for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(plas * insu)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_deviation_from_healthy",
+      "type": "formula",
+      "description": "Absolute deviation of BMI from a standard healthy baseline (22.5).",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Transforms a raw metric into a continuous severity measure of weight abnormality.",
+      "leakage_risk": "low",
+      "formula": "np.abs(mass - 22.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_severity_score",
+      "type": "formula",
+      "description": "Measures how far glucose exceeds a normal fasting threshold (100), clipped at 0.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "threshold_deviation",
+      "expected_model_benefit": "Provides a hinge-like feature that activates only when glucose is elevated, ideal for linear SVMs.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(0.0, plas - 100.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_syndrome_risk_index",
+      "type": "formula",
+      "description": "A weighted composite of standardized glucose, BMI, and blood pressure.",
+      "value_range": [
+        -5.0,
+        15.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Projects multiple risk factors into a single approximate linear dimension.",
+      "leakage_risk": "low",
+      "formula": "((plas - 120.0) / 31.2) + ((mass - 31.2) / 7.4) + ((pres - 67.9) / 18.3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_age_risk",
+      "type": "formula",
+      "description": "Combines genetic predisposition (pedigree function) with age risk.",
+      "value_range": [
+        0.0,
+        150.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the compounding effect of age and genetics in a single continuous feature.",
+      "leakage_risk": "low",
+      "formula": "pedi * age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_extremes",
+      "type": "formula",
+      "description": "Absolute deviation of blood pressure from the dataset mean, highlighting both unusually high and low values.",
+      "value_range": [
+        0.0,
+        70.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Converts a potentially non-monotonic relationship into a monotonic severity score.",
+      "leakage_risk": "low",
+      "formula": "np.abs(pres - 67.9)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "skin_thickness_mass_ratio",
+      "type": "formula",
+      "description": "Ratio of skin thickness to BMI, potentially indicating body fat distribution.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a normalized structural feature that may separate different body types.",
+      "leakage_risk": "low",
+      "formula": "skin / np.maximum(mass, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zero_measurement_count",
+      "type": "formula",
+      "description": "Counts the number of biologically implausible zero values across key measurements (skin, insu, pres, mass).",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "data_quality",
+      "expected_model_benefit": "Acts as a linear indicator of missing data patterns, which often carry predictive signal.",
+      "leakage_risk": "low",
+      "formula": "np.where(skin == 0, 1, 0) + np.where(insu == 0, 1, 0) + np.where(pres == 0, 1, 0) + np.where(mass == 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "clinical_severity_assessment",
+      "type": "judgment",
+      "description": "Semantic evaluation of the patient's overall metabolic profile based on the combination of glucose, BMI, and age, outputting a continuous risk score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Captures complex, non-linear clinical heuristics that are difficult to express in simple formulas, providing a smooth score for SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "genetic_risk_interpretation",
+      "type": "judgment",
+      "description": "Semantic interpretation of the diabetes pedigree function in the context of the patient's age and current metabolic state.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Translates the abstract pedigree function into a more actionable, continuous risk magnitude.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "910f5c858439e3e4",
+  "metadata": {}
+}

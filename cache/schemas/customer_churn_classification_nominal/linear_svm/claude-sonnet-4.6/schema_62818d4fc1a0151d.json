@@ -1,0 +1,190 @@
+{
+  "dataset_name": "customer_churn_classification_nominal",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_credit_score",
+      "type": "formula",
+      "description": "Credit score normalized to [0,1] using training min/max range (350 to 850), providing a smooth linear input for SVM margins.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "creditworthiness",
+      "expected_model_benefit": "Smooth normalized credit risk signal directly usable by linear SVM without scale distortion.",
+      "leakage_risk": "low",
+      "formula": "(creditscore - 350.0) / (850.0 - 350.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_risk_score",
+      "type": "formula",
+      "description": "Normalized age deviation from the mean (38.07), capturing mid-career vs older customer risk profile on a continuous scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Continuous age-based risk signal normalized for SVM, capturing non-linear age effects via absolute deviation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(age - 38.07) / 53.93, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "balance_to_salary_ratio",
+      "type": "formula",
+      "description": "Log-transformed ratio of balance to estimated salary, capturing relative wealth accumulation. Log1p handles zero balances gracefully.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Smooth log-ratio feature capturing financial stability relative to income, useful for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(balance / (estimatedsalary + 1.0)), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_composite",
+      "type": "formula",
+      "description": "Weighted composite of active membership, credit card ownership, and number of products normalized to [0,1], measuring overall bank engagement.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement",
+      "expected_model_benefit": "Single continuous engagement score combining multiple binary/ordinal signals for linear SVM margin optimization.",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.4 * isactivemember + 0.2 * hascrcard + 0.4 * np.clip((numofproducts - 1.0) / 3.0, 0.0, 1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tenure_stability_score",
+      "type": "formula",
+      "description": "Tenure normalized by maximum tenure (10), representing customer loyalty duration as a smooth [0,1] score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loyalty",
+      "expected_model_benefit": "Normalized tenure signal for linear SVM, capturing long-term customer stability.",
+      "leakage_risk": "low",
+      "formula": "tenure / 10.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_balance_normalized",
+      "type": "formula",
+      "description": "Log-transformed balance normalized by log of max balance, compressing the heavy-tailed balance distribution for linear models.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "financial_ratio",
+      "expected_model_benefit": "Reduces skewness in balance distribution, enabling linear SVM to better separate high vs low balance customers.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(balance) / np.log1p(250898.09), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "germany_high_balance_interaction",
+      "type": "formula",
+      "description": "Interaction between Germany geography flag and normalized balance, capturing region-specific financial behavior patterns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "geographic_financial",
+      "expected_model_benefit": "Captures geographic-financial interaction that may be linearly separable in SVM feature space.",
+      "leakage_risk": "low",
+      "formula": "germany * np.clip(np.log1p(balance) / np.log1p(250898.09), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "female_age_interaction",
+      "type": "formula",
+      "description": "Interaction between female gender indicator and normalized age, capturing gender-age demographic combinations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Provides linear SVM with a combined demographic signal that may separate risk groups more effectively.",
+      "leakage_risk": "low",
+      "formula": "female * np.clip((age - 18.0) / 74.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "product_concentration_risk",
+      "type": "formula",
+      "description": "Risk score based on number of products: customers with exactly 1 or 3+ products may have different retention profiles. Normalized deviation from optimal 2 products.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "product_risk",
+      "expected_model_benefit": "Captures non-linear product count risk as a smooth continuous score suitable for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(numofproducts - 2.0) / 2.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stress_index",
+      "type": "formula",
+      "description": "Composite financial stress measure combining low credit score, high balance-to-salary ratio, and inactive membership into a single severity score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_composite",
+      "expected_model_benefit": "Aggregated financial stress signal providing a smooth composite for linear SVM decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.clip((1.0 - (creditscore - 350.0) / 500.0) * 0.4 + np.clip(balance / (estimatedsalary + 1.0) / 3.0, 0.0, 1.0) * 0.3 + (1.0 - isactivemember) * 0.3, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "customer_value_score",
+      "type": "judgment",
+      "description": "Semantic assessment of overall customer value based on combination of balance level, salary, tenure, and product usage. Higher scores indicate more valuable, potentially harder-to-replace customers. Scored 0 (low value) to 1 (high value).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "customer_value",
+      "expected_model_benefit": "Holistic customer value signal that captures complex interactions not easily expressed in single formulas, useful for SVM margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "behavioral_disengagement_score",
+      "type": "judgment",
+      "description": "Semantic assessment of behavioral disengagement signals: inactive membership, no credit card, single product, and short tenure together indicate disengagement risk. Scored 0 (fully engaged) to 1 (highly disengaged).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement",
+      "expected_model_benefit": "Captures nuanced disengagement patterns across multiple behavioral dimensions as a single continuous score for linear SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "62818d4fc1a0151d",
+  "metadata": {}
+}

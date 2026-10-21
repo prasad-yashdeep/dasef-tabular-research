@@ -1,0 +1,190 @@
+{
+  "dataset_name": "online_shoppers",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "page_value_log_normalized",
+      "type": "formula",
+      "description": "Log-transformed PageValues normalized by training mean, capturing purchase intent signal on a smooth scale suitable for linear margins",
+      "value_range": [
+        0.0,
+        4.5
+      ],
+      "feature_family": "engagement_quality",
+      "expected_model_benefit": "PageValues is highly predictive; log transform reduces skew and normalization centers the feature for SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "np.log1p(PageValues) / np.log1p(5.850848034187349)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "exit_bounce_composite",
+      "type": "formula",
+      "description": "Weighted sum of ExitRates and BounceRates normalized to [0,1], representing overall session disengagement severity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "disengagement_signal",
+      "expected_model_benefit": "Combined exit and bounce signal provides a smooth continuous disengagement score useful for linear separation",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.6 * ExitRates + 0.4 * BounceRates) / 0.2, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bounce_exit_ratio",
+      "type": "formula",
+      "description": "Ratio of BounceRates to ExitRates indicating how much of exit behavior is pure bounces versus engaged exits",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "disengagement_signal",
+      "expected_model_benefit": "Captures relative bounce severity; high ratio suggests low-quality traffic, useful for linear decision boundary",
+      "leakage_risk": "low",
+      "formula": "BounceRates / np.maximum(ExitRates, 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "product_engagement_score",
+      "type": "formula",
+      "description": "Log-transformed product-related duration scaled by number of product pages visited, measuring depth of product exploration",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "engagement_quality",
+      "expected_model_benefit": "Captures intensity of product browsing behavior; continuous score works well with SVM linear kernel",
+      "leakage_risk": "low",
+      "formula": "np.log1p(ProductRelated_Duration.astype(float)) * np.log1p(ProductRelated.astype(float))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "special_day_proximity_penalty",
+      "type": "formula",
+      "description": "SpecialDay value as a penalty score; higher values indicate proximity to special days which may reduce purchase conversion",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_context",
+      "expected_model_benefit": "Special day proximity is a smooth continuous feature that linearly penalizes conversion likelihood",
+      "leakage_risk": "low",
+      "formula": "SpecialDay",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "returning_visitor_flag",
+      "type": "formula",
+      "description": "Binary indicator for returning visitors who have higher baseline purchase intent than new visitors",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "visitor_profile",
+      "expected_model_benefit": "Returning visitors have different conversion patterns; binary feature provides clean linear split",
+      "leakage_risk": "low",
+      "formula": "np.where(VisitorType == 'Returning_Visitor', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_value_month_score",
+      "type": "formula",
+      "description": "Numeric score encoding months with historically higher shopping activity (Nov, Dec get higher scores, Feb/Jun lower)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_context",
+      "expected_model_benefit": "Encodes seasonal purchase intent as a continuous score for linear model to exploit temporal patterns",
+      "leakage_risk": "low",
+      "formula": "np.where(Month == 'Nov', 1.0, np.where(Month == 'Dec', 0.9, np.where(Month == 'Oct', 0.7, np.where(Month == 'Sep', 0.6, np.where(Month == 'Aug', 0.5, np.where(Month == 'Jul', 0.5, np.where(Month == 'May', 0.4, np.where(Month == 'Mar', 0.3, np.where(Month == 'June', 0.2, 0.1)))))))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "administrative_engagement_log",
+      "type": "formula",
+      "description": "Log-transformed administrative duration indicating time spent on account/admin pages as a session depth signal",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "engagement_quality",
+      "expected_model_benefit": "Administrative engagement correlates with purchase intent; log scale reduces skew for linear models",
+      "leakage_risk": "low",
+      "formula": "np.log1p(Administrative_Duration.astype(float))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "informational_depth_score",
+      "type": "formula",
+      "description": "Combined informational engagement score from page count and duration, normalized to capture research behavior intensity",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "engagement_quality",
+      "expected_model_benefit": "Research behavior before purchase is a smooth continuous signal useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "np.log1p(Informational.astype(float)) + np.log1p(Informational_Duration.astype(float) / 60.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weekend_session_indicator",
+      "type": "formula",
+      "description": "Binary weekend flag indicating sessions occurring on weekends which may have different purchase conversion patterns",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_context",
+      "expected_model_benefit": "Weekend vs weekday sessions have different behavioral patterns; clean binary feature for linear models",
+      "leakage_risk": "low",
+      "formula": "np.where(Weekend == True, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "session_quality_composite",
+      "type": "judgment",
+      "description": "Holistic assessment of session quality combining page value signal strength, low bounce/exit rates, and meaningful product engagement into a single composite score from 0 (poor quality) to 1 (high quality)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement_quality",
+      "expected_model_benefit": "Provides a single interpretable quality score that captures multiple engagement dimensions, useful as a strong linear feature for SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "traffic_source_quality_score",
+      "type": "judgment",
+      "description": "Semantic quality score for traffic source based on TrafficType category, where direct/organic traffic (types 1,2,3) scores higher (0.7-1.0) than paid/referral traffic (0.3-0.6) and unknown sources score lowest (0.1-0.3)",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "visitor_profile",
+      "expected_model_benefit": "Traffic source quality is a meaningful continuous proxy for visitor intent that provides smooth linear signal for SVM margins",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "3a094272a918cc12",
+  "metadata": {}
+}

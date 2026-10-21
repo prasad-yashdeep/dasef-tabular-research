@@ -1,0 +1,190 @@
+{
+  "dataset_name": "nursery",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "health_severity_score",
+      "type": "formula",
+      "description": "Ordinal severity of health condition mapped to a smooth scale where higher means worse health status.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Provides a monotonic numeric projection of health for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "np.where(health == 'not_recom', 1.0, np.where(health == 'priority', 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "parents_pretention_score",
+      "type": "formula",
+      "description": "Ordinal pretension level of parents from usual (low) to great_pret (high).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Smooth ordinal projection usable in linear combinations.",
+      "leakage_risk": "low",
+      "formula": "np.where(parents == 'usual', 0.0, np.where(parents == 'pretentious', 0.5, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_nurs_inadequacy_score",
+      "type": "formula",
+      "description": "Ordinal nursery inadequacy from proper (best) through less_proper, improper, critical, very_crit (worst).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Captures graded nursery condition severity as a continuous linear feature.",
+      "leakage_risk": "low",
+      "formula": "np.where(has_nurs == 'proper', 0.0, np.where(has_nurs == 'less_proper', 0.25, np.where(has_nurs == 'improper', 0.5, np.where(has_nurs == 'critical', 0.75, 1.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_inconvenience_score",
+      "type": "formula",
+      "description": "Ordinal housing inconvenience from convenient to critical.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Continuous severity dimension for SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.where(housing == 'convenient', 0.0, np.where(housing == 'less_conv', 0.5, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "finance_inconvenience_flag",
+      "type": "formula",
+      "description": "Binary indicator that finance is inconvenient.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_encoding",
+      "expected_model_benefit": "Direct linear contribution from financial inconvenience.",
+      "leakage_risk": "low",
+      "formula": "np.where(finance == 'inconv', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_problem_score",
+      "type": "formula",
+      "description": "Ordinal social condition score from nonprob to problematic.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Smooth ordinal feature reflecting social difficulty.",
+      "leakage_risk": "low",
+      "formula": "np.where(social == 'nonprob', 0.0, np.where(social == 'slightly_prob', 0.5, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "form_incompleteness_score",
+      "type": "formula",
+      "description": "Ordinal family form structure score, higher meaning less standard family form.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Provides continuous projection of family structure for linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.where(form == 'complete', 0.0, np.where(form == 'completed', 0.33, np.where(form == 'incomplete', 0.66, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "children_count_numeric",
+      "type": "formula",
+      "description": "Numeric children count with 'more' mapped to 4, normalized to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_encoding",
+      "expected_model_benefit": "Numeric ordinal usable directly in linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.where(children == '1', 0.0, np.where(children == '2', 0.333, np.where(children == '3', 0.667, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_household_strain_composite",
+      "type": "formula",
+      "description": "Weighted composite summing key severity scores (housing, finance, social, has_nurs) reflecting overall household strain.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregated linear-friendly severity composite captures cumulative risk along one axis.",
+      "leakage_risk": "low",
+      "formula": "np.where(housing == 'convenient', 0.0, np.where(housing == 'less_conv', 0.5, 1.0)) + np.where(finance == 'inconv', 1.0, 0.0) + np.where(social == 'nonprob', 0.0, np.where(social == 'slightly_prob', 0.5, 1.0)) + np.where(has_nurs == 'proper', 0.0, np.where(has_nurs == 'less_proper', 0.25, np.where(has_nurs == 'improper', 0.5, np.where(has_nurs == 'critical', 0.75, 1.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "health_blocks_recommendation",
+      "type": "formula",
+      "description": "Indicator that health is at the worst category, which historically dominates non-recommendation decisions in such ordinal nursery rules.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_encoding",
+      "expected_model_benefit": "Single high-impact binary dimension supports clean linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.where(health == 'not_recom', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "child_load_per_strain_ratio",
+      "type": "formula",
+      "description": "Ratio of children count to household strain composite plus a small constant; reflects child-load relative to overall difficulty.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio interaction useful as a smooth continuous SVM feature.",
+      "leakage_risk": "low",
+      "formula": "(np.where(children == '1', 1.0, np.where(children == '2', 2.0, np.where(children == '3', 3.0, 4.0)))) / (1.0 + np.where(housing == 'convenient', 0.0, np.where(housing == 'less_conv', 0.5, 1.0)) + np.where(finance == 'inconv', 1.0, 0.0) + np.where(social == 'nonprob', 0.0, np.where(social == 'slightly_prob', 0.5, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_suitability_judgment",
+      "type": "judgment",
+      "description": "Semantic judgment score of overall family suitability for nursery placement based on the joint configuration of parents pretension, family form, children count, and social condition, on a 0 (least suitable) to 1 (most suitable) scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Captures non-formulaic gestalt suitability that complements ordinal projections in linear models.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2f0c203025f49c1a",
+  "metadata": {}
+}

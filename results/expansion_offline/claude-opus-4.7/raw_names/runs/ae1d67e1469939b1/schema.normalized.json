@@ -1,0 +1,190 @@
+{
+  "dataset_name": "optdigits",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "total_ink",
+      "type": "formula",
+      "description": "Sum of all pixel intensities across the 8x8 grid, normalized to [0,1] range. Represents overall ink/darkness of digit.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "global_intensity",
+      "expected_model_benefit": "Provides a smooth global magnitude useful for separating digits with different stroke densities along a linear margin.",
+      "leakage_risk": "low",
+      "formula": "(input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input26+input27+input28+input29+input30+input31+input32+input34+input35+input36+input37+input38+input39+input42+input43+input44+input45+input46+input47+input48+input50+input51+input52+input53+input54+input55+input56+input58+input59+input60+input61+input62+input63+input64) / (55.0*16.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "top_half_ink_ratio",
+      "type": "formula",
+      "description": "Ratio of ink in top 4 rows vs total ink. Distinguishes digits with top-heavy structure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Smooth continuous ratio enables linear separation between top-heavy and bottom-heavy digits.",
+      "leakage_risk": "low",
+      "formula": "(input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input26+input27+input28+input29+input30+input31+input32) / (1.0 + input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input26+input27+input28+input29+input30+input31+input32+input34+input35+input36+input37+input38+input39+input42+input43+input44+input45+input46+input47+input48+input50+input51+input52+input53+input54+input55+input56+input58+input59+input60+input61+input62+input63+input64)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "left_half_ink_ratio",
+      "type": "formula",
+      "description": "Ratio of ink in left 4 columns vs total ink. Captures left/right asymmetry.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Provides continuous horizontal asymmetry signal for linear margin.",
+      "leakage_risk": "low",
+      "formula": "(input2+input3+input4+input5+input10+input11+input12+input13+input18+input19+input20+input21+input26+input27+input28+input29+input34+input35+input36+input37+input42+input43+input44+input45+input50+input51+input52+input53+input58+input59+input60+input61) / (1.0 + input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input26+input27+input28+input29+input30+input31+input32+input34+input35+input36+input37+input38+input39+input42+input43+input44+input45+input46+input47+input48+input50+input51+input52+input53+input54+input55+input56+input58+input59+input60+input61+input62+input63+input64)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "center_mass_ratio",
+      "type": "formula",
+      "description": "Fraction of ink in the central 4x4 region of the 8x8 grid.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Distinguishes digits with strong central strokes (e.g., 0 ring vs 1 vertical line) along linear projection.",
+      "leakage_risk": "low",
+      "formula": "(input19+input20+input21+input22+input27+input28+input29+input30+input35+input36+input37+input38+input43+input44+input45+input46) / (1.0 + input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input26+input27+input28+input29+input30+input31+input32+input34+input35+input36+input37+input38+input39+input42+input43+input44+input45+input46+input47+input48+input50+input51+input52+input53+input54+input55+input56+input58+input59+input60+input61+input62+input63+input64)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_symmetry_score",
+      "type": "formula",
+      "description": "Measure of left-right symmetry: 1 minus normalized sum of absolute differences between mirrored pixels.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "symmetry",
+      "expected_model_benefit": "Highly symmetric digits (0, 8) score high; asymmetric ones (2, 7) score low. Linear separable signal.",
+      "leakage_risk": "low",
+      "formula": "1.0 - (np.abs(input2-input9)+np.abs(input3-input8)+np.abs(input4-input7)+np.abs(input5-input6)+np.abs(input10-input17)+np.abs(input11-input16)+np.abs(input12-input15)+np.abs(input13-input14)+np.abs(input18-input25)+np.abs(input19-input24)+np.abs(input20-input23)+np.abs(input21-input22)+np.abs(input26-input33)+np.abs(input27-input32)+np.abs(input28-input31)+np.abs(input29-input30)) / (1.0 + input2+input3+input4+input5+input6+input7+input8+input9+input10+input11+input12+input13+input14+input15+input16+input17+input18+input19+input20+input21+input22+input23+input24+input25+input26+input27+input28+input29+input30+input31+input32+input33)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "horizontal_symmetry_score",
+      "type": "formula",
+      "description": "Measure of top-bottom symmetry across horizontal axis.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "symmetry",
+      "expected_model_benefit": "Separates digits like 8 (symmetric) from 6/9 (asymmetric) via continuous score.",
+      "leakage_risk": "low",
+      "formula": "1.0 - (np.abs(input2-input58)+np.abs(input3-input59)+np.abs(input4-input60)+np.abs(input5-input61)+np.abs(input6-input62)+np.abs(input7-input63)+np.abs(input8-input64)+np.abs(input10-input50)+np.abs(input11-input51)+np.abs(input12-input52)+np.abs(input13-input53)+np.abs(input14-input54)+np.abs(input15-input55)+np.abs(input16-input56)+np.abs(input18-input42)+np.abs(input19-input43)+np.abs(input20-input44)+np.abs(input21-input45)+np.abs(input22-input46)+np.abs(input23-input47)+np.abs(input24-input48)) / (1.0 + input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input42+input43+input44+input45+input46+input47+input48+input50+input51+input52+input53+input54+input55+input56+input58+input59+input60+input61+input62+input63+input64)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_pixel_fraction",
+      "type": "formula",
+      "description": "Fraction of pixels with intensity above 4 (out of 16). Smooth proxy for stroke coverage.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "global_intensity",
+      "expected_model_benefit": "Continuous coverage measure complements raw ink sum for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "(np.where(input3>4,1,0)+np.where(input4>4,1,0)+np.where(input5>4,1,0)+np.where(input6>4,1,0)+np.where(input11>4,1,0)+np.where(input12>4,1,0)+np.where(input13>4,1,0)+np.where(input14>4,1,0)+np.where(input19>4,1,0)+np.where(input20>4,1,0)+np.where(input21>4,1,0)+np.where(input22>4,1,0)+np.where(input27>4,1,0)+np.where(input28>4,1,0)+np.where(input29>4,1,0)+np.where(input30>4,1,0)+np.where(input35>4,1,0)+np.where(input36>4,1,0)+np.where(input37>4,1,0)+np.where(input38>4,1,0)+np.where(input43>4,1,0)+np.where(input44>4,1,0)+np.where(input45>4,1,0)+np.where(input46>4,1,0)+np.where(input51>4,1,0)+np.where(input52>4,1,0)+np.where(input53>4,1,0)+np.where(input54>4,1,0)+np.where(input59>4,1,0)+np.where(input60>4,1,0)+np.where(input61>4,1,0)+np.where(input62>4,1,0)) / 32.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "perimeter_ink_ratio",
+      "type": "formula",
+      "description": "Ratio of ink concentrated on the outer border of the grid vs total ink.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spatial_distribution",
+      "expected_model_benefit": "Digits with hollow centers (0) have lower perimeter concentration; helps linear separation.",
+      "leakage_risk": "low",
+      "formula": "(input2+input3+input4+input5+input6+input7+input8+input10+input18+input26+input34+input42+input50+input58+input59+input60+input61+input62+input63+input64+input16+input24+input32+input39+input47+input56) / (1.0 + input2+input3+input4+input5+input6+input7+input8+input10+input11+input12+input13+input14+input15+input16+input18+input19+input20+input21+input22+input23+input24+input26+input27+input28+input29+input30+input31+input32+input34+input35+input36+input37+input38+input39+input42+input43+input44+input45+input46+input47+input48+input50+input51+input52+input53+input54+input55+input56+input58+input59+input60+input61+input62+input63+input64)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "diagonal_main_intensity",
+      "type": "formula",
+      "description": "Normalized sum of intensities along the main diagonal (top-left to bottom-right).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "directional_stroke",
+      "expected_model_benefit": "Captures diagonal stroke presence (1, 7); contributes smoothly to linear margin.",
+      "leakage_risk": "low",
+      "formula": "(input2+input11+input20+input29+input38+input47+input56) / (7.0*16.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "diagonal_anti_intensity",
+      "type": "formula",
+      "description": "Normalized sum of intensities along the anti-diagonal (top-right to bottom-left).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "directional_stroke",
+      "expected_model_benefit": "Distinguishes diagonals oriented oppositely from main diagonal for linear discrimination.",
+      "leakage_risk": "low",
+      "formula": "(input9+input16+input23+input30+input37+input44+input51+input58) / (8.0*16.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_stroke_strength",
+      "type": "formula",
+      "description": "Maximum normalized column-sum (vertical strokes) divided by 8*16, weighted by central columns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "directional_stroke",
+      "expected_model_benefit": "Detects strong vertical strokes (digit 1) via continuous projection useful for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(input5+input13+input21+input29+input37+input45+input53+input61, input4+input12+input20+input28+input36+input44+input52+input60), np.maximum(input6+input14+input22+input30+input38+input46+input54+input62, input3+input11+input19+input27+input35+input43+input51+input59)) / 128.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "stroke_intensity_contrast",
+      "type": "judgment",
+      "description": "Semantic judgment of contrast between strongly inked (>=12) pixels and lightly inked (1-4) pixels, normalized as ratio of strong-ink count to total non-zero pixel count. Higher values indicate sharper strokes with less anti-aliasing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "stroke_quality",
+      "expected_model_benefit": "Provides a smooth semantic axis distinguishing bold vs faint digit rendering, useful as an additional linear feature dimension.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "764e4f4783592aef",
+  "metadata": {}
+}

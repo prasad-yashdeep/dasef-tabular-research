@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "credit_amount_per_month",
+      "type": "formula",
+      "description": "Calculates the monthly principal amount by dividing credit_amount by duration.",
+      "value_range": [
+        4.0,
+        4000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a continuous rate feature that helps the linear SVM establish a margin based on monthly financial burden.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / np.maximum(duration, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_amount",
+      "type": "formula",
+      "description": "Applies a log1p transformation to the credit amount to reduce skewness.",
+      "value_range": [
+        5.0,
+        10.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Smooths the distribution of large credit amounts, allowing the linear SVM to fit a more robust hyperplane without being dominated by extreme values.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(credit_amount)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Min-max normalization of age to a 0-1 scale based on training set bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Ensures the age feature is on a similar scale to other normalized features, preventing it from disproportionately influencing the SVM margin.",
+      "leakage_risk": "low",
+      "formula": "(age - 20.0) / 48.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "Semantic judgment assessing overall financial stability based on checking_status, savings_status, and employment.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Creates a monotonic, continuous severity measure that linearly separates financially secure applicants from vulnerable ones.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_burden",
+      "type": "formula",
+      "description": "Normalizes the installment_commitment to a 0-1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Provides a scaled linear projection of the applicant's commitment burden, suitable for linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": "installment_commitment / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_risk",
+      "type": "judgment",
+      "description": "Semantic judgment evaluating the risk associated with the applicant's credit_history and existing_credits.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_assessment",
+      "expected_model_benefit": "Translates categorical risk profiles into a continuous score, enabling the SVM to assign a linear weight to historical credit behavior.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_normalized",
+      "type": "formula",
+      "description": "Min-max normalization of the loan duration to a 0-1 scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Scales the temporal aspect of the loan, allowing the linear model to weigh duration equally against other normalized financial metrics.",
+      "leakage_risk": "low",
+      "formula": "(duration - 4.0) / 56.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "property_and_housing_score",
+      "type": "judgment",
+      "description": "Semantic judgment of asset wealth based on property_magnitude and housing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Provides a continuous composite of asset ownership, which serves as a strong linear predictor for financial capacity.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "amount_per_dependent",
+      "type": "formula",
+      "description": "Calculates the credit amount distributed per dependent.",
+      "value_range": [
+        100.0,
+        16000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a ratio feature that adjusts the requested amount by household size, offering a more nuanced linear feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / num_dependents",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "employment_stability_score",
+      "type": "judgment",
+      "description": "Semantic judgment of job security based on employment duration and job type.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Converts categorical employment data into a smooth, continuous measure of income stability for linear separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_duration_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between normalized age and normalized duration.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the non-linear relationship between age and loan length as a single continuous feature, allowing the linear SVM to utilize this interaction.",
+      "leakage_risk": "low",
+      "formula": "(age / 68.0) * (duration / 60.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_support_score",
+      "type": "judgment",
+      "description": "Semantic judgment of the applicant's social safety net based on personal_status, other_parties, and num_dependents.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregates social and demographic factors into a single continuous score, simplifying the feature space for the linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d3a4a8eab96cc036",
+  "metadata": {}
+}

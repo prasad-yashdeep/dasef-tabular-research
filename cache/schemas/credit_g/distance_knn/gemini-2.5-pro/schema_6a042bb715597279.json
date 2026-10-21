@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-2.5-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "debt_to_age_ratio",
+      "type": "formula",
+      "description": "The ratio of the total credit amount to the applicant's age. Aims to capture the loan burden relative to the applicant's life stage.",
+      "value_range": [
+        3.6,
+        798.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Provides a scale-invariant measure of financial burden, helping k-NN to group individuals with similar debt profiles relative to their age.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / age",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_payment_proxy",
+      "type": "formula",
+      "description": "An estimate of the monthly payment, calculated as the total credit amount divided by the loan duration in months.",
+      "value_range": [
+        4.1,
+        3987.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Creates a key feature for assessing affordability. Points with similar monthly payments will be closer in the feature space, improving neighborhood quality.",
+      "leakage_risk": "low",
+      "formula": "credit_amount / duration",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_age",
+      "type": "formula",
+      "description": "Applicant's age, min-max scaled to a [0, 1] range based on the training set's min and max age.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Ensures the age feature is on a comparable scale to other features, preventing it from dominating distance calculations in the k-NN model.",
+      "leakage_risk": "low",
+      "formula": "(age - 20.0) / (68.0 - 20.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_credit_amount",
+      "type": "formula",
+      "description": "Credit amount, min-max scaled to a [0, 1] range based on the training set's min and max credit amount.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Standardizes the scale of the credit amount, which has a large range, to improve the performance of distance-based algorithms like k-NN.",
+      "leakage_risk": "low",
+      "formula": "(credit_amount - 250.0) / (15945.0 - 250.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_value_loan_indicator",
+      "type": "formula",
+      "description": "A binary flag indicating if the credit amount is significantly large, defined as being greater than one standard deviation above the mean from the training set (approx. 3778 + 3166 = 6944).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Creates a clear partition in the feature space between high-value and standard loans, which can help define more distinct and meaningful neighborhoods for the k-NN algorithm.",
+      "leakage_risk": "low",
+      "formula": "np.where(credit_amount > 6944, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "long_term_loan_indicator",
+      "type": "formula",
+      "description": "A binary flag for loans with a long duration, defined as being greater than one standard deviation above the mean from the training set (approx. 22 + 13 = 35).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Separates applicants by loan term commitment, potentially improving the geometry of the feature space for identifying groups with different long-term risk profiles.",
+      "leakage_risk": "low",
+      "formula": "np.where(duration > 35, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "judgment",
+      "description": "A composite score from 0 to 11 reflecting financial health. Higher scores indicate greater stability. Score is based on checking status (0-3), savings status (0-4), and employment duration (0-4).",
+      "value_range": [
+        0.0,
+        11.0
+      ],
+      "feature_family": "composite_score",
+      "expected_model_benefit": "Aggregates several categorical features into a single, ordered dimension of financial stability. This simplifies the feature space and helps k-NN find neighbors with similar financial backgrounds.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_history_quality_score",
+      "type": "judgment",
+      "description": "An ordinal score from 1 to 4 representing the quality of past credit behavior, derived from the 'credit_history' category. Higher scores indicate better history (e.g., 4 for 'all paid', 1 for 'critical').",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "ordinal_mapping",
+      "expected_model_benefit": "Converts a critical categorical feature into a meaningful ordinal scale, allowing the distance metric to correctly interpret degrees of creditworthiness.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_real_estate",
+      "type": "judgment",
+      "description": "A binary indicator (0 or 1) for whether the applicant owns real estate, based on the 'property_magnitude' feature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Creates a strong binary signal for a significant asset, which can create a clear and useful separation in the feature space for the k-NN model to leverage.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_unemployed_or_unskilled",
+      "type": "judgment",
+      "description": "Binary indicator for applicants who are either 'unemployed' (from 'employment') or have an 'unskilled' job type (from 'job').",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Identifies a specific sub-population that may share similar characteristics, helping to form a distinct cluster and improving the definition of local neighborhoods.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "single_male_indicator",
+      "type": "judgment",
+      "description": "Binary indicator for applicants whose personal status is 'male single', a large demographic group in the dataset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Captures a large, distinct demographic segment. This binary split can help the k-NN model form more homogeneous neighborhoods based on personal status.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_purpose_granularity",
+      "type": "judgment",
+      "description": "A score representing the specificity and potential collateral of the loan purpose. High-ticket, tangible items (car, radio/tv, furniture) get a high score (2), business/education a medium score (1), and others/repairs a low score (0).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ordinal_mapping",
+      "expected_model_benefit": "Groups loan purposes into a simplified ordinal feature, allowing the distance metric to capture similarity between purposes more effectively than one-hot encoding would.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "6a042bb715597279",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "tree",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "is_high_glucose",
+      "type": "formula",
+      "description": "Boolean indicator for high plasma glucose levels, providing a direct split point for tree models.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "clinical_threshold",
+      "expected_model_benefit": "Allows tree models to immediately isolate individuals with elevated glucose, a primary physiological indicator.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas > 140.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_category",
+      "type": "formula",
+      "description": "Ordinal bucketing of BMI (mass) into standard clinical categories (underweight, normal, overweight, obese).",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "clinical_grouping",
+      "expected_model_benefit": "Provides a monotonic ordinal feature that groups similar body mass profiles, reducing the number of splits needed by the tree.",
+      "leakage_risk": "low",
+      "formula": "np.where(mass < 18.5, 0.0, np.where(mass < 25.0, 1.0, np.where(mass < 30.0, 2.0, 3.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_pregnancy_interaction",
+      "type": "formula",
+      "description": "Ratio of pregnancies to age, capturing the frequency of pregnancies over the patient's adult lifespan.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Exposes the density of pregnancies relative to age, which may be more informative than either feature independently.",
+      "leakage_risk": "low",
+      "formula": "preg / np.maximum(age, 21.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_glucose_ratio",
+      "type": "formula",
+      "description": "Ratio of serum insulin to plasma glucose, a simple proxy for insulin production relative to circulating sugar.",
+      "value_range": [
+        0.0,
+        900.0
+      ],
+      "feature_family": "physiological_ratio",
+      "expected_model_benefit": "Captures the physiological relationship between insulin and glucose, providing a continuous interaction term for the model.",
+      "leakage_risk": "low",
+      "formula": "insu / np.maximum(plas, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_blood_pressure_abnormal",
+      "type": "formula",
+      "description": "Boolean indicator for diastolic blood pressure outside the typical normal range (60-90 mm Hg).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "clinical_threshold",
+      "expected_model_benefit": "Groups both hypotensive and hypertensive individuals into a single abnormal category for efficient tree splitting.",
+      "leakage_risk": "low",
+      "formula": "np.where((pres < 60.0) | (pres > 90.0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_syndrome_risk_score",
+      "type": "judgment",
+      "description": "Semantic assessment of metabolic syndrome risk based on the combination of BMI, blood pressure, and glucose levels, outputting a continuous risk score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Synthesizes multiple physiological measurements into a single holistic risk score, capturing complex non-linear relationships.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_risk_bucket",
+      "type": "formula",
+      "description": "Ordinal bucketing of the diabetes pedigree function to group individuals by genetic risk magnitude.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "genetic_grouping",
+      "expected_model_benefit": "Transforms a continuous genetic risk score into discrete ordinal steps, which are often easier for tree models to split on robustly.",
+      "leakage_risk": "low",
+      "formula": "np.where(pedi < 0.3, 0.0, np.where(pedi < 0.6, 1.0, np.where(pedi < 1.0, 2.0, 3.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "missing_biometrics_count",
+      "type": "formula",
+      "description": "Count of zero values across biological measurements where zero typically indicates a missing value rather than a true physiological state.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "data_quality",
+      "expected_model_benefit": "Allows the model to explicitly learn patterns associated with missing data, which may correlate with specific patient demographics or data collection practices.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas == 0.0, 1.0, 0.0) + np.where(pres == 0.0, 1.0, 0.0) + np.where(skin == 0.0, 1.0, 0.0) + np.where(insu == 0.0, 1.0, 0.0) + np.where(mass == 0.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_bmi_product",
+      "type": "formula",
+      "description": "Multiplicative interaction between plasma glucose and BMI.",
+      "value_range": [
+        0.0,
+        15000.0
+      ],
+      "feature_family": "nonlinear_interaction",
+      "expected_model_benefit": "Highlights individuals who have both high glucose and high BMI, creating a strong interaction feature for the tree.",
+      "leakage_risk": "low",
+      "formula": "plas * mass",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_group",
+      "type": "formula",
+      "description": "Ordinal bucketing of age into distinct life stages.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "demographic_grouping",
+      "expected_model_benefit": "Provides a coarse-grained demographic feature, allowing the tree to make broad splits before fine-tuning on exact age.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 30.0, 0.0, np.where(age < 45.0, 1.0, np.where(age < 60.0, 2.0, 3.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_resistance_proxy",
+      "type": "judgment",
+      "description": "Semantic judgment estimating the severity of insulin resistance by evaluating the interplay between skin fold thickness, BMI, and insulin levels.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a high-level physiological interpretation of raw measurements, giving the model access to domain-like expertise.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "adjusted_glucose",
+      "type": "formula",
+      "description": "Plasma glucose level adjusted by the logarithm of age, accounting for natural metabolic changes over time.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "physiological_adjustment",
+      "expected_model_benefit": "Normalizes glucose levels against age, potentially revealing abnormal glucose levels that are masked by age-related baselines.",
+      "leakage_risk": "low",
+      "formula": "plas / np.log1p(age)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a3c962e7615566c1",
+  "metadata": {}
+}

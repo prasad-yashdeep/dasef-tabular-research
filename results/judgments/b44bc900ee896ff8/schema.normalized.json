@@ -1,0 +1,190 @@
+{
+  "dataset_name": "credit_g",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "duration_minmax_scaled",
+      "type": "formula",
+      "description": "Loan duration scaled from the training-fold numeric range of 4 to 60 months and clipped to a bounded 0.0-1.0 interval.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_numeric",
+      "expected_model_benefit": "Puts loan term on a common bounded scale so Euclidean neighborhoods are not dominated by raw month counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((duration - 4.0) / (60.0 - 4.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_credit_amount_minmax_scaled",
+      "type": "formula",
+      "description": "Credit amount transformed with log1p, then scaled using the training-fold amount range and clipped to 0.0-1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_numeric",
+      "expected_model_benefit": "Compresses large monetary differences while preserving ordering, improving distance behavior for skewed amounts.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(credit_amount) - np.log1p(250.0)) / (np.log1p(15945.0) - np.log1p(250.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_credit_amount_scaled",
+      "type": "formula",
+      "description": "Approximate financed amount per month, log-scaled and normalized against the feasible training-fold range implied by amount and duration bounds.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_ratio",
+      "expected_model_benefit": "Adds a normalized repayment-shape coordinate that helps neighbors match on monthly loan intensity rather than total amount alone.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(credit_amount / np.maximum(duration, 1.0)) - np.log1p(250.0 / 60.0)) / (np.log1p(15945.0 / 4.0) - np.log1p(250.0 / 60.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "installment_pressure_index",
+      "type": "formula",
+      "description": "Interaction between scaled installment commitment and scaled monthly credit amount, clipped to 0.0-1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_interaction",
+      "expected_model_benefit": "Creates a bounded local-pressure coordinate so nearby rows share similar repayment burden geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((installment_commitment - 1.0) / (4.0 - 1.0)) * ((np.log1p(credit_amount / np.maximum(duration, 1.0)) - np.log1p(250.0 / 60.0)) / (np.log1p(15945.0 / 4.0) - np.log1p(250.0 / 60.0))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_minmax_scaled",
+      "type": "formula",
+      "description": "Applicant age scaled from the training-fold numeric range of 20 to 68 and clipped to 0.0-1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_numeric",
+      "expected_model_benefit": "Keeps age comparable to other bounded features in nearest-neighbor distance calculations.",
+      "leakage_risk": "low",
+      "formula": "np.clip((age - 20.0) / (68.0 - 20.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "numeric_centroid_distance_scaled",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from the unsupervised training-fold numeric center across duration, amount, installment commitment, age, residence duration, and existing credits.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "unsupervised_prototype_distance",
+      "expected_model_benefit": "Adds a generic prototype-distance coordinate that helps KNN identify rows near or far from the central numeric profile.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((duration - 22.2066666667) / 13.2510611734) ** 2 + ((credit_amount - 3555.1766666667) / 2975.2419059278) ** 2 + ((installment_commitment - 2.8766666667) / 1.1553306405) ** 2 + ((age - 35.4666666667) / 11.0882320001) ** 2 + ((residence_since - 2.77) / 1.1534441180) ** 2 + ((existing_credits - 1.4166666667) / 0.5624845677) ** 2) / 8.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "amount_duration_mismatch_scaled",
+      "type": "formula",
+      "description": "Absolute difference between standardized credit amount and standardized duration, scaled and clipped to 0.0-1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Highlights rows whose amount is unusually high or low relative to term length, improving local shape similarity.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(((credit_amount - 3555.1766666667) / 2975.2419059278) - ((duration - 22.2066666667) / 13.2510611734)) / 6.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "compact_low_exposure_cluster_indicator",
+      "type": "formula",
+      "description": "Unsupervised rule flag for compact low-exposure loan profiles: duration at most 12 months, amount at most 2500, and installment commitment at most 2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a crisp neighborhood anchor for short, smaller, lower-commitment credit profiles.",
+      "leakage_risk": "low",
+      "formula": "np.where((duration <= 12) & (credit_amount <= 2500.0) & (installment_commitment <= 2), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "extended_high_exposure_cluster_indicator",
+      "type": "formula",
+      "description": "Unsupervised rule flag for extended high-exposure loan profiles: duration at least 36 months, amount at least 5000, and installment commitment at least 3.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a crisp neighborhood anchor for long, larger, higher-commitment credit profiles.",
+      "leakage_risk": "low",
+      "formula": "np.where((duration >= 36) & (credit_amount >= 5000.0) & (installment_commitment >= 3), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_reserve_semantic_score",
+      "type": "judgment",
+      "description": "Semantic 0.0-1.0 score from checking_status and savings_status. Suggested rubric: checking_status <0=0.05, 0<=X<200=0.35, >=200=0.75, no checking=0.55; savings_status <100=0.15, 100<=X<500=0.45, 500<=X<1000=0.70, >=1000=0.90, no known savings=0.50; combine consistently as a smooth liquidity reserve score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity_score",
+      "expected_model_benefit": "Places ordered liquidity categories nearer in feature space than unrelated one-hot levels, improving cash-buffer similarity for KNN.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_record_semantic_score",
+      "type": "judgment",
+      "description": "Semantic 0.0-1.0 score from credit_history. Suggested rubric: no credits/all paid=0.25, all paid=0.35, delayed previously=0.45, existing paid=0.70, critical/other existing credit=0.85; interpolate only for normalized text variants.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity_score",
+      "expected_model_benefit": "Converts nominal credit record phrases into an ordered similarity axis for smoother nearest-neighbor matching.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_and_asset_stability_semantic_score",
+      "type": "judgment",
+      "description": "Semantic 0.0-1.0 score using employment, job, housing, and property_magnitude. Employment anchors: unemployed=0.05, <1=0.25, 1<=X<4=0.55, 4<=X<7=0.75, >=7=0.90. Job anchors: unemp/unskilled non res=0.10, unskilled resident=0.35, skilled=0.65, high qualif/self emp/mgmt=0.85. Housing anchors: rent=0.25, for free=0.35, own=0.75. Property anchors: no known property=0.15, life insurance=0.45, car=0.55, real estate=0.85. Blend consistently within 0.0-1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_similarity_score",
+      "expected_model_benefit": "Adds a continuous stability axis that makes rows with comparable employment, occupation, residence, and asset context closer.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "436e6359d5f55fa0",
+  "metadata": {}
+}

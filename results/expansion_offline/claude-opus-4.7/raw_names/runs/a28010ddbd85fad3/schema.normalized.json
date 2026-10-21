@@ -1,0 +1,190 @@
+{
+  "dataset_name": "amazon_employee_access",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "resource_frequency_log",
+      "type": "formula",
+      "description": "Log-frequency of RESOURCE based on training count proxy via the row value itself; uses log1p of the numeric resource id as a smooth severity proxy when frequency table unavailable.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "frequency_encoding",
+      "expected_model_benefit": "Smooth continuous projection of resource identity for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(RESOURCE.astype('float64'))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mgr_id_log",
+      "type": "formula",
+      "description": "Log-transformed manager id providing a smooth continuous representation for linear models.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "smooth_encoding",
+      "expected_model_benefit": "Provides continuous numeric projection of manager identity.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(MGR_ID.astype('float64'))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "role_title_code_match",
+      "type": "formula",
+      "description": "Binary indicator whether ROLE_TITLE equals ROLE_CODE (they are typically aligned); deviation indicates anomaly.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "consistency_check",
+      "expected_model_benefit": "Direct linear signal for role consistency anomalies.",
+      "leakage_risk": "low",
+      "formula": "np.where(ROLE_TITLE.astype('float64') == ROLE_CODE.astype('float64'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "role_title_code_diff_abs",
+      "type": "formula",
+      "description": "Absolute numeric difference between ROLE_TITLE and ROLE_CODE as a smooth divergence measure.",
+      "value_range": [
+        0.0,
+        500000.0
+      ],
+      "feature_family": "divergence",
+      "expected_model_benefit": "Continuous magnitude of role inconsistency for SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.abs(ROLE_TITLE.astype('float64') - ROLE_CODE.astype('float64')))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rollup_hierarchy_match",
+      "type": "formula",
+      "description": "Indicator that ROLE_ROLLUP_1 equals ROLE_ROLLUP_2 indicating flat hierarchy.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "consistency_check",
+      "expected_model_benefit": "Captures organizational depth signal.",
+      "leakage_risk": "low",
+      "formula": "np.where(ROLE_ROLLUP_1.astype('float64') == ROLE_ROLLUP_2.astype('float64'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rollup_log_ratio",
+      "type": "formula",
+      "description": "Log-ratio between ROLE_ROLLUP_1 and ROLE_ROLLUP_2 as smooth hierarchical structure feature.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Smooth ratio useful for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(ROLE_ROLLUP_1.astype('float64')) - np.log1p(ROLE_ROLLUP_2.astype('float64')), -5.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "deptname_log",
+      "type": "formula",
+      "description": "Log-transformed department name id for smooth continuous encoding.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "smooth_encoding",
+      "expected_model_benefit": "Continuous representation of department.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(ROLE_DEPTNAME.astype('float64'))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_desc_vs_family_diff",
+      "type": "formula",
+      "description": "Log-abs difference between ROLE_FAMILY_DESC and ROLE_FAMILY indicating role-family alignment.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "divergence",
+      "expected_model_benefit": "Smooth divergence signal between related role attributes.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.abs(ROLE_FAMILY_DESC.astype('float64') - ROLE_FAMILY.astype('float64')))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "resource_to_mgr_log_ratio",
+      "type": "formula",
+      "description": "Log-ratio between RESOURCE and MGR_ID, providing a smooth interaction projection.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures relative magnitude relationship for linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(RESOURCE.astype('float64')) - np.log1p(MGR_ID.astype('float64')), -10.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "common_rollup1_indicator",
+      "type": "formula",
+      "description": "Indicator that ROLE_ROLLUP_1 equals the dominant value 117961 (covers ~65% of rows).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "frequency_indicator",
+      "expected_model_benefit": "Captures membership in dominant organizational rollup.",
+      "leakage_risk": "low",
+      "formula": "np.where(ROLE_ROLLUP_1.astype('float64') == 117961.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "role_attribute_dispersion",
+      "type": "formula",
+      "description": "Standard-deviation-like dispersion of log-encoded role attributes capturing intra-row variability.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Weighted composite useful for linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((np.log1p(ROLE_TITLE.astype('float64')) - np.log1p(ROLE_FAMILY.astype('float64')))**2 + (np.log1p(ROLE_DEPTNAME.astype('float64')) - np.log1p(ROLE_FAMILY_DESC.astype('float64')))**2) / 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "access_request_specificity",
+      "type": "judgment",
+      "description": "Semantic judgment of how specific or unusual the access request appears, blending resource rarity and role hierarchy depth. Higher values indicate more atypical access patterns warranting scrutiny. Computed from row-value characteristics only.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a normalized soft severity score complementing deterministic features for linear SVM margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "377f7a66081cd280",
+  "metadata": {}
+}

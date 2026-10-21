@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "distance_knn",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "continuous_centroid_z_l2",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from the training-fold mean profile over broad continuous descriptors.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "centroid_distance",
+      "expected_model_benefit": "Adds a smooth centrality coordinate so rows with similar standardized continuous profiles are closer under KNN.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((V1 - 4.776870253164557) / 0.5484442083033194) ** 2 + ((V2 - 3.0600427215189874) / 0.8117726883249491) ** 2 + ((V8 - 37.062658227848104) / 9.299336332500504) ** 2 + ((V12 + 0.19317088607594934) / 0.7583518245414135) ** 2 + ((V13 - 3.430072784810126) / 0.5570211496505924) ** 2 + ((V14 - 1.3344050632911393) / 0.8124814353320162) ** 2 + ((V15 - 9.926072784810128) / 0.9416685859234286) ** 2 + ((V22 - 1.2384050632911392) / 0.09362938911478945) ** 2 + ((V27 - 2.215224683544304) / 0.22989479602379848) ** 2 + ((V30 - 8.652316455696203) / 11.968861908073771) ** 2 + ((V31 - 2.642208860759494) / 2.2649071852159874) ** 2 + ((V36 - 3.793189873417722) / 0.6994267422293443) ** 2 + ((V37 - 2.527870253164557) / 0.5972420678386097) ** 2 + ((V39 - 8.485860759493672) / 1.0072770097063506) ** 2) / 3.7416573867739413, 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "sparse_count_centroid_z_l2",
+      "type": "formula",
+      "description": "Scale-normalized Euclidean distance from the training-fold mean count profile over sparse integer descriptors.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "centroid_distance",
+      "expected_model_benefit": "Separates neighborhoods by count-pattern sparsity and outlying substructure counts.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((V3 - 0.6360759493670886) / 1.3584577235367898) ** 2 + ((V5 - 0.9556962025316456) / 2.046438513919097) ** 2 + ((V6 - 0.2879746835443038) / 1.0231409566040235) ** 2 + ((V7 - 1.6455696202531647) / 2.100560351300771) ** 2 + ((V9 - 1.4398734177215189) / 1.9871880735534646) ** 2 + ((V10 - 1.7088607594936709) / 1.749516379714852) ** 2 + ((V11 - 1.3765822784810127) / 2.532189419433009) ** 2 + ((V16 - 3.4588607594936707) / 4.493478111393679) ** 2 + ((V23 - 1.2848101265822784) / 1.7103252046672988) ** 2 + ((V32 - 0.12974683544303797) / 0.6504146188501887) ** 2 + ((V33 - 0.8259493670886076) / 1.4313700783633059) ** 2 + ((V34 - 1.3512658227848102) / 2.0715137662512952) ** 2 + ((V35 - 0.9810126582278481) / 1.280187481262624) ** 2 + ((V38 - 0.7120253164556962) / 1.0075573668334439) ** 2 + ((V41 - 0.6044303797468354) / 2.12843452713309) ** 2) / 3.872983346207417, 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "low_range_prototype_distance",
+      "type": "formula",
+      "description": "Distance to a generic low-magnitude descriptor prototype using training-fold lower and upper bounds.",
+      "value_range": [
+        0.0,
+        1.2
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides an unsupervised anchor that helps KNN organize rows near compact low-range profiles.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((V1 - 2.0) / 4.253) ** 2 + ((V2 - 1.1349) / 8.0426) ** 2 + (V8 / 60.7) ** 2 + ((V13 - 1.544) / 4.043) ** 2 + (V14 / 4.437) ** 2 + ((V15 - 4.174) / 8.247) ** 2 + (V30 / 71.167) ** 2 + ((V31 - 0.5) / 16.614) ** 2 + ((V36 - 2.267) / 8.056) ** 2 + ((V39 - 4.917) / 9.091) ** 2) / 3.1622776601683795, 0.0, 1.2)",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "high_range_prototype_distance",
+      "type": "formula",
+      "description": "Distance to a generic high-magnitude descriptor prototype using training-fold lower and upper bounds.",
+      "value_range": [
+        0.0,
+        1.2
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides an unsupervised anchor that helps KNN organize rows near extended high-range profiles.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt((1.0 - ((V1 - 2.0) / 4.253)) ** 2 + (1.0 - ((V2 - 1.1349) / 8.0426)) ** 2 + (1.0 - (V8 / 60.7)) ** 2 + (1.0 - ((V13 - 1.544) / 4.043)) ** 2 + (1.0 - (V14 / 4.437)) ** 2 + (1.0 - ((V15 - 4.174) / 8.247)) ** 2 + (1.0 - (V30 / 71.167)) ** 2 + (1.0 - ((V31 - 0.5) / 16.614)) ** 2 + (1.0 - ((V36 - 2.267) / 8.056)) ** 2 + (1.0 - ((V39 - 4.917) / 9.091)) ** 2) / 3.1622776601683795, 0.0, 1.2)",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "size_polar_balance_similarity",
+      "type": "formula",
+      "description": "Similarity score for the standardized balance between V8 and V1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Keeps rows with comparable V8-to-V1 balance closer in the distance geometry.",
+      "leakage_risk": "low",
+      "formula": "1.0 / (1.0 + np.abs(((V8 - 37.062658227848104) / 9.299336332500504) - ((V1 - 4.776870253164557) / 0.5484442083033194)))",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "functional_group_density_log",
+      "type": "formula",
+      "description": "Log-scaled density of summed sparse count descriptors relative to broad size and shape descriptors.",
+      "value_range": [
+        0.0,
+        2.5
+      ],
+      "feature_family": "density_ratio",
+      "expected_model_benefit": "Adds a compact normalized coordinate for functional richness, reducing dominance by raw count magnitudes.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(V3 + V5 + V6 + V7 + V9 + V10 + V11 + V23 + V33 + V34 + V35 + V38 + V41) / np.log1p(V16 + V30 + V31 + V36 + V39 + 1.0), 0.0, 2.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "rare_motif_presence",
+      "type": "formula",
+      "description": "Binary flag for any uncommon count indicator being present in the row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a simple neighborhood split for rows carrying rare motifs that can distort raw Euclidean distances.",
+      "leakage_risk": "low",
+      "formula": "np.where((V4 + V19 + V20 + V21 + V24 + V25 + V26 + V29 + V32 + V40) > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "electronic_shift_magnitude",
+      "type": "formula",
+      "description": "Average absolute standardized shift for descriptors with signed or electronic character.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "scale_normalized_deviation",
+      "expected_model_benefit": "Makes neighborhoods sensitive to direction-independent electronic departures while limiting outlier impact.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.abs((V12 + 0.19317088607594934) / 0.7583518245414135) + np.abs((V28 + 0.00595253164556962) / 0.1665658372131037) + np.abs((V22 - 1.2384050632911392) / 0.09362938911478945)) / 3.0, 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "shape_compactness_log_ratio",
+      "type": "formula",
+      "description": "Log-scaled multiplicative ratio relating paired shape and topology continuous descriptors.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "shape_ratio",
+      "expected_model_benefit": "Adds a bounded compactness axis that can improve local matching among similarly shaped profiles.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p((V36 / (V37 + 0.001)) * (V27 / (V22 + 0.001))), 0.0, 3.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_polarity_quadrant_code",
+      "type": "formula",
+      "description": "Four-region unsupervised partition based on whether V30 and V8 are above their training-fold means.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a coarse neighborhood grouping for bulk and polarity patterns before fine distance comparisons.",
+      "leakage_risk": "low",
+      "formula": "np.where(((V30 > 8.652316455696203) & (V8 > 37.062658227848104)), 3, np.where(((V30 > 8.652316455696203) & (V8 <= 37.062658227848104)), 2, np.where(((V30 <= 8.652316455696203) & (V8 > 37.062658227848104)), 1, 0)))",
+      "computation_method": null,
+      "uses_only_row_values": false
+    },
+    {
+      "name": "expert_structural_complexity_score",
+      "type": "judgment",
+      "description": "Expert semantic score from 0 to 5 summarizing perceived molecular descriptor complexity from count richness, large continuous-size descriptors, and sparse motif diversity in the row.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_complexity_score",
+      "expected_model_benefit": "Adds an interpretable ordinal coordinate that can bring profiles with similar broad structural richness closer even when raw descriptor matches are imperfect.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expert_polar_functionality_score",
+      "type": "judgment",
+      "description": "Expert semantic score from 0 to 5 estimating how strongly the row suggests polar or hetero-atom functionality, using the balance of V8, V12, V14, V22, V28, and relevant count descriptors.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_functionality_score",
+      "expected_model_benefit": "Supplies a smooth chemistry-informed similarity axis for KNN when individual polar descriptors are noisy or sparse.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "519d36797a04b758",
+  "metadata": {}
+}

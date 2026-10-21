@@ -1,0 +1,190 @@
+{
+  "dataset_name": "optdigits",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "ink_density_norm",
+      "type": "formula",
+      "description": "Total ink normalized by the 8x8 maximum intensity, giving a smooth brightness and density measure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "global_ink",
+      "expected_model_benefit": "Captures overall stroke amount and helps a linear margin separate sparse glyphs from dense or over-written glyphs.",
+      "leakage_risk": "low",
+      "formula": "(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) / 1024.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x_centroid_offset_norm",
+      "type": "formula",
+      "description": "Signed horizontal center of mass of ink; negative values emphasize the left side and positive values emphasize the right side.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "centroid_geometry",
+      "expected_model_benefit": "Provides an approximate linear projection of lateral placement, useful for separating glyphs with left or right tails and openings.",
+      "leakage_risk": "low",
+      "formula": "((-3.5 * (input1 + input9 + input17 + input25 + input33 + input41 + input49 + input57)) + (-2.5 * (input2 + input10 + input18 + input26 + input34 + input42 + input50 + input58)) + (-1.5 * (input3 + input11 + input19 + input27 + input35 + input43 + input51 + input59)) + (-0.5 * (input4 + input12 + input20 + input28 + input36 + input44 + input52 + input60)) + (0.5 * (input5 + input13 + input21 + input29 + input37 + input45 + input53 + input61)) + (1.5 * (input6 + input14 + input22 + input30 + input38 + input46 + input54 + input62)) + (2.5 * (input7 + input15 + input23 + input31 + input39 + input47 + input55 + input63)) + (3.5 * (input8 + input16 + input24 + input32 + input40 + input48 + input56 + input64))) / (3.5 * (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "y_centroid_offset_norm",
+      "type": "formula",
+      "description": "Signed vertical center of mass of ink; negative values emphasize the upper area and positive values emphasize the lower area.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "centroid_geometry",
+      "expected_model_benefit": "Adds a smooth projection of upper versus lower placement, helping the margin use vertical tails, caps, and descenders.",
+      "leakage_risk": "low",
+      "formula": "((-3.5 * (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8)) + (-2.5 * (input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16)) + (-1.5 * (input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24)) + (-0.5 * (input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32)) + (0.5 * (input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40)) + (1.5 * (input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48)) + (2.5 * (input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56)) + (3.5 * (input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64))) / (3.5 * (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x_spread_norm",
+      "type": "formula",
+      "description": "Normalized horizontal second-moment spread of ink, high when strokes are concentrated near left and right edges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spread_geometry",
+      "expected_model_benefit": "Separates narrow center-heavy glyphs from wide glyphs using a continuous width cue that is friendly to linear margins.",
+      "leakage_risk": "low",
+      "formula": "((12.25 * (input1 + input9 + input17 + input25 + input33 + input41 + input49 + input57)) + (6.25 * (input2 + input10 + input18 + input26 + input34 + input42 + input50 + input58)) + (2.25 * (input3 + input11 + input19 + input27 + input35 + input43 + input51 + input59)) + (0.25 * (input4 + input12 + input20 + input28 + input36 + input44 + input52 + input60)) + (0.25 * (input5 + input13 + input21 + input29 + input37 + input45 + input53 + input61)) + (2.25 * (input6 + input14 + input22 + input30 + input38 + input46 + input54 + input62)) + (6.25 * (input7 + input15 + input23 + input31 + input39 + input47 + input55 + input63)) + (12.25 * (input8 + input16 + input24 + input32 + input40 + input48 + input56 + input64))) / (12.25 * (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "y_spread_norm",
+      "type": "formula",
+      "description": "Normalized vertical second-moment spread of ink, high when strokes are concentrated near top and bottom edges.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spread_geometry",
+      "expected_model_benefit": "Adds a continuous height cue, improving separation of compact glyphs from tall glyphs.",
+      "leakage_risk": "low",
+      "formula": "((12.25 * (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8)) + (6.25 * (input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16)) + (2.25 * (input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24)) + (0.25 * (input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32)) + (0.25 * (input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40)) + (2.25 * (input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48)) + (6.25 * (input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56)) + (12.25 * (input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64))) / (12.25 * (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "central_ink_fraction",
+      "type": "formula",
+      "description": "Fraction of ink inside the central 4x4 block, measured relative to total ink with a stabilizing offset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "regional_density",
+      "expected_model_benefit": "Captures whether the glyph is center-filled or mostly outlined, a strong smooth cue for many handwritten forms.",
+      "leakage_risk": "low",
+      "formula": "(input19 + input20 + input21 + input22 + input27 + input28 + input29 + input30 + input35 + input36 + input37 + input38 + input43 + input44 + input45 + input46) / (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "border_ink_fraction",
+      "type": "formula",
+      "description": "Fraction of ink on the outer border cells, measured relative to total ink with a stabilizing offset.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "edge_density",
+      "expected_model_benefit": "Encodes whether strokes hug the frame versus stay central, giving a robust outline and cropping cue.",
+      "leakage_risk": "low",
+      "formula": "(input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64 + input9 + input17 + input25 + input33 + input41 + input49 + input16 + input24 + input32 + input40 + input48 + input56) / (input1 + input2 + input3 + input4 + input5 + input6 + input7 + input8 + input9 + input10 + input11 + input12 + input13 + input14 + input15 + input16 + input17 + input18 + input19 + input20 + input21 + input22 + input23 + input24 + input25 + input26 + input27 + input28 + input29 + input30 + input31 + input32 + input33 + input34 + input35 + input36 + input37 + input38 + input39 + input40 + input41 + input42 + input43 + input44 + input45 + input46 + input47 + input48 + input49 + input50 + input51 + input52 + input53 + input54 + input55 + input56 + input57 + input58 + input59 + input60 + input61 + input62 + input63 + input64 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "diagonal_ink_contrast",
+      "type": "formula",
+      "description": "Signed contrast between the main diagonal and the opposite diagonal of the 8x8 grid.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "diagonal_projection",
+      "expected_model_benefit": "Adds a slant-sensitive projection that helps linear margins exploit rising or falling stroke patterns.",
+      "leakage_risk": "low",
+      "formula": "((input1 + input10 + input19 + input28 + input37 + input46 + input55 + input64) - (input8 + input15 + input22 + input29 + input36 + input43 + input50 + input57)) / 128.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "horizontal_bar_balance",
+      "type": "formula",
+      "description": "Relative strength of upper horizontal bands versus lower horizontal bands, using the inner six columns of the top two and bottom two rows.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "band_projection",
+      "expected_model_benefit": "Captures top-heavy versus bottom-heavy bar structure with a bounded ratio suited to a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "((input2 + input3 + input4 + input5 + input6 + input7 + input10 + input11 + input12 + input13 + input14 + input15) - (input50 + input51 + input52 + input53 + input54 + input55 + input58 + input59 + input60 + input61 + input62 + input63)) / (input2 + input3 + input4 + input5 + input6 + input7 + input10 + input11 + input12 + input13 + input14 + input15 + input50 + input51 + input52 + input53 + input54 + input55 + input58 + input59 + input60 + input61 + input62 + input63 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "central_hollow_proxy",
+      "type": "formula",
+      "description": "Bounded contrast between a bright ring around the central 4x4 area and the four innermost cells, acting as a hollow-center cue.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "hollow_structure",
+      "expected_model_benefit": "Highlights closed or nearly closed central structure while remaining a smooth bounded score for margin learning.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((input19 + input20 + input21 + input22 + input27 + input30 + input35 + input38 + input43 + input44 + input45 + input46) - (input28 + input29 + input36 + input37)) / (input19 + input20 + input21 + input22 + input27 + input30 + input35 + input38 + input43 + input44 + input45 + input46 + input28 + input29 + input36 + input37 + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_loop_count",
+      "type": "judgment",
+      "description": "Rater-estimated number of enclosed interior openings visible in the rendered 8x8 glyph; fractional values express ambiguity.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "semantic_shape",
+      "expected_model_benefit": "Provides a high-level closed-structure cue that can complement pixel composites when shapes are noisy or partially written.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_angularity_score",
+      "type": "judgment",
+      "description": "Rater-estimated degree of sharp, straight, or corner-like strokes in the rendered 8x8 glyph; 0 means mostly rounded and 1 means strongly angular.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_shape",
+      "expected_model_benefit": "Adds high-level stroke texture not fully captured by coarse ink moments, improving margin placement for visually similar glyphs.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0144ab756551ddaf",
+  "metadata": {}
+}

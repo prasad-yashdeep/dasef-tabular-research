@@ -1,0 +1,190 @@
+{
+  "dataset_name": "loan_approval_status_classification",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "debt_to_income_ratio",
+      "type": "formula",
+      "description": "Ratio of loan amount to annual income, normalized by log transformation to reduce skew. Measures borrower's debt burden relative to earnings.",
+      "value_range": [
+        0.0001,
+        2.5
+      ],
+      "feature_family": "debt_burden",
+      "expected_model_benefit": "Direct linear signal for creditworthiness; higher ratio indicates greater repayment risk for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "loan_amnt / np.maximum(person_income, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "credit_score_normalized",
+      "type": "formula",
+      "description": "Credit score linearly normalized to [0,1] range using training set min (418) and max (807) values for smooth SVM input.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "creditworthiness",
+      "expected_model_benefit": "Smooth normalized credit quality signal directly usable by linear SVM without scaling artifacts",
+      "leakage_risk": "low",
+      "formula": "np.clip((credit_score - 418.0) / (807.0 - 418.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "monthly_payment_burden",
+      "type": "formula",
+      "description": "Estimated monthly loan payment as fraction of monthly income, combining interest rate effect with loan percent income.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "debt_burden",
+      "expected_model_benefit": "Captures affordability stress; continuous severity measure well-suited for linear margin boundaries",
+      "leakage_risk": "low",
+      "formula": "loan_percent_income * (1.0 + loan_int_rate / 100.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_stability_score",
+      "type": "formula",
+      "description": "Composite score combining credit score, employment experience, and credit history length into a weighted stability index normalized to [0,1].",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "creditworthiness",
+      "expected_model_benefit": "Weighted composite captures multiple stability dimensions in a single smooth feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.5 * (credit_score - 418.0) / 389.0 + 0.3 * np.minimum(person_emp_exp, 30.0) / 30.0 + 0.2 * np.minimum(cb_person_cred_hist_length, 30.0) / 30.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_income",
+      "type": "formula",
+      "description": "Log-transformed personal income to reduce right skew and create approximately linear relationship with loan approval likelihood.",
+      "value_range": [
+        8.99,
+        15.53
+      ],
+      "feature_family": "income_capacity",
+      "expected_model_benefit": "Linearizes income distribution for SVM; removes extreme outlier influence while preserving ordinal information",
+      "leakage_risk": "low",
+      "formula": "np.log1p(person_income)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interest_rate_risk_score",
+      "type": "formula",
+      "description": "Normalized interest rate deviation from minimum observed rate (5.42), scaled by range to measure relative rate risk.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loan_risk",
+      "expected_model_benefit": "Smooth continuous risk measure; higher interest rates correlate with higher-risk borrowers, useful for linear separation",
+      "leakage_risk": "low",
+      "formula": "np.clip((loan_int_rate - 5.42) / (20.0 - 5.42), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "default_credit_interaction",
+      "type": "formula",
+      "description": "Interaction between default history and credit score deviation from mean (633). Captures how defaults compound with poor credit.",
+      "value_range": [
+        -215.0,
+        174.0
+      ],
+      "feature_family": "creditworthiness",
+      "expected_model_benefit": "Captures non-linear interaction between default status and credit quality as a linear feature for SVM",
+      "leakage_risk": "low",
+      "formula": "defaults_yes * (credit_score - 633.27)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "homeownership_stability_index",
+      "type": "formula",
+      "description": "Weighted homeownership stability score: mortgage=0.8, own=1.0, rent=0.3, other=0.1, reflecting housing stability levels.",
+      "value_range": [
+        0.1,
+        1.0
+      ],
+      "feature_family": "stability_indicators",
+      "expected_model_benefit": "Converts categorical homeownership into ordinal stability signal for linear SVM margin computation",
+      "leakage_risk": "low",
+      "formula": "0.8 * home_mortgage + 1.0 * home_own + 0.3 * home_rent + 0.1 * home_other + 0.1 * (1 - home_mortgage - home_own - home_rent - home_other)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loan_size_to_income_log_ratio",
+      "type": "formula",
+      "description": "Log ratio of loan amount to income, providing a scale-invariant measure of loan size relative to earning capacity.",
+      "value_range": [
+        -7.5,
+        1.5
+      ],
+      "feature_family": "debt_burden",
+      "expected_model_benefit": "Scale-invariant debt burden measure; log transformation creates smooth continuous feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.log1p(loan_amnt) - np.log1p(person_income)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_income_alignment",
+      "type": "formula",
+      "description": "Measures alignment between education level and income relative to training mean income (80865), indicating whether income matches educational attainment.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "income_capacity",
+      "expected_model_benefit": "Captures socioeconomic consistency signal; misalignment may indicate income instability relevant for loan risk",
+      "leakage_risk": "low",
+      "formula": "np.clip((person_education / 4.0) - np.clip((person_income - 8000.0) / (200000.0 - 8000.0), 0.0, 1.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "borrower_risk_composite",
+      "type": "judgment",
+      "description": "Holistic semantic assessment of borrower risk combining age-income stability, employment history, and loan purpose risk. Young borrowers with high debt, short employment, and risky loan intents score higher. Scale: 0=very low risk, 1=very high risk.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "loan_risk",
+      "expected_model_benefit": "Semantic composite captures domain knowledge about borrower risk profiles not easily captured by individual features",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "repayment_capacity_score",
+      "type": "formula",
+      "description": "Composite repayment capacity combining income adequacy, credit score quality, and absence of defaults into a single normalized score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "creditworthiness",
+      "expected_model_benefit": "Single smooth composite of repayment ability factors; directly useful as a linear projection for SVM decision boundary",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.4 * np.clip((credit_score - 418.0) / 389.0, 0.0, 1.0) + 0.4 * (1.0 - np.clip(loan_percent_income / 0.63, 0.0, 1.0)) + 0.2 * defaults_no, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e485bcfef55efcf2",
+  "metadata": {}
+}

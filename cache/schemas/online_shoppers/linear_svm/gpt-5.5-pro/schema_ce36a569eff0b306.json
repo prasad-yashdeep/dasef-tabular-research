@@ -1,0 +1,190 @@
+{
+  "dataset_name": "online_shoppers",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "page_value_log_norm",
+      "type": "formula",
+      "description": "Log-scaled PageValues normalized by the training-fold maximum to compress the heavy tail.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "commercial_value",
+      "expected_model_benefit": "Provides a smooth high-value axis for a linear margin without letting extreme PageValues dominate.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(PageValues) / np.log1p(361.7637419), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "friction_rate_norm",
+      "type": "formula",
+      "description": "Combined BounceRates and ExitRates severity scaled by their training-fold maxima.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "navigation_friction",
+      "expected_model_benefit": "Adds a bounded continuous abandonment-friction measure that is easy for a linear margin to weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip((BounceRates + ExitRates) / 0.4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "exit_bounce_asymmetry",
+      "type": "formula",
+      "description": "Normalized balance between ExitRates and BounceRates; values above 0.5 indicate exits exceed bounces.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "navigation_friction",
+      "expected_model_benefit": "Captures directional friction shape beyond the average rate, adding another useful linear coordinate.",
+      "leakage_risk": "low",
+      "formula": "np.clip((ExitRates - BounceRates + 0.2) / 0.4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "value_friction_contrast",
+      "type": "formula",
+      "description": "Signed contrast between log-scaled PageValues strength and combined navigation friction.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "value_friction_projection",
+      "expected_model_benefit": "Creates an approximate value-minus-friction projection that can directly support a wide-margin boundary.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(PageValues) / np.log1p(361.7637419), 0.0, 1.0) - np.clip((BounceRates + ExitRates) / 0.4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "value_low_friction_composite",
+      "type": "formula",
+      "description": "Product of log-scaled PageValues strength and the complement of combined navigation friction.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "value_friction_projection",
+      "expected_model_benefit": "Highlights sessions where value and low-friction cues align on a bounded scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(PageValues) / np.log1p(361.7637419), 0.0, 1.0) * (1.0 - np.clip((BounceRates + ExitRates) / 0.4, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "special_day_norm",
+      "type": "formula",
+      "description": "SpecialDay clipped to a bounded intensity score for temporal proximity to a special shopping date.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "calendar_context",
+      "expected_model_benefit": "Supplies a smooth calendar-nearness feature that can receive a simple linear weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(SpecialDay, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weekend_flag",
+      "type": "formula",
+      "description": "Numeric indicator for whether the session occurred on a weekend.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "calendar_context",
+      "expected_model_benefit": "Keeps weekend behavior as a compact numeric coordinate for linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.where(Weekend == 1, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "visitor_newness_score",
+      "type": "formula",
+      "description": "Ordered encoding of VisitorType semantics: returning visitor as 0.0, other as 0.5, new visitor as 1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "visitor_context",
+      "expected_model_benefit": "Replaces sparse visitor-type indicators with a compact recency-oriented score.",
+      "leakage_risk": "low",
+      "formula": "np.where(VisitorType == 'New_Visitor', 1.0, np.where(VisitorType == 'Other', 0.5, 0.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "month_commercial_season_score",
+      "type": "formula",
+      "description": "Deterministic ordinal score for Month, emphasizing late-year shopping season and assigning smaller values to earlier months present in the fold.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "calendar_context",
+      "expected_model_benefit": "Gives the margin a single calendar-season axis instead of several sparse month indicators.",
+      "leakage_risk": "low",
+      "formula": "np.where(Month == 'Nov', 1.0, np.where(Month == 'Dec', 0.85, np.where(Month == 'Oct', 0.75, np.where(Month == 'Sep', 0.65, np.where(Month == 'Aug', 0.55, np.where(Month == 'Jul', 0.45, np.where(Month == 'June', 0.35, np.where(Month == 'May', 0.25, np.where(Month == 'Mar', 0.15, np.where(Month == 'Feb', 0.05, 0.0))))))))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "traffic_source_prevalence_score",
+      "type": "formula",
+      "description": "Unsupervised commonness score for TrafficType based on training-fold top-value counts scaled to the most frequent source.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "acquisition_context",
+      "expected_model_benefit": "Represents rare-versus-common acquisition source structure in one smooth numeric coordinate while avoiding wide one-hot expansion.",
+      "leakage_risk": "low",
+      "formula": "np.where((TrafficType == 2) | (TrafficType == '2'), 1.0, np.where((TrafficType == 1) | (TrafficType == '1'), 0.642, np.where((TrafficType == 3) | (TrafficType == '3'), 0.515, np.where((TrafficType == 4) | (TrafficType == '4'), 0.263, np.where((TrafficType == 13) | (TrafficType == '13'), 0.189, np.where((TrafficType == 6) | (TrafficType == '6'), 0.110, np.where((TrafficType == 8) | (TrafficType == '8'), 0.104, np.where((TrafficType == 10) | (TrafficType == '10'), 0.104, np.where((TrafficType == 11) | (TrafficType == '11'), 0.074, np.where((TrafficType == 5) | (TrafficType == '5'), 0.069, 0.030))))))))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "product_exploration_depth_judgment",
+      "type": "judgment",
+      "description": "Rate how extensively the session examines product content using ProductRelated and ProductRelated_Duration: 0.0 means none or a single very short product view, 0.5 means several product views with moderate dwell, 1.0 means broad sustained product browsing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement_depth",
+      "expected_model_benefit": "Adds continuous engagement-depth information from product activity fields when raw values are skewed or stored with many distinct categories.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "research_navigation_depth_judgment",
+      "type": "judgment",
+      "description": "Rate evidence of research or account-navigation effort using Administrative, Administrative_Duration, Informational, and Informational_Duration: 0.0 means none, 0.5 means moderate review, 1.0 means sustained multi-page review.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "research_navigation",
+      "expected_model_benefit": "Captures broader preparation or support-seeking effort separately from product browsing on a compact scale.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ce36a569eff0b306",
+  "metadata": {}
+}

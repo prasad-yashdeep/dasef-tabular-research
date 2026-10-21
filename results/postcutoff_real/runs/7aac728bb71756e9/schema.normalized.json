@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_prediction_markets_20260517",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "price_range",
+      "type": "formula",
+      "description": "The absolute spread between the highest and lowest price, representing the total price movement.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "volatility",
+      "expected_model_benefit": "Provides a direct, continuous measure of market volatility, which is highly informative for linear margins.",
+      "leakage_risk": "low",
+      "formula": "high - low",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_open_to_high_ratio",
+      "type": "formula",
+      "description": "Log-scaled ratio of the upward price movement from the open price, normalized by the open price.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Captures the relative upward momentum in a smooth, log-compressed scale suitable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.log1p((high - open) / np.maximum(open, 0.001))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "open_to_low_ratio",
+      "type": "formula",
+      "description": "Ratio of the downward price movement from the open price, normalized by the open price.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Captures the relative downward momentum, providing a bounded continuous feature for SVM hyperplanes.",
+      "leakage_risk": "low",
+      "formula": "(open - low) / np.maximum(open, 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_volume_scaled",
+      "type": "formula",
+      "description": "Log-transformed and roughly max-scaled trading volume to compress extreme outliers.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Prevents large volume outliers from dominating the linear SVM margin while preserving the continuous scale of market participation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(volume) / 13.63",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_trade_count_scaled",
+      "type": "formula",
+      "description": "Log-transformed and roughly max-scaled trade count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Provides a smooth, bounded representation of market activity frequency.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(trade_count) / 7.64",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volume_per_trade_log",
+      "type": "formula",
+      "description": "Log-transformed average volume per trade, indicating the average size of market transactions.",
+      "value_range": [
+        0.0,
+        14.0
+      ],
+      "feature_family": "liquidity",
+      "expected_model_benefit": "Helps the model distinguish between markets driven by many small trades versus a few large trades.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.where(trade_count > 0, volume / trade_count, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "open_normalized",
+      "type": "formula",
+      "description": "Z-score normalized open price using training set mean and standard deviation.",
+      "value_range": [
+        -1.5,
+        1.5
+      ],
+      "feature_family": "price_level",
+      "expected_model_benefit": "Standardizes the initial price level, which is a fundamental requirement for stable linear SVM convergence.",
+      "leakage_risk": "low",
+      "formula": "(open - 0.5287599762087843) / 0.3540544512478701",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "relative_open_position",
+      "type": "formula",
+      "description": "The position of the open price relative to the high-low range, scaled between 0 and 1.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "price_dynamics",
+      "expected_model_benefit": "Provides a bounded, continuous indicator of where the market opened relative to its extremes.",
+      "leakage_risk": "low",
+      "formula": "np.where((high - low) > 0, (open - low) / (high - low), 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_price_spread_to_open",
+      "type": "formula",
+      "description": "Log-scaled ratio of the total price spread relative to the open price.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "volatility",
+      "expected_model_benefit": "Measures relative volatility in a compressed scale, preventing extreme spreads from skewing the linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.log1p((high - low) / np.maximum(open, 0.001))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "activity_momentum",
+      "type": "formula",
+      "description": "Interaction feature combining log volume and price range to capture high-activity, high-volatility states.",
+      "value_range": [
+        0.0,
+        14.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Allows the linear model to capture the non-linear interaction between volume and volatility through a pre-computed composite.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(volume) * (high - low)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "liquidity_judgment",
+      "type": "judgment",
+      "description": "Assesses the overall liquidity and reliability of the market on a continuous scale from 0 (highly illiquid, untrustworthy signals) to 1 (highly liquid, robust signals) based on the volume and trade count.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Provides a semantic weighting factor that can help the SVM margin discount noisy signals from illiquid markets.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "volatility_regime_judgment",
+      "type": "judgment",
+      "description": "Assesses the volatility regime of the market on a continuous scale from 0 (stable, low volatility) to 1 (chaotic, extreme volatility) based on the spread between high and low relative to the open price.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Translates raw price movements into a semantic regime score, allowing the linear model to adjust its sensitivity based on market conditions.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0bba60770e63236e",
+  "metadata": {}
+}

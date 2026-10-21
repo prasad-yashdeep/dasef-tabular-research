@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mozilla4",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "sqrt_duration",
+      "type": "formula",
+      "description": "Square root of the time duration between start and end, reducing the impact of extreme outliers.",
+      "value_range": [
+        0.0,
+        1500.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a smoothed, sub-linear scale for duration that helps linear SVMs establish more robust margins without being dominated by extreme values.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(np.maximum(0.0, end - start))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_duration",
+      "type": "formula",
+      "description": "Log-transformed duration between start and end.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Compresses the wide range of durations into a compact scale, allowing the linear model to capture multiplicative differences as additive shifts.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(0.0, end - start))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_size",
+      "type": "formula",
+      "description": "Log-transformed size metric.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Normalizes the heavily skewed size distribution, making it more suitable for linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(size)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_size_per_duration",
+      "type": "formula",
+      "description": "Log-transformed ratio of size to duration, representing the rate of size accumulation.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Creates a continuous rate feature that can linearly separate instances based on their intensity or density over time.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(size / np.maximum(1.0, end - start))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_id",
+      "type": "formula",
+      "description": "Linearly scaled identifier, potentially capturing chronological or sequential data collection effects.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "metadata",
+      "expected_model_benefit": "Allows the SVM to linearly adjust for any underlying temporal drift or sequential bias in the dataset.",
+      "leakage_risk": "medium",
+      "formula": "id / 4088.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "event_size_interaction",
+      "type": "formula",
+      "description": "Interaction term between the event flag and the log-transformed size.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Enables the linear SVM to apply a different weight to the size feature depending on whether the event occurred.",
+      "leakage_risk": "low",
+      "formula": "event * np.log1p(size)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_start",
+      "type": "formula",
+      "description": "Start time normalized to a [0, 1] scale based on the maximum observed start time.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a bounded, continuous temporal feature that prevents large raw timestamp values from dominating the SVM margin calculations.",
+      "leakage_risk": "low",
+      "formula": "start / 1936311.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_end",
+      "type": "formula",
+      "description": "End time normalized to a [0, 1] scale based on the maximum observed end time.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a bounded, continuous temporal feature for the completion time, suitable for linear scaling.",
+      "leakage_risk": "low",
+      "formula": "end / 1965726.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_duration_size_ratio",
+      "type": "formula",
+      "description": "Log-transformed ratio of duration to size, representing the time taken per unit of size.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Captures the inverse of the rate feature, providing an alternative linear projection that might better separate certain clusters.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(0.0, end - start) / np.maximum(1.0, size))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "event_duration_interaction",
+      "type": "formula",
+      "description": "Interaction term between the event flag and the log-transformed duration.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear model to fit a specific slope for duration when the event flag is active, increasing model flexibility.",
+      "leakage_risk": "low",
+      "formula": "event * np.log1p(np.maximum(0.0, end - start))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_anomaly_score",
+      "type": "judgment",
+      "description": "Semantic assessment of whether the size is anomalously large or small given the event status and duration, scored from 0 (normal) to 1 (highly anomalous).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "anomaly",
+      "expected_model_benefit": "Provides a non-linear, context-aware anomaly score that can be directly used as a linear feature to penalize or highlight unusual instances.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "temporal_progression_score",
+      "type": "judgment",
+      "description": "Semantic assessment of the temporal progression and urgency based on start and end timestamps, scored from 0 (routine) to 1 (urgent/abnormal).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Translates complex temporal relationships into a single continuous severity measure, ideal for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "686d777b63aa091e",
+  "metadata": {}
+}

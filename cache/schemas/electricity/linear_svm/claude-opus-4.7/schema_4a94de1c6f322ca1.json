@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "nsw_price_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of NSW price to NSW demand, capturing price pressure per unit demand.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a continuous price-per-demand signal useful for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "nswprice / (nswdemand + 0.01)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vic_price_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of VIC price to VIC demand, capturing price pressure per unit demand in Victoria.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Smooth ratio aiding linear separation between rising/falling regimes.",
+      "leakage_risk": "low",
+      "formula": "vicprice / (vicdemand + 0.01)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_vic_price_spread",
+      "type": "formula",
+      "description": "Difference between NSW price and VIC price, representing inter-regional price gap.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spread",
+      "expected_model_benefit": "Inter-regional spread is a strong linear predictor of directional movement.",
+      "leakage_risk": "low",
+      "formula": "nswprice - vicprice",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_vic_demand_spread",
+      "type": "formula",
+      "description": "Difference between NSW and VIC demand levels.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "spread",
+      "expected_model_benefit": "Demand imbalance contributes a useful linear projection axis.",
+      "leakage_risk": "low",
+      "formula": "nswdemand - vicdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_demand_load",
+      "type": "formula",
+      "description": "Weighted average of NSW and VIC demand approximating total system load.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures overall system stress; smooth linear feature.",
+      "leakage_risk": "low",
+      "formula": "(nswdemand + vicdemand) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_centered",
+      "type": "formula",
+      "description": "Transfer flow centered at zero (subtracting neutral midpoint 0.5).",
+      "value_range": [
+        -0.5,
+        0.5
+      ],
+      "feature_family": "centered",
+      "expected_model_benefit": "Centered signed transfer flow gives linear SVM a directional axis.",
+      "leakage_risk": "low",
+      "formula": "transfer - 0.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_nsw_price",
+      "type": "formula",
+      "description": "Log-transformed NSW price to compress heavy-tailed price spikes.",
+      "value_range": [
+        0.0,
+        0.7
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Log-scale prices align better with linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(nswprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_vic_price",
+      "type": "formula",
+      "description": "Log-transformed VIC price to compress price extremes.",
+      "value_range": [
+        0.0,
+        0.2
+      ],
+      "feature_family": "transform",
+      "expected_model_benefit": "Tames skewness for smoother linear margins.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(vicprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "peak_period_indicator",
+      "type": "formula",
+      "description": "Continuous proximity-to-peak score based on period (peaks near 0.5 in normalized period).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Smooth peak-hour indicator helps linear model handle diurnal effects.",
+      "leakage_risk": "low",
+      "formula": "1.0 - 2.0 * np.abs(period - 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_interaction",
+      "type": "formula",
+      "description": "Interaction term between NSW price and NSW demand.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows linear SVM to capture multiplicative pressure effects.",
+      "leakage_risk": "low",
+      "formula": "nswprice * nswdemand",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_demand_alignment",
+      "type": "formula",
+      "description": "Product of centered transfer and NSW-VIC demand spread indicating whether transfer flow aligns with demand imbalance.",
+      "value_range": [
+        -0.5,
+        0.5
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Composite alignment signal informative for directional movement.",
+      "leakage_risk": "low",
+      "formula": "(transfer - 0.5) * (nswdemand - vicdemand)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_stress_score",
+      "type": "judgment",
+      "description": "Semantic composite assessment of overall market stress combining price elevation, demand load, and transfer extremity. Higher values indicate more stressed conditions where directional moves are more likely. Computed as a smooth weighted sum of normalized inputs.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "judgment_composite",
+      "expected_model_benefit": "Provides a single interpretable severity axis for the linear SVM margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "4a94de1c6f322ca1",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Ratio of V1 to V2, providing a smooth normalized score that helps the linear SVM capture interaction effects between these two continuous descriptors.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Transforms a non-linear relationship into a linear feature, improving the margin separation for the SVM.",
+      "leakage_risk": "low",
+      "formula": "V1 / (V2 + 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v8_v30_composite",
+      "type": "formula",
+      "description": "Weighted composite of V8 and V30, creating an approximate linear projection that scales these features into a unified severity measure.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a pre-calculated linear combination that stabilizes weight assignment in the downstream model.",
+      "leakage_risk": "low",
+      "formula": "(V8 / 60.0) + (V30 / 75.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v12_abs_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of V12 from its mean, offering a continuous magnitude measure that allows the linear model to penalize extreme variations symmetrically.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Allows a linear model to capture symmetric non-linear effects (V-shape) around the mean.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V12 + 0.212)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v15_v39_interaction",
+      "type": "formula",
+      "description": "Scaled product of V15 and V39, explicitly providing a multiplicative interaction term to the linear SVM without requiring a non-linear kernel.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Exposes a cross-feature interaction directly to the linear solver, expanding its representational capacity.",
+      "leakage_risk": "low",
+      "formula": "(V15 * V39) / 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v31_log_scaled",
+      "type": "formula",
+      "description": "Logarithmic transformation of V31 to compress its long tail, resulting in a smoother distribution.",
+      "value_range": [
+        0.0,
+        3.5
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces the influence of extreme outliers, improving the stability and robustness of linear SVM weights.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V31)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v16_v41_sum",
+      "type": "formula",
+      "description": "Sum of integer features V16 and V41, acting as a combined frequency or count measure.",
+      "value_range": [
+        0.0,
+        55.0
+      ],
+      "feature_family": "aggregation",
+      "expected_model_benefit": "Provides a clear, monotonic linear gradient for the decision boundary by aggregating related count features.",
+      "leakage_risk": "low",
+      "formula": "V16 + V41",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v5_v7_density",
+      "type": "formula",
+      "description": "Average of V3, V5, and V7, creating a stable, low-variance composite feature.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Reduces noise by averaging correlated structural counts, leading to a more robust linear coefficient.",
+      "leakage_risk": "low",
+      "formula": "(V3 + V5 + V7) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v13_v14_diff",
+      "type": "formula",
+      "description": "Difference between V13 and V14, directly supplying the linear SVM with a relative contrast measure between these two properties.",
+      "value_range": [
+        -3.0,
+        5.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Highlights the relative dominance of one feature over another, which is highly effective for linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": "V13 - V14",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v27_v28_norm",
+      "type": "formula",
+      "description": "Euclidean norm of V27 and V28, providing a continuous magnitude feature that captures the combined intensity of these variables.",
+      "value_range": [
+        0.5,
+        3.5
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Captures the joint scale of two features in a single continuous dimension, useful for distance-based margins.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(V27**2 + V28**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v36_v37_ratio",
+      "type": "formula",
+      "description": "Ratio of V36 to V37, offering a normalized relative scale.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Helps the linear model separate instances based on proportional differences rather than absolute values.",
+      "leakage_risk": "low",
+      "formula": "V36 / (V37 + 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_complexity_score",
+      "type": "judgment",
+      "description": "Semantic judgment of molecular complexity based on structural descriptors, providing a high-level continuous feature.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Linearly separates complex from simple structures using domain-informed logic that a linear model cannot easily infer.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hydrophobicity_estimate",
+      "type": "judgment",
+      "description": "Semantic estimation of hydrophobicity, offering a domain-informed continuous score.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Aligns well with linear decision boundaries in chemical spaces by providing a synthesized physical property estimate.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "df73509f0132f77c",
+  "metadata": {}
+}

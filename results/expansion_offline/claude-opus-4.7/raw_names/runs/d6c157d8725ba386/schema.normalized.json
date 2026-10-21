@@ -1,0 +1,190 @@
+{
+  "dataset_name": "fried",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "fried_core_signal",
+      "type": "formula",
+      "description": "Approximation of the Friedman regression core signal: 10*sin(pi*X1*X2) approximated via smooth polynomial proxy plus quadratic and linear terms scaled into normalized range.",
+      "value_range": [
+        -5.0,
+        30.0
+      ],
+      "feature_family": "domain_composite",
+      "expected_model_benefit": "Provides a near-linear projection of the underlying generating signal that aligns well with linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": "10.0 * X1 * X2 * (1.0 - np.abs(X1 - X2)) + 20.0 * (X3 - 0.5) ** 2 + 10.0 * X4 + 5.0 * X5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x2_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between X1 and X2, capturing the dominant nonlinear term in the Friedman generator.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Linearizes a key bilinear term so the SVM can exploit it directly.",
+      "leakage_risk": "low",
+      "formula": "X1 * X2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_centered_sq",
+      "type": "formula",
+      "description": "Squared deviation of X3 from 0.5, capturing curvature on X3.",
+      "value_range": [
+        0.0,
+        0.25
+      ],
+      "feature_family": "nonlinear_transform",
+      "expected_model_benefit": "Adds a smooth quadratic basis function for linear models to capture curvature on X3.",
+      "leakage_risk": "low",
+      "formula": "(X3 - 0.5) ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "informative_sum",
+      "type": "formula",
+      "description": "Weighted sum of the informative features X1-X5 emphasizing their relative scale per Friedman generator.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Smooth normalized weighted score useful as a direct linear margin contributor.",
+      "leakage_risk": "low",
+      "formula": "0.1 * X1 + 0.1 * X2 + 0.2 * X3 + 0.4 * X4 + 0.2 * X5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "noise_block_mean",
+      "type": "formula",
+      "description": "Mean of X6-X10, the non-informative features; should be near 0.5 if no leakage, useful as a control axis.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "aggregate",
+      "expected_model_benefit": "Provides a baseline averaging signal that a linear SVM can down-weight automatically.",
+      "leakage_risk": "low",
+      "formula": "(X6 + X7 + X8 + X9 + X10) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "informative_vs_noise_gap",
+      "type": "formula",
+      "description": "Difference between mean of informative block (X1-X5) and noise block (X6-X10).",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "contrast",
+      "expected_model_benefit": "Continuous severity-style contrast that lines up with a linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "((X1 + X2 + X3 + X4 + X5) / 5.0) - ((X6 + X7 + X8 + X9 + X10) / 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_x5_ratio",
+      "type": "formula",
+      "description": "Smoothed ratio between X4 and X5 using log1p to keep range bounded and stable.",
+      "value_range": [
+        -0.6931,
+        0.6931
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a stable smoothed ratio feature that injects a log-scale linear contribution.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(X4) - np.log1p(X5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1x2_minus_x3sq",
+      "type": "formula",
+      "description": "Contrast between bilinear X1*X2 term and quadratic X3 centered term reflecting Friedman structure.",
+      "value_range": [
+        -0.25,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Combines two key generator terms into a single discriminative axis suitable for linear margins.",
+      "leakage_risk": "low",
+      "formula": "X1 * X2 - (X3 - 0.5) ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "informative_l2_norm",
+      "type": "formula",
+      "description": "Euclidean norm of informative features X1-X5, providing a continuous magnitude measure.",
+      "value_range": [
+        0.0,
+        2.2361
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Smooth magnitude feature serving as an isotropic severity score for the linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(X1 ** 2 + X2 ** 2 + X3 ** 2 + X4 ** 2 + X5 ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_high_indicator_soft",
+      "type": "formula",
+      "description": "Soft indicator of X4 being in the upper half, scaled smoothly via clipping for SVM-friendly margins.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "soft_threshold",
+      "expected_model_benefit": "Provides a smooth bounded coefficient on the highly weighted X4 feature.",
+      "leakage_risk": "low",
+      "formula": "np.clip((X4 - 0.5) * 2.0, -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "feature_dispersion",
+      "type": "formula",
+      "description": "Range (max minus min) across all 10 features, capturing row-level dispersion.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "dispersion",
+      "expected_model_benefit": "Captures whether row values are clustered or spread, providing a continuous auxiliary axis.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(np.maximum(np.maximum(np.maximum(X1, X2), np.maximum(X3, X4)), np.maximum(X5, X6)), np.maximum(np.maximum(X7, X8), np.maximum(X9, X10))) - np.minimum(np.minimum(np.minimum(np.minimum(X1, X2), np.minimum(X3, X4)), np.minimum(X5, X6)), np.minimum(np.minimum(X7, X8), np.minimum(X9, X10)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_signal_strength",
+      "type": "judgment",
+      "description": "Semantic assessment of how strongly a row exhibits the canonical Friedman signal pattern, evaluated as a smooth heuristic from informative-feature alignment: high when X1, X2, X4 are large and X3 is far from 0.5, low otherwise. Computed as a bounded blended score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a holistic interpretable severity score that is approximately linear in the underlying generator and complements raw composites.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "12c2cd2cf4c350be",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "nursery",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "parents_pressure_score",
+      "type": "formula",
+      "description": "Ordinal pressure score from the parents field: usual is lowest, pretentious is middle, great_pret is highest.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Gives the linear SVM a monotone parental-profile axis rather than unrelated category dummies.",
+      "leakage_risk": "low",
+      "formula": "np.where(parents == 'usual', 0.0, np.where(parents == 'pretentious', 0.5, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "care_quality_concern_score",
+      "type": "formula",
+      "description": "Ordered concern score for has_nurs, scaled from proper through less_proper, improper, critical, and very_crit.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Provides an approximately ordered care-quality severity coordinate for margin placement.",
+      "leakage_risk": "low",
+      "formula": "np.where(has_nurs == 'proper', 0.0, np.where(has_nurs == 'less_proper', 0.25, np.where(has_nurs == 'improper', 0.5, np.where(has_nurs == 'critical', 0.75, 1.0))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "family_form_instability_score",
+      "type": "formula",
+      "description": "Instability score for family form wording, with complete lowest and foster highest.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Maps family arrangement wording to a smooth instability direction.",
+      "leakage_risk": "low",
+      "formula": "np.where(form == 'complete', 0.0, np.where(form == 'completed', 0.25, np.where(form == 'incomplete', 0.75, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "child_count_load_score",
+      "type": "formula",
+      "description": "Normalized household child-load score increasing from one child to more children.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Captures increasing demand from larger child counts with a near-linear scale.",
+      "leakage_risk": "low",
+      "formula": "np.where(children == '1', 0.0, np.where(children == '2', 0.3333333333, np.where(children == '3', 0.6666666667, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_constraint_score",
+      "type": "formula",
+      "description": "Housing constraint score from convenient to less_conv to critical.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Turns housing wording into a simple constraint axis.",
+      "leakage_risk": "low",
+      "formula": "np.where(housing == 'convenient', 0.0, np.where(housing == 'less_conv', 0.5, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "finance_constraint_score",
+      "type": "formula",
+      "description": "Binary financial inconvenience score based on the finance field.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_projection",
+      "expected_model_benefit": "Adds a binary resource constraint that can shift the margin cleanly.",
+      "leakage_risk": "low",
+      "formula": "np.where(finance == 'convenient', 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "social_problem_score",
+      "type": "formula",
+      "description": "Graded social difficulty score from nonprob to slightly_prob to problematic.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ordinal_projection",
+      "expected_model_benefit": "Represents social difficulty as a graded numeric cue.",
+      "leakage_risk": "low",
+      "formula": "np.where(social == 'nonprob', 0.0, np.where(social == 'slightly_prob', 0.5, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "health_nonroutine_need_score",
+      "type": "formula",
+      "description": "Binary health-need severity for whether health guidance wording is outside the most favorable state listed in the row.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "binary_projection",
+      "expected_model_benefit": "Supplies a compact health-status axis using only the row's health value.",
+      "leakage_risk": "low",
+      "formula": "np.where(health == 'recommended', 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "household_resource_strain_index",
+      "type": "formula",
+      "description": "Average normalized strain across family form, children, housing, finance, and social context.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Combines household resource pressures into one normalized coordinate, reducing the need for the margin to learn several parallel weights.",
+      "leakage_risk": "low",
+      "formula": "(np.where(form == 'complete', 0.0, np.where(form == 'completed', 0.25, np.where(form == 'incomplete', 0.75, 1.0))) + np.where(children == '1', 0.0, np.where(children == '2', 0.3333333333, np.where(children == '3', 0.6666666667, 1.0))) + np.where(housing == 'convenient', 0.0, np.where(housing == 'less_conv', 0.5, 1.0)) + np.where(finance == 'convenient', 0.0, 1.0) + np.where(social == 'nonprob', 0.0, np.where(social == 'slightly_prob', 0.5, 1.0))) / 5.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "severe_condition_density",
+      "type": "formula",
+      "description": "Normalized density of severe row cues across parental profile, care quality, family form, children, housing, finance, social, and health.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity_density",
+      "expected_model_benefit": "Creates a linear-friendly count of stacked severe cues and can capture broad escalation effects.",
+      "leakage_risk": "low",
+      "formula": "(np.where(parents == 'great_pret', 1.0, 0.0) + np.where((has_nurs == 'critical') | (has_nurs == 'very_crit'), 1.0, 0.0) + np.where((form == 'incomplete') | (form == 'foster'), 1.0, 0.0) + np.where(children == 'more', 1.0, 0.0) + np.where(housing == 'critical', 1.0, 0.0) + np.where(finance == 'inconv', 1.0, 0.0) + np.where(social == 'problematic', 1.0, 0.0) + np.where(health == 'recommended', 0.0, 1.0)) / 8.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_overall_context_severity",
+      "type": "judgment",
+      "description": "Assessor-provided continuous score from 0.0 to 1.0 for overall urgency implied by the row's wording across all eight input fields; higher means more adverse wording or stacked concerns.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Gives a semantic severity coordinate that can summarize interactions not captured by fixed formulas.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_support_resilience_score",
+      "type": "judgment",
+      "description": "Assessor-provided continuous score from 0.0 to 1.0 for how much the row wording suggests stable support and manageable household demands; higher means stronger support.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_assessment",
+      "expected_model_benefit": "Adds a soft favorable-context axis, helping the margin account for offsetting supportive cues.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "696e07ca3f927412",
+  "metadata": {}
+}

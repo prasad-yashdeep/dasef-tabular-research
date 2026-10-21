@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3-pro",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "glucose_bmi_interaction",
+      "type": "formula",
+      "description": "Interaction between normalized glucose and BMI, providing a non-linear feature for the linear model.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear SVM to capture the synergistic effect of high glucose and high BMI.",
+      "leakage_risk": "low",
+      "formula": "(plas / 199.0) * (mass / 67.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Age standardized using training set mean and standard deviation.",
+      "value_range": [
+        -1.05,
+        4.1
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Improves convergence and margin calculation in linear SVM by putting age on a similar scale to other features.",
+      "leakage_risk": "low",
+      "formula": "(age - 33.24) / 11.75",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_normalized",
+      "type": "formula",
+      "description": "Glucose standardized using training set mean and standard deviation.",
+      "value_range": [
+        -3.8,
+        2.5
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Ensures glucose variance does not dominate the SVM objective function.",
+      "leakage_risk": "low",
+      "formula": "(plas - 120.89) / 31.95",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_normalized",
+      "type": "formula",
+      "description": "BMI standardized using training set mean and standard deviation.",
+      "value_range": [
+        -4.1,
+        4.5
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Standardizes BMI for balanced margin penalization.",
+      "leakage_risk": "low",
+      "formula": "(mass - 31.99) / 7.88",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pedigree_log",
+      "type": "formula",
+      "description": "Log-transformed diabetes pedigree function to reduce right-skewness.",
+      "value_range": [
+        0.07,
+        1.25
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Makes the distribution of the pedigree function more symmetric, which is favorable for linear models.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(pedi)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_glucose_ratio",
+      "type": "formula",
+      "description": "Ratio of insulin to glucose, capturing the relative insulin response.",
+      "value_range": [
+        0.0,
+        846.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a physiological ratio that might be linearly separable from other states.",
+      "leakage_risk": "low",
+      "formula": "insu / np.maximum(plas, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_risk_score",
+      "type": "formula",
+      "description": "A linear composite score summing normalized glucose, BMI, and age.",
+      "value_range": [
+        0.25,
+        3.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Pre-computes a linear combination of known risk factors, providing a strong single feature for the SVM.",
+      "leakage_risk": "low",
+      "formula": "(plas / 199.0) + (mass / 67.1) + (age / 81.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pregnancies_per_year",
+      "type": "formula",
+      "description": "Number of pregnancies divided by estimated reproductive years (age - 12).",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes pregnancy count by age, creating a more comparable rate feature across different ages.",
+      "leakage_risk": "low",
+      "formula": "preg / np.maximum(age - 12.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blood_pressure_deviation",
+      "type": "formula",
+      "description": "Absolute deviation of blood pressure from the training set mean, scaled by standard deviation.",
+      "value_range": [
+        0.0,
+        3.6
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Captures abnormality in blood pressure (both high and low) as a single continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.abs(pres - 69.11) / 19.34",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_missing_insulin_skin",
+      "type": "formula",
+      "description": "Indicator variable for rows where both insulin and skin thickness are zero (likely missing data).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "missingness",
+      "expected_model_benefit": "Allows the linear model to apply a specific bias offset for records with this pattern of missing data.",
+      "leakage_risk": "low",
+      "formula": "np.where((insu == 0) & (skin == 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "clinical_severity_assessment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall clinical severity based on the combination of glucose, BMI, blood pressure, and age.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures complex, non-linear clinical heuristics that a linear SVM cannot easily deduce from raw features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lifestyle_intervention_priority",
+      "type": "judgment",
+      "description": "Semantic judgment of how urgently lifestyle intervention is needed, evaluating BMI, blood pressure, and glucose levels.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides an ordinal severity scale that aligns well with linear margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "77d6c742fbd67229",
+  "metadata": {}
+}

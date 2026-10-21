@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "molecular_complexity_ratio",
+      "type": "formula",
+      "description": "Ratio of aromatic/ring-related descriptors (V16) to total atom count proxy (V10 + V11 + 1), capturing structural complexity relative to size",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Tree splits on this ratio can separate simple vs complex molecular structures that differ in biodegradability",
+      "leakage_risk": "low",
+      "formula": "V16 / (V10 + V11 + 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "polarity_asymmetry",
+      "type": "formula",
+      "description": "Absolute difference between two electronegativity/polarity descriptors V17 and V18, indicating molecular polarity imbalance",
+      "value_range": [
+        0.0,
+        0.42
+      ],
+      "feature_family": "electronic_properties",
+      "expected_model_benefit": "Polarity asymmetry can indicate susceptibility to enzymatic attack, relevant to biodegradation",
+      "leakage_risk": "low",
+      "formula": "np.abs(V17 - V18)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "heteroatom_density",
+      "type": "formula",
+      "description": "Sum of nitrogen/oxygen-related counts (V3 + V4 + V5 + V6) normalized by molecular size proxy V8, representing heteroatom density",
+      "value_range": [
+        0.0,
+        2.5
+      ],
+      "feature_family": "chemical_composition",
+      "expected_model_benefit": "Higher heteroatom density often correlates with biodegradability due to functional group availability",
+      "leakage_risk": "low",
+      "formula": "(V3 + V4 + V5 + V6) / (V8 + 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_molecular_weight_proxy",
+      "type": "formula",
+      "description": "Log-transformed molecular weight proxy V8, compressing the skewed distribution for better tree splits",
+      "value_range": [
+        0.0,
+        4.1
+      ],
+      "feature_family": "molecular_size",
+      "expected_model_benefit": "Log transformation reveals nonlinear size thresholds that trees can exploit for biodegradation prediction",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V8)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "branching_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for high branching: V7 (branching count) exceeds 2, indicating highly branched structures",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "structural_topology",
+      "expected_model_benefit": "Branched molecules often resist biodegradation; binary split enables direct tree node separation",
+      "leakage_risk": "low",
+      "formula": "np.where(V7 > 2, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lipophilicity_polarity_interaction",
+      "type": "formula",
+      "description": "Product of lipophilicity proxy V1 and polarity descriptor V22, capturing the interaction between hydrophobicity and polarity",
+      "value_range": [
+        1.7,
+        9.3
+      ],
+      "feature_family": "physicochemical_interaction",
+      "expected_model_benefit": "Nonlinear interaction between lipophilicity and polarity is a known driver of biodegradation; trees can split on this product",
+      "leakage_risk": "low",
+      "formula": "V1 * V22",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "charge_deviation_from_neutral",
+      "type": "formula",
+      "description": "Absolute value of V12 (charge-related descriptor), measuring deviation from neutral charge state",
+      "value_range": [
+        0.0,
+        5.26
+      ],
+      "feature_family": "electronic_properties",
+      "expected_model_benefit": "Charged molecules behave differently in biological systems; absolute charge deviation enables threshold splits",
+      "leakage_risk": "low",
+      "formula": "np.abs(V12)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ring_system_complexity_bucket",
+      "type": "formula",
+      "description": "Ordinal bucket for ring system complexity based on V16: 0=no rings, 1=low (1-3), 2=medium (4-8), 3=high (>8)",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "structural_topology",
+      "expected_model_benefit": "Ordinal ring complexity buckets provide direct categorical splits for tree models on structural features",
+      "leakage_risk": "low",
+      "formula": "np.where(V16 == 0, 0, np.where(V16 <= 3, 1, np.where(V16 <= 8, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "functional_group_richness",
+      "type": "formula",
+      "description": "Count of diverse functional group indicators: sum of binary/low-count descriptors V19, V24, V25, V26, V29 indicating presence of special functional groups",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "chemical_composition",
+      "expected_model_benefit": "Molecules with more diverse functional groups tend to be more biodegradable; count enables ordinal splits",
+      "leakage_risk": "low",
+      "formula": "np.minimum(V19, 1) + np.minimum(V24, 1) + np.minimum(V25, 1) + np.minimum(V26, 1) + np.minimum(V29, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_normalized_connectivity",
+      "type": "formula",
+      "description": "Ratio of connectivity descriptor V31 to molecular size proxy V8, capturing connectivity density",
+      "value_range": [
+        0.01,
+        5.0
+      ],
+      "feature_family": "structural_topology",
+      "expected_model_benefit": "Connectivity per unit size captures molecular graph density, which influences biodegradation pathways",
+      "leakage_risk": "low",
+      "formula": "V31 / (V8 + 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aromatic_fraction_estimate",
+      "type": "judgment",
+      "description": "Estimated fraction of aromatic character based on V16 (aromatic ring count) relative to V10 (total ring-related atoms). Score from 0 (fully aliphatic) to 1 (highly aromatic). Aromatic compounds are generally less biodegradable.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "structural_complexity",
+      "expected_model_benefit": "Aromatic fraction is a key predictor of biodegradation resistance; provides a continuous score for tree splits",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_flexibility_score",
+      "type": "formula",
+      "description": "Interaction of rotatable bond proxy V9 and chain length proxy V34, measuring overall molecular flexibility as product clipped to reasonable range",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "structural_topology",
+      "expected_model_benefit": "Flexible molecules with long chains are more accessible to enzymatic degradation; nonlinear interaction enables tree splits",
+      "leakage_risk": "low",
+      "formula": "np.clip(V9 * V34, 0.0, 50.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "bbfe4574da4d5530",
+  "metadata": {}
+}

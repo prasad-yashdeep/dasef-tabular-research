@@ -1,0 +1,190 @@
+{
+  "dataset_name": "news_channel",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "content_length_log_normalized",
+      "type": "formula",
+      "description": "Log-transformed and normalized article content length, smoothing the heavy right skew for linear separability",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "content_volume",
+      "expected_model_benefit": "Provides smooth continuous signal about article length which differs across channels; log normalization helps linear margins",
+      "leakage_risk": "low",
+      "formula": "np.log1p(n_tokens_content) / np.log1p(7764.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lexical_diversity_score",
+      "type": "formula",
+      "description": "Composite lexical diversity combining unique token ratio and non-stop unique token ratio, indicating vocabulary richness",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "text_quality",
+      "expected_model_benefit": "Different channels have distinct vocabulary richness patterns; tech and world news tend to use more specialized vocabulary",
+      "leakage_risk": "low",
+      "formula": "0.5 * n_unique_tokens + 0.5 * n_non_stop_unique_tokens",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "media_richness_index",
+      "type": "formula",
+      "description": "Weighted composite of images and videos normalized by typical maximums, measuring multimedia content density",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "media_content",
+      "expected_model_benefit": "Entertainment and lifestyle channels tend to have more images; tech channels may have more videos; useful linear discriminator",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.6 * (num_imgs / 108.0) + 0.4 * (num_videos / 75.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "self_link_ratio",
+      "type": "formula",
+      "description": "Ratio of self-referential hyperlinks to total hyperlinks, indicating how much an article references its own domain",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "link_structure",
+      "expected_model_benefit": "Channels like lifestyle and socmed may have higher self-referencing patterns; useful for linear separation",
+      "leakage_risk": "low",
+      "formula": "num_self_hrefs / np.maximum(num_hrefs, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "sentiment_polarity_normalized",
+      "type": "formula",
+      "description": "Global sentiment polarity shifted and scaled to [0,1] range for smooth linear model input",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sentiment",
+      "expected_model_benefit": "Sentiment varies by channel; entertainment tends positive, world news may be more negative; smooth normalization aids SVM margins",
+      "leakage_risk": "low",
+      "formula": "(global_sentiment_polarity - (-0.35946969697)) / (0.58 - (-0.35946969697))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "subjectivity_polarity_interaction",
+      "type": "formula",
+      "description": "Product of subjectivity and absolute sentiment polarity, capturing emotionally charged subjective content",
+      "value_range": [
+        0.0,
+        0.45
+      ],
+      "feature_family": "sentiment",
+      "expected_model_benefit": "Captures interaction between how subjective and how emotionally charged content is; useful nonlinear signal for linear SVM via feature engineering",
+      "leakage_risk": "low",
+      "formula": "global_subjectivity * np.abs(global_sentiment_polarity)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positive_sentiment_dominance",
+      "type": "formula",
+      "description": "Ratio of positive word rate to total sentiment word rate, measuring positivity dominance in sentiment-bearing words",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "sentiment",
+      "expected_model_benefit": "Channels differ in tone; lifestyle and socmed tend more positive while world news may be more negative; linear discriminator",
+      "leakage_risk": "low",
+      "formula": "global_rate_positive_words / np.maximum(global_rate_positive_words + global_rate_negative_words, 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "keyword_density_score",
+      "type": "formula",
+      "description": "Normalized keyword count scaled to [0,1] range, indicating how keyword-rich the article metadata is",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "metadata_richness",
+      "expected_model_benefit": "Articles with more keywords are better indexed; different channels may have different keyword strategies useful for linear separation",
+      "leakage_risk": "low",
+      "formula": "(num_keywords - 1.0) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "word_complexity_score",
+      "type": "formula",
+      "description": "Normalized average token length indicating vocabulary complexity and reading level of the article",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "text_quality",
+      "expected_model_benefit": "Tech and business articles tend to use longer, more complex words; entertainment uses simpler language; smooth linear signal",
+      "leakage_risk": "low",
+      "formula": "np.clip(average_token_length / 6.18965517241, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "link_density_per_content",
+      "type": "formula",
+      "description": "Log-ratio of hyperlinks to content tokens, measuring how link-heavy the article is relative to its length",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "link_structure",
+      "expected_model_benefit": "Tech and business articles tend to have more external references; captures structural differences between channels",
+      "leakage_risk": "low",
+      "formula": "np.log1p(num_hrefs) / np.log1p(np.maximum(n_tokens_content, 1.0) + num_hrefs)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "title_topic_relevance_score",
+      "type": "judgment",
+      "description": "Semantic score from 0 to 1 assessing how strongly the article title signals a specific topical domain (technology, world affairs, entertainment, business, social media, lifestyle) based on presence of domain-specific terminology, named entities, and topic markers in the title text",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_content",
+      "expected_model_benefit": "Title language is highly predictive of channel; explicit topic signals in titles provide strong linear discriminating features for SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "content_formality_index",
+      "type": "judgment",
+      "description": "Numeric score from 0 to 1 estimating article formality based on combination of average token length, subjectivity level, and sentiment polarity magnitude; higher scores indicate more formal, objective writing style typical of news and business reporting",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "text_quality",
+      "expected_model_benefit": "Formality distinguishes world/business news from entertainment/lifestyle; provides interpretable continuous signal for linear SVM decision boundaries",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f356d9111677be4d",
+  "metadata": {}
+}

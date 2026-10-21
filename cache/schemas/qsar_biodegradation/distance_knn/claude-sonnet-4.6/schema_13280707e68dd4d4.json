@@ -1,0 +1,190 @@
+{
+  "dataset_name": "qsar_biodegradation",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "l2_norm_all_features",
+      "type": "formula",
+      "description": "L2 norm of all 41 features after z-score normalization using training-set mean and std, representing the overall magnitude of a sample in feature space",
+      "value_range": [
+        0.1,
+        25.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures distance from origin in normalized feature space, helping KNN identify outliers and boundary samples",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 4.771142) / 0.568451) ** 2 + ((V2 - 3.096974) / 0.818515) ** 2 + ((V3 - 0.464455) / 1.017579) ** 2 + ((V4 - 0.037915) / 0.214373) ** 2 + ((V5 - 0.909953) / 1.968098) ** 2 + ((V6 - 0.345972) / 1.171834) ** 2 + ((V7 - 1.507109) / 1.972247) ** 2 + ((V8 - 36.586730) / 9.305414) ** 2 + ((V9 - 1.521327) / 2.075191) ** 2 + ((V10 - 1.715640) / 1.618815) ** 2 + ((V11 - 1.336493) / 2.456357) ** 2 + ((V12 - (-0.212223)) / 0.773726) ** 2 + ((V13 - 3.369180) / 0.531487) ** 2 + ((V14 - 1.313270) / 0.762578) ** 2 + ((V15 - 9.884934) / 0.967253) ** 2 + ((V16 - 3.293839) / 3.925721) ** 2 + ((V17 - 1.011806) / 0.046874) ** 2 + ((V18 - 1.134365) / 0.031280) ** 2 + ((V19 - 0.014218) / 0.118389) ** 2 + ((V20 - 0.075829) / 0.282060) ** 2 + ((V21 - 0.033175) / 0.264555) ** 2 + ((V22 - 1.228237) / 0.093570) ** 2 + ((V23 - 1.227488) / 1.707359) ** 2 + ((V24 - 0.014218) / 0.118389) ** 2 + ((V25 - 0.137441) / 0.344312) ** 2 + ((V26 - 0.042654) / 0.202076) ** 2 + ((V27 - 2.208081) / 0.237323) ** 2 + ((V28 - (-0.017085)) / 0.177114) ** 2 + ((V29 - 0.004739) / 0.068680) ** 2 + ((V30 - 8.553441) / 11.372090) ** 2 + ((V31 - 2.507123) / 2.145355) ** 2 + ((V32 - 0.170616) / 0.741006) ** 2 + ((V33 - 0.748815) / 1.268815) ** 2 + ((V34 - 1.360190) / 1.988862) ** 2 + ((V35 - 1.023697) / 1.198106) ** 2 + ((V36 - 3.752280) / 0.706590) ** 2 + ((V37 - 2.576640) / 0.626999) ** 2 + ((V38 - 0.691943) / 0.951368) ** 2 + ((V39 - 8.387171) / 0.967850) ** 2 + ((V40 - 0.052133) / 0.311140) ** 2 + ((V41 - 0.597156) / 2.335344) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "continuous_features_mahal_approx",
+      "type": "formula",
+      "description": "Approximate Mahalanobis-like distance using key continuous features (V1, V2, V8, V12, V13, V15, V30, V31, V36, V37, V39) normalized by their standard deviations",
+      "value_range": [
+        0.01,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Scale-normalized distance metric for continuous features improves KNN neighborhood geometry by removing scale bias",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V1 - 4.771142) / 0.568451) ** 2 + ((V2 - 3.096974) / 0.818515) ** 2 + ((V8 - 36.586730) / 9.305414) ** 2 + ((V12 - (-0.212223)) / 0.773726) ** 2 + ((V13 - 3.369180) / 0.531487) ** 2 + ((V15 - 9.884934) / 0.967253) ** 2 + ((V30 - 8.553441) / 11.372090) ** 2 + ((V31 - 2.507123) / 2.145355) ** 2 + ((V36 - 3.752280) / 0.706590) ** 2 + ((V37 - 2.576640) / 0.626999) ** 2 + ((V39 - 8.387171) / 0.967850) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "count_features_l1_norm",
+      "type": "formula",
+      "description": "L1 norm of count/integer features (V3-V7, V9-V11, V16, V23, V32-V35, V38, V40, V41) normalized by their standard deviations, capturing structural complexity",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Normalized count feature distance helps KNN distinguish structurally similar vs dissimilar molecules",
+      "leakage_risk": "low",
+      "formula": "np.abs((V3 - 0.464455) / 1.017579) + np.abs((V4 - 0.037915) / 0.214373) + np.abs((V5 - 0.909953) / 1.968098) + np.abs((V6 - 0.345972) / 1.171834) + np.abs((V7 - 1.507109) / 1.972247) + np.abs((V9 - 1.521327) / 2.075191) + np.abs((V10 - 1.715640) / 1.618815) + np.abs((V11 - 1.336493) / 2.456357) + np.abs((V16 - 3.293839) / 3.925721) + np.abs((V23 - 1.227488) / 1.707359) + np.abs((V32 - 0.170616) / 0.741006) + np.abs((V33 - 0.748815) / 1.268815) + np.abs((V34 - 1.360190) / 1.988862) + np.abs((V35 - 1.023697) / 1.198106) + np.abs((V38 - 0.691943) / 0.951368) + np.abs((V40 - 0.052133) / 0.311140) + np.abs((V41 - 0.597156) / 2.335344)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ratio_v1_v2",
+      "type": "formula",
+      "description": "Ratio of V1 to V2, capturing relative scale between two key continuous descriptors",
+      "value_range": [
+        0.2,
+        5.5
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Ratio features create new dimensions in feature space that can improve KNN separation",
+      "leakage_risk": "low",
+      "formula": "V1 / (V2 + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v8_zscore",
+      "type": "formula",
+      "description": "Z-score of V8 (molecular weight-like descriptor) relative to training mean and std",
+      "value_range": [
+        -4.0,
+        2.5
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Standardized V8 directly improves KNN distance calculations by removing scale effects from a high-variance feature",
+      "leakage_risk": "low",
+      "formula": "(V8 - 36.586730) / 9.305414",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v30_log1p_zscore",
+      "type": "formula",
+      "description": "Log-transformed and z-scored V30, which has high variance and right skew, to normalize its distribution for distance calculations",
+      "value_range": [
+        -0.9,
+        3.5
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Log normalization of skewed V30 improves KNN distance metric by reducing influence of extreme values",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(V30) - np.log1p(8.553441)) / (np.log1p(8.553441 + 11.372090) - np.log1p(8.553441 - np.minimum(8.553441, 11.372090)) + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "binary_feature_sum",
+      "type": "formula",
+      "description": "Sum of binary indicator features (V19, V24, V25, V26, V29) representing presence/absence of specific structural properties",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Binary feature aggregation creates a discrete cluster indicator that groups samples with similar structural fingerprints",
+      "leakage_risk": "low",
+      "formula": "V19 + V24 + V25 + V26 + V29",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v17_v18_v22_similarity",
+      "type": "formula",
+      "description": "Cosine-like similarity score among tightly-ranged ratio features V17, V18, V22 relative to their training means",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures joint deviation pattern in ratio descriptors, improving KNN neighborhood coherence for samples with similar ratio profiles",
+      "leakage_risk": "low",
+      "formula": "1.0 / (1.0 + np.sqrt(((V17 - 1.011806) / 0.046874) ** 2 + ((V18 - 1.134365) / 0.031280) ** 2 + ((V22 - 1.228237) / 0.093570) ** 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v13_v15_v39_distance",
+      "type": "formula",
+      "description": "Euclidean distance in the subspace of V13, V15, V39 (log-scale molecular descriptors) from their training means",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Focused distance in log-scale descriptor subspace helps KNN identify samples with similar electronic/topological properties",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V13 - 3.369180) / 0.531487) ** 2 + ((V15 - 9.884934) / 0.967253) ** 2 + ((V39 - 8.387171) / 0.967850) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_count_feature_indicator",
+      "type": "formula",
+      "description": "Indicator for samples with unusually high count features, defined as having V5+V7+V9+V11 exceeding 2 standard deviations above mean sum",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Binary cluster indicator separates structurally complex molecules, improving KNN boundary definition",
+      "leakage_risk": "low",
+      "formula": "np.where((V5 + V7 + V9 + V11) > (0.909953 + 1.507109 + 1.521327 + 1.336493 + 2.0 * np.sqrt(1.968098**2 + 1.972247**2 + 2.075191**2 + 2.456357**2)), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "molecular_complexity_score",
+      "type": "judgment",
+      "description": "Semantic assessment of molecular structural complexity based on the combined count of heteroatom-related features (V3, V4, V5, V6, V7, V9, V10, V11) relative to training distribution norms. Higher values indicate more complex molecular structures with more diverse atom types and bonds.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a holistic complexity score that groups structurally similar molecules together, improving KNN cluster coherence",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v27_v28_v36_v37_subspace_dist",
+      "type": "formula",
+      "description": "Normalized distance in the subspace of V27, V28, V36, V37 (connectivity and branching descriptors) from training means",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Focused distance metric in connectivity descriptor subspace improves KNN sensitivity to molecular topology differences",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((V27 - 2.208081) / 0.237323) ** 2 + ((V28 - (-0.017085)) / 0.177114) ** 2 + ((V36 - 3.752280) / 0.706590) ** 2 + ((V37 - 2.576640) / 0.626999) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "13280707e68dd4d4",
+  "metadata": {}
+}

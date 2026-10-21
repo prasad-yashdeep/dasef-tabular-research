@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Standardized age using training mean and std for scale-normalized distance.",
+      "value_range": [
+        -5.0,
+        6.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Brings age onto unit scale so it contributes proportionally in Euclidean neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "(age - 40.0328585302687) / 10.383885479407919",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_log_zscore",
+      "type": "formula",
+      "description": "Log-transformed and standardized call duration to compress heavy tail before distance computation.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Reduces dominance of long-duration outliers in distance metrics.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(duration) - 5.0) / 1.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_log_zscore",
+      "type": "formula",
+      "description": "Log-standardized campaign contact count.",
+      "value_range": [
+        -3.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes skewed contact frequencies for stable neighbor distances.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(campaign) - 1.0) / 0.7",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "euribor_zscore",
+      "type": "formula",
+      "description": "Standardized euribor3m rate for macro-economic similarity.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Equalizes contribution of interest rate signal in distance calculations.",
+      "leakage_risk": "low",
+      "formula": "(euribor3m - 3.627963661379087) / 1.7341672829220742",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macro_composite_index",
+      "type": "formula",
+      "description": "Composite macroeconomic similarity score combining standardized employment, rate, and confidence indicators.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a single low-dimensional axis capturing economic regime for neighborhood matching.",
+      "leakage_risk": "low",
+      "formula": "((emp.var.rate - 0.0899805762382648) / 1.57063998754873 + (euribor3m - 3.627963661379087) / 1.7341672829220742 + (nr.employed - 5167.113693752023) / 72.33695372345825) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "not_previously_contacted",
+      "type": "formula",
+      "description": "Indicator that the client was never previously contacted (pdays sentinel 999).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Separates fresh contacts from re-contacts as a clean cluster split in neighbor space.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pdays_recency_score",
+      "type": "formula",
+      "description": "Recency score: small if recently contacted, zero if never contacted.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Encodes recency on a bounded scale suitable for distance metrics, masking the 999 sentinel.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 0.0, np.clip(1.0 - pdays / 30.0, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_intensity",
+      "type": "formula",
+      "description": "Ratio of current campaign contacts to total prior contacts plus one, capturing engagement intensity.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Highlights heavily contacted clients clustering similarly in neighbor space.",
+      "leakage_risk": "low",
+      "formula": "campaign / (previous + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_band_indicator",
+      "type": "formula",
+      "description": "Coarse age cluster index: young (<30)=0, prime (30-50)=1, senior (50-65)=2, retired (>65)=3.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides discrete demographic cluster useful for KNN tie-breaking.",
+      "leakage_risk": "low",
+      "formula": "np.where(age < 30, 0, np.where(age < 50, 1, np.where(age < 65, 2, 3)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "economic_stress_distance",
+      "type": "formula",
+      "description": "Distance from median economic conditions using standardized emp.var.rate and cons.conf.idx.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Unsupervised prototype distance highlighting unusual economic contexts.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((emp.var.rate - 0.0899805762382648) / 1.57063998754873) ** 2 + ((cons.conf.idx + 40.45113305276788) / 4.614954983136801) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "client_risk_profile",
+      "type": "judgment",
+      "description": "Semantic ordinal score of client financial risk combining default, housing loan, and personal loan status, where higher values indicate more financial obligations/risk.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Creates a semantically meaningful axis for grouping financially similar clients in KNN space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contactability_quality",
+      "type": "judgment",
+      "description": "Semantic assessment of the quality/reachability of the contact channel and timing, considering contact type, month, and day_of_week patterns typical for outreach effectiveness.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Embeds domain knowledge about communication channel effectiveness into the distance space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "be5dc0059e12498f",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "first_order_theorem_proving",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_scaled_heavy_tail_composite",
+      "type": "formula",
+      "description": "Log1p-transformed sum of heavy-tailed high-variance columns to smooth outliers for linear margins.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "smoothed_magnitude",
+      "expected_model_benefit": "Compresses extreme tails into a near-linear severity score useful for SVM hyperplane separation.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.abs(V12)) + np.log1p(np.abs(V13)) + np.log1p(np.abs(V15)) + np.log1p(np.abs(V17)) + np.log1p(np.abs(V28)) + np.log1p(np.abs(V29))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_v12_z",
+      "type": "formula",
+      "description": "Approximate z-score for V12 using training mean and std for stable linear projection.",
+      "value_range": [
+        -1.0,
+        40.0
+      ],
+      "feature_family": "standardization",
+      "expected_model_benefit": "Provides normalized scale for the highly skewed V12 column, beneficial for linear margins.",
+      "leakage_risk": "low",
+      "formula": "(V12 - (-0.0028254997275204466)) / 1.1555012969211211",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log1p_v9_v17_v28_product",
+      "type": "formula",
+      "description": "Log-sum interaction between three skewed columns reflecting compound complexity.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "interaction_smoothed",
+      "expected_model_benefit": "Captures multiplicative coupling of difficulty signals in a linear-friendly additive log form.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.abs(V9)) + np.log1p(np.abs(V17)) + np.log1p(np.abs(V28))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v14_v32_redundancy_deviation",
+      "type": "formula",
+      "description": "Absolute deviation between V14 and V32 which share identical training statistics; measures discrepancy.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "redundancy_check",
+      "expected_model_benefit": "Highlights cases where two near-duplicate columns diverge, providing a sparse linear signal.",
+      "leakage_risk": "low",
+      "formula": "np.abs(V14 - V32)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_variance_v33_v43_severity",
+      "type": "formula",
+      "description": "Combined magnitude of low-variance columns V33 and V43 which spike rarely.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "rare_event_indicator",
+      "expected_model_benefit": "Surface rare spikes in tight-distribution columns as a smooth severity signal.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.abs(V33)) + np.log1p(np.abs(V43))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "negative_mass_score",
+      "type": "formula",
+      "description": "Sum over columns that frequently take negative values, measuring negative directional pressure.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "directional_aggregate",
+      "expected_model_benefit": "Provides a one-sided linear projection capturing the negative half-space of bounded columns.",
+      "leakage_risk": "low",
+      "formula": "np.clip(-V1, 0, 5) + np.clip(-V2, 0, 5) + np.clip(-V14, 0, 5) + np.clip(-V32, 0, 5) + np.clip(-V45, 0, 5) + np.clip(-V51, 0, 5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "positive_mass_score",
+      "type": "formula",
+      "description": "Sum over heavy positive-tail columns capturing upward pressure.",
+      "value_range": [
+        0.0,
+        80.0
+      ],
+      "feature_family": "directional_aggregate",
+      "expected_model_benefit": "Smooth bounded composite of positive excursions ideal for linear SVM weight assignment.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V8, 0, 10) + np.clip(V9, 0, 10) + np.clip(V11, 0, 10) + np.clip(V20, 0, 15) + np.clip(V22, 0, 15) + np.clip(V36, 0, 20)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ratio_v13_v15",
+      "type": "formula",
+      "description": "Ratio of two related skewed magnitude columns with safe denominator.",
+      "value_range": [
+        -1.0,
+        14.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures relative scaling between two skewed proof-related measurements.",
+      "leakage_risk": "low",
+      "formula": "(V13 + 1.0) / (np.abs(V15) + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "global_l2_magnitude_smoothed",
+      "type": "formula",
+      "description": "Square root of sum of squares of a representative subset, log-smoothed for linear margins.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "global_magnitude",
+      "expected_model_benefit": "Smooth overall row-norm signal that linearly correlates with row activity intensity.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.sqrt(V1*V1 + V3*V3 + V5*V5 + V7*V7 + V16*V16 + V18*V18 + V19*V19 + V44*V44 + V47*V47 + V49*V49))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "extreme_outlier_count",
+      "type": "formula",
+      "description": "Count of columns where the value exceeds roughly 3 standard deviations from training mean.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "outlier_count",
+      "expected_model_benefit": "Coarse but linear-friendly count of extreme deviations across heavy-tail features.",
+      "leakage_risk": "low",
+      "formula": "np.where(np.abs(V12) > 3.5, 1, 0) + np.where(np.abs(V13) > 2.5, 1, 0) + np.where(np.abs(V15) > 2.5, 1, 0) + np.where(np.abs(V17) > 2.8, 1, 0) + np.where(np.abs(V20) > 3.3, 1, 0) + np.where(np.abs(V28) > 3.2, 1, 0) + np.where(np.abs(V29) > 3.0, 1, 0) + np.where(np.abs(V36) > 3.4, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "row_complexity_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of overall row complexity combining magnitude, spread, and outlier presence into a 0-1 smoothness-friendly score, interpreted as a difficulty proxy.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_severity",
+      "expected_model_benefit": "Bounded smooth scalar summarizing row difficulty, well-suited for linear SVM contribution.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "row_sparsity_judgment",
+      "type": "judgment",
+      "description": "Semantic estimate of how concentrated the row's signal is in a few features versus spread across many, expressed as a 0-1 sparsity index.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_structure",
+      "expected_model_benefit": "Provides an orthogonal structural signal to magnitude features, helpful for linear separation across heuristic regimes.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "af161dd4a73115ef",
+  "metadata": {}
+}

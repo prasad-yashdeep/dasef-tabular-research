@@ -1,0 +1,190 @@
+{
+  "dataset_name": "house_8l",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_p3_normalized",
+      "type": "formula",
+      "description": "Log-transformed and approximately standardized version of the highly skewed P3 feature.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Reduces the impact of extreme outliers in P3, providing a smooth, normalized feature that helps linear SVM establish a stable margin.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(P3) - 7.9) / 1.5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p11p3_p16p2_ratio",
+      "type": "formula",
+      "description": "Ratio between P11p3 and P16p2, with a small constant added to the denominator to prevent division by zero.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the relative proportion between two key P-series features, allowing the linear model to leverage their interaction directly.",
+      "leakage_risk": "low",
+      "formula": "P11p3 / (P16p2 + 0.001)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h15p1_centered",
+      "type": "formula",
+      "description": "Mean-centered version of H15p1.",
+      "value_range": [
+        -6.0,
+        4.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Centering features helps linear SVM converge faster and improves the interpretability of the learned weights.",
+      "leakage_risk": "low",
+      "formula": "H15p1 - 5.978",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p6p4_p19p2_sum",
+      "type": "formula",
+      "description": "Sum of P6p4 and P19p2.",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a simple linear projection of two related features, reducing dimensionality and providing a stronger combined signal.",
+      "leakage_risk": "low",
+      "formula": "P6p4 + P19p2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h40p4_h5p2_diff",
+      "type": "formula",
+      "description": "Difference between H40p4 and H5p2.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Highlights the divergence between two H-series metrics, which can be a strong linear separator.",
+      "leakage_risk": "low",
+      "formula": "H40p4 - H5p2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p19p2_sqrt",
+      "type": "formula",
+      "description": "Square root transformation of P19p2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Spreads out values near zero for this right-skewed feature, making the distribution more linear-friendly.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(P19p2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_p_score",
+      "type": "formula",
+      "description": "Average of P11p3 and P16p2.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a stable, weighted composite score that smooths out individual feature noise.",
+      "leakage_risk": "low",
+      "formula": "(P11p3 + P16p2) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h15p1_h40p4_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between scaled H15p1 and H40p4.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly provides a non-linear interaction term to the linear SVM, expanding its representational capacity.",
+      "leakage_risk": "low",
+      "formula": "(H15p1 / 10.0) * H40p4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p3_extreme_outlier",
+      "type": "formula",
+      "description": "Binary indicator for extreme values in P3, using the training standard deviation as a threshold.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Allows the linear model to assign a specific weight offset for extreme outliers, preventing them from skewing the main continuous weight.",
+      "leakage_risk": "low",
+      "formula": "np.where(P3 > 13818.0, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_density_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of housing density based on H15p1 and H40p4, providing a continuous score.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Translates raw housing metrics into a linear-friendly continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "property_value_tier",
+      "type": "judgment",
+      "description": "Semantic categorization of property value into tiers based on P3 and P11p3.",
+      "value_range": [
+        1.0,
+        5.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides an ordinal scale that linear SVM can use to weight different property value segments monotonically.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_risk_index",
+      "type": "judgment",
+      "description": "Semantic judgment of demographic risk factors based on P6p4, P19p2, and H5p2.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Combines multiple demographic indicators into a single weighted composite score, reducing feature space and improving margin separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "7fd7808f748ef73f",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "airlines",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "time_scaled",
+      "type": "formula",
+      "description": "Standardized scheduled departure time.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a normalized continuous feature for the linear SVM, ensuring the time scale does not dominate the margin.",
+      "leakage_risk": "low",
+      "formula": "(Time - 803.25) / 277.21",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "length_scaled",
+      "type": "formula",
+      "description": "Standardized flight duration.",
+      "value_range": [
+        -2.0,
+        7.0
+      ],
+      "feature_family": "flight_characteristics",
+      "expected_model_benefit": "Standardizes flight length, allowing the SVM to weigh duration equally with other scaled features.",
+      "leakage_risk": "low",
+      "formula": "(Length - 131.26) / 69.96",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_length",
+      "type": "formula",
+      "description": "Log-transformed flight duration.",
+      "value_range": [
+        3.2,
+        6.4
+      ],
+      "feature_family": "flight_characteristics",
+      "expected_model_benefit": "Reduces the impact of extreme long-haul flights on the linear decision boundary by compressing the right tail.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(Length)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_weekend",
+      "type": "formula",
+      "description": "Binary indicator for weekend flights (Saturday or Sunday).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Provides a discrete shift in the linear margin for weekend flights, capturing weekly operational differences.",
+      "leakage_risk": "low",
+      "formula": "np.where((DayOfWeek == '6') | (DayOfWeek == '7'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_evening_rush",
+      "type": "formula",
+      "description": "Binary indicator for flights departing during the evening rush (16:00 to 19:00).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Allows the linear model to apply a specific weight to flights departing during peak evening hours.",
+      "leakage_risk": "low",
+      "formula": "np.where((Time >= 960) & (Time <= 1140), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_length_interaction",
+      "type": "formula",
+      "description": "Interaction term between standardized departure time and standardized flight length.",
+      "value_range": [
+        -20.0,
+        20.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly provides the interaction between departure time and flight duration, which a linear SVM cannot learn natively.",
+      "leakage_risk": "low",
+      "formula": "((Time - 803.25) / 277.21) * ((Length - 131.26) / 69.96)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_squared_scaled",
+      "type": "formula",
+      "description": "Squared standardized departure time.",
+      "value_range": [
+        0.0,
+        9.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Introduces a non-linear (quadratic) transformation of time, enabling the linear SVM to capture parabolic time-of-day effects.",
+      "leakage_risk": "low",
+      "formula": "((Time - 803.25) / 277.21) ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_to_midnight_scaled",
+      "type": "formula",
+      "description": "Proximity to midnight, scaled to a 0-1 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Captures proximity to midnight as a continuous feature, useful for modeling end-of-day operational resets.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(Time, 1440 - Time) / 720.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "arrival_time_proxy_scaled",
+      "type": "formula",
+      "description": "Estimated arrival time (time + length modulo 1440), scaled to a 0-1 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Estimates the arrival time on a normalized scale, providing a proxy for destination-side temporal effects.",
+      "leakage_risk": "low",
+      "formula": "((Time + Length) % 1440) / 1440.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "airline_tier",
+      "type": "judgment",
+      "description": "Judgment feature assigning a tier to the airline based on its code (e.g., 1.0 for major legacy carriers, 0.5 for low-cost, 0.0 for regional).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Translates categorical airline codes into a continuous ordinal scale based on carrier size, suitable for linear weighting.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "airport_from_hub_status",
+      "type": "judgment",
+      "description": "Judgment feature assigning a hub status score to the departure airport (1.0 for major international hubs, 0.5 for medium hubs, 0.0 for small regional airports).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Encodes departure airport size into a continuous feature, allowing the SVM to learn a linear relationship with hub congestion.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "airport_to_hub_status",
+      "type": "judgment",
+      "description": "Judgment feature assigning a hub status score to the arrival airport (1.0 for major international hubs, 0.5 for medium hubs, 0.0 for small regional airports).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "categorical_encoding",
+      "expected_model_benefit": "Encodes arrival airport size into a continuous feature, allowing the SVM to learn a linear relationship with destination congestion.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "80ff89b5509d64a3",
+  "metadata": {}
+}

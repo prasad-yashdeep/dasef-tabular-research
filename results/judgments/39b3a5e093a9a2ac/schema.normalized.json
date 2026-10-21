@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Standardized age relative to training mean and std, providing scale-normalized distance contribution.",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Equalizes age contribution in Euclidean distance computations.",
+      "leakage_risk": "low",
+      "formula": "(age - 38.5876) / 13.2402",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_zscore",
+      "type": "formula",
+      "description": "Standardized hours_per_week using training statistics.",
+      "value_range": [
+        -5.0,
+        8.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Normalizes hours_per_week magnitude for distance metric fairness.",
+      "leakage_risk": "low",
+      "formula": "(hours_per_week - 40.8693) / 11.8470",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_fnlwgt_scaled",
+      "type": "formula",
+      "description": "Log-transformed and scaled fnlwgt to reduce skew and bring it onto a comparable scale.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Prevents heavy-tailed fnlwgt from dominating Euclidean neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(fnlwgt) - 12.0) / 0.6",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_gain",
+      "type": "formula",
+      "description": "Log-compressed capital_gain to suppress extreme outliers in distance calculations.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Tames extreme capital_gain values that would otherwise distort kNN distances.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_gain)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_capital_loss",
+      "type": "formula",
+      "description": "Log-compressed capital_loss feature.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Reduces capital_loss skew so neighbors are not dominated by rare large values.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_loss)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_num_zscore",
+      "type": "formula",
+      "description": "Standardized education_num.",
+      "value_range": [
+        -4.0,
+        3.0
+      ],
+      "feature_family": "scale_normalization",
+      "expected_model_benefit": "Equalizes education_num scale for distance computations.",
+      "leakage_risk": "low",
+      "formula": "(education_num - 10.139) / 2.555",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "has_capital_activity",
+      "type": "formula",
+      "description": "Binary indicator of any nonzero capital gain or loss; an unsupervised cluster indicator for financially active rows.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Separates a distinct subpopulation that often has different neighborhoods.",
+      "leakage_risk": "low",
+      "formula": "np.where((capital_gain + capital_loss) > 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prime_working_age_distance",
+      "type": "formula",
+      "description": "Absolute deviation from prototypical prime working age (40), as an unsupervised age prototype distance.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a meaningful prototype-distance signal for age-based neighborhood structure.",
+      "leakage_risk": "low",
+      "formula": "np.abs(age - 40.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fulltime_hours_distance",
+      "type": "formula",
+      "description": "Absolute deviation from standard 40-hour work week.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures atypical work-hour patterns as a prototype-distance metric.",
+      "leakage_risk": "low",
+      "formula": "np.abs(hours_per_week - 40.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_centroid_distance",
+      "type": "formula",
+      "description": "Euclidean distance from a row's standardized core numeric features to the unsupervised training centroid (origin in z-space).",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Measures global atypicality; useful for kNN to weight outliers.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((age - 38.5876) / 13.2402) ** 2 + ((hours_per_week - 40.8693) / 11.8470) ** 2 + ((education_num - 10.139) / 2.555) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_hours_similarity",
+      "type": "formula",
+      "description": "Negative absolute difference between standardized education and hours, a similarity-like score for joint education-hours profile.",
+      "value_range": [
+        -8.0,
+        0.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Encodes joint education-effort similarity to support neighborhood discrimination.",
+      "leakage_risk": "low",
+      "formula": "-np.abs((education_num - 10.139) / 2.555 - (hours_per_week - 40.8693) / 11.8470)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_stability_score",
+      "type": "judgment",
+      "description": "Heuristic 0-1 score reflecting demographic stability based on marital_status indicating partnered (codes commonly representing married), relationship code indicating spouse/family role, and prime-age range. Higher values indicate more stable household profile, useful as an unsupervised cluster indicator for kNN.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a composite semantic grouping that improves neighborhood coherence beyond raw encoded categoricals.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "c42b0be227bd0d2b",
+  "metadata": {}
+}

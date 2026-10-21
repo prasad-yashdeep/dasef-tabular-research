@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bitcoinheist_ransomware",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "day_progress_norm",
+      "type": "formula",
+      "description": "Maps day to a bounded yearly progress coordinate using the observed 1 to 365 span.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_position",
+      "expected_model_benefit": "Allows a linear SVM to use monotonic calendar drift as a smooth margin direction.",
+      "leakage_risk": "low",
+      "formula": "np.clip((day - 1.0) / 364.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "length_log_norm",
+      "type": "formula",
+      "description": "Log-normalized chain length relative to the observed maximum length of 144.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "path_depth",
+      "expected_model_benefit": "Turns a heavy-tailed depth measure into a bounded near-linear input.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(length) / np.log1p(144.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weight_log_norm",
+      "type": "formula",
+      "description": "Log-normalized transfer weight relative to the observed maximum weight.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transfer_weight",
+      "expected_model_benefit": "Compresses extreme skew in weight so unusually large values influence the margin without dominating it.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(weight) / np.log1p(197.35272593471802), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "count_log_norm",
+      "type": "formula",
+      "description": "Log-normalized activity count using the observed count range from 1 to 13334.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "activity_volume",
+      "expected_model_benefit": "Provides a smooth activity-volume coordinate for linear margin fitting.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(count) - np.log1p(1.0)) / (np.log1p(13334.0) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "neighbors_log_norm",
+      "type": "formula",
+      "description": "Log-normalized neighbor breadth using the observed neighbor range from 1 to 824.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "graph_breadth",
+      "expected_model_benefit": "Exposes address breadth on a scale where large hubs remain usable by a linear SVM.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(neighbors) - np.log1p(1.0)) / (np.log1p(824.0) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_log_norm",
+      "type": "formula",
+      "description": "Log-normalized income using the observed income range from 30000000 to 1544509020257.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "monetary_volume",
+      "expected_model_benefit": "Gives a bounded monetary-scale direction while reducing the influence of extreme income values.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(income) - np.log1p(30000000.0)) / (np.log1p(1544509020257.0) - np.log1p(30000000.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "loop_reuse_share",
+      "type": "formula",
+      "description": "Bounded share of looped activity within total observed activity, with smoothing for small counts.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "reuse_ratio",
+      "expected_model_benefit": "Captures reuse intensity with a stable ratio that is less sensitive to raw count scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip(looped / (count + looped + 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "neighbor_activity_balance",
+      "type": "formula",
+      "description": "Bounded ratio of neighbor breadth to combined event volume and neighbor breadth.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "breadth_density",
+      "expected_model_benefit": "Represents whether activity is broad relative to event volume, adding a smooth sparsity and concentration direction.",
+      "leakage_risk": "low",
+      "formula": "np.clip(neighbors / (count + neighbors), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "income_per_activity_log_norm",
+      "type": "formula",
+      "description": "Log-normalized income per activity unit, using count smoothing for stability.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "monetary_density",
+      "expected_model_benefit": "Helps identify rows where monetary magnitude is high relative to event volume while staying smooth for margin learning.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(income / (count + 1.0)) / np.log1p(1544509020257.0 / 2.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "flow_volume_structure_index",
+      "type": "formula",
+      "description": "Hand-weighted bounded index combining monetary size, event volume, path depth, loop reuse, weight, and neighbor breadth.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "weighted_composite",
+      "expected_model_benefit": "Supplies an interpretable linear projection across several row-level cues, matching SVM margin geometry.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.22 * np.clip((np.log1p(income) - np.log1p(30000000.0)) / (np.log1p(1544509020257.0) - np.log1p(30000000.0)), 0.0, 1.0) + 0.20 * np.clip((np.log1p(count) - np.log1p(1.0)) / (np.log1p(13334.0) - np.log1p(1.0)), 0.0, 1.0) + 0.18 * np.clip(np.log1p(length) / np.log1p(144.0), 0.0, 1.0) + 0.18 * np.clip(looped / (count + looped + 1.0), 0.0, 1.0) + 0.12 * np.clip(np.log1p(weight) / np.log1p(197.35272593471802), 0.0, 1.0) + 0.10 * np.clip((np.log1p(neighbors) - np.log1p(1.0)) / (np.log1p(824.0) - np.log1p(1.0)), 0.0, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_structure_complexity_score",
+      "type": "judgment",
+      "description": "Numeric semantic score in [0.0, 1.0] assigned from row fields and fixed training-fold ranges: 0.0 for simple, short, low-volume, low-reuse, narrow-neighbor patterns; 1.0 for long, high-volume, high-reuse, broad-neighbor patterns; intermediate values should vary smoothly with the evidence.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_structure",
+      "expected_model_benefit": "Condenses several row-level structural cues into a single ordinal severity feature that can be used directly by a linear margin.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_flow_concentration_score",
+      "type": "judgment",
+      "description": "Numeric semantic score in [0.0, 1.0] assigned from row fields and fixed training-fold ranges: 0.0 for diffuse flow with income spread over many events and little looping; 1.0 for concentrated flow with large income relative to activity scale or pronounced looping; intermediate values reflect partial concentration.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_concentration",
+      "expected_model_benefit": "Adds a human-readable concentration cue that complements deterministic ratios when boundary behavior is approximately linear but not captured by one formula.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0cbcf61c8bed67b1",
+  "metadata": {}
+}

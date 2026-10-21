@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "call_duration_log_norm",
+      "type": "formula",
+      "description": "Log-transformed and normalized call duration, capturing diminishing returns of longer calls on a smooth scale suitable for linear margins",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "call_engagement",
+      "expected_model_benefit": "Smooth continuous signal for call engagement intensity, avoids heavy-tail distortion in SVM kernel",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(duration) / np.log1p(4199.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "economic_stress_index",
+      "type": "formula",
+      "description": "Composite economic stress score combining employment variation rate and euribor rate, normalized to [0,1]. Higher values indicate more stressed economic conditions",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "macroeconomic",
+      "expected_model_benefit": "Linear projection of macro-economic environment onto a single axis useful for SVM hyperplane separation",
+      "leakage_risk": "low",
+      "formula": "np.clip(((emp.var.rate - (-3.4)) / (1.4 - (-3.4))) * 0.5 + ((euribor3m - 0.634) / (4.97 - 0.634)) * 0.5, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_contact_success_score",
+      "type": "formula",
+      "description": "Score reflecting prior campaign outcome quality: successful previous outcome (poutcome=1) with recent contact (low pdays) gets highest score",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "campaign_history",
+      "expected_model_benefit": "Encodes prior campaign success signal as continuous score for linear decision boundary",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.where(poutcome == 1, 1.0, np.where(poutcome == 2, 0.5, 0.0)) * np.where(pdays < 999, np.clip(1.0 - pdays / 999.0, 0.0, 1.0) + 0.3, 0.1), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_contact_burden",
+      "type": "formula",
+      "description": "Normalized measure of how many times a client was contacted in this campaign, log-scaled to penalize excessive contacts",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "campaign_intensity",
+      "expected_model_benefit": "Captures diminishing returns and potential annoyance from repeated contacts as smooth linear feature",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(campaign) / np.log1p(56.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "consumer_confidence_norm",
+      "type": "formula",
+      "description": "Normalized consumer confidence index shifted to [0,1] range, where higher values indicate more positive consumer sentiment",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "macroeconomic",
+      "expected_model_benefit": "Direct linear signal of consumer sentiment for SVM margin optimization",
+      "leakage_risk": "low",
+      "formula": "np.clip((cons.conf.idx - (-50.8)) / ((-26.9) - (-50.8)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_financial_maturity_score",
+      "type": "formula",
+      "description": "Smooth score capturing financial maturity by age, peaking around middle age (35-55) where financial product interest is typically highest",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Non-linear age effect linearized as a smooth score for SVM to exploit without polynomial features",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - np.abs(age - 45.0) / 45.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "debt_burden_composite",
+      "type": "formula",
+      "description": "Composite debt burden score combining housing loan and personal loan indicators, weighted by severity",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "financial_obligations",
+      "expected_model_benefit": "Single continuous debt burden axis for linear separation of financially constrained vs free clients",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.where(housing == 1, 0.4, np.where(housing == 2, 0.0, 0.2)) + np.where(loan == 1, 0.4, np.where(loan == 2, 0.0, 0.2)) + np.where(default == 1, 0.2, np.where(default == 2, 0.0, 0.1))), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_job_alignment_score",
+      "type": "formula",
+      "description": "Normalized composite of education level and job category as proxy for socioeconomic standing, useful for linear projection",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic",
+      "expected_model_benefit": "Smooth socioeconomic proxy enabling linear SVM to capture education-job interaction without explicit cross terms",
+      "leakage_risk": "low",
+      "formula": "np.clip((education / 7.0) * 0.6 + np.where(job <= 3, 0.8, np.where(job <= 7, 0.5, 0.2)) * 0.4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_previous_contact_score",
+      "type": "formula",
+      "description": "Score for recency of previous campaign contact: 0 if never contacted (pdays=999), increasing as contact was more recent",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "campaign_history",
+      "expected_model_benefit": "Continuous recency signal that linearizes the pdays spike at 999 for better SVM margin utilization",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays >= 999, 0.0, np.clip(1.0 - pdays / 999.0, 0.0, 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macro_employment_pressure",
+      "type": "formula",
+      "description": "Normalized employment pressure combining nr.employed and emp.var.rate to capture labor market tightness as a single linear feature",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "macroeconomic",
+      "expected_model_benefit": "Reduces correlated macro features to single axis, improving linear SVM conditioning",
+      "leakage_risk": "low",
+      "formula": "np.clip(((nr.employed - 4963.6) / (5228.1 - 4963.6)) * 0.6 + ((emp.var.rate - (-3.4)) / (1.4 - (-3.4))) * 0.4, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_channel_recency_quality",
+      "type": "judgment",
+      "description": "Semantic assessment of contact quality combining channel type (cellular=1 vs telephone=0) and timing (month and day_of_week). Cellular contact in mid-week during spring/summer months scores highest as these tend to yield better engagement",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "contact_quality",
+      "expected_model_benefit": "Encodes domain knowledge about optimal contact conditions as a smooth score for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "client_receptivity_composite",
+      "type": "formula",
+      "description": "Weighted composite of signals indicating client receptivity: cellular contact, no default, previous success, and reasonable campaign count",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "engagement_potential",
+      "expected_model_benefit": "Single composite receptivity score that projects multiple weak signals onto one linear axis for SVM margin",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.where(contact == 1, 0.25, 0.0) + np.where(default == 0, 0.2, 0.0) + np.where(poutcome == 1, 0.3, np.where(poutcome == 2, 0.1, 0.0)) + np.clip((1.0 - (campaign - 1.0) / 10.0) * 0.25, 0.0, 0.25), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "8efadf749a4512c5",
+  "metadata": {}
+}

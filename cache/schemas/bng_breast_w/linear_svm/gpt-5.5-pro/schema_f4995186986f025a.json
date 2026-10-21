@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bng_breast_w",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "overall_morphology_severity",
+      "type": "formula",
+      "description": "Equal-weight min-max clipped average across all nine cytology measurements; higher values indicate broader morphological abnormality.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_composite",
+      "expected_model_benefit": "Dense monotone signal for a linear SVM margin, useful when many measurements rise together.",
+      "leakage_risk": "low",
+      "formula": "((np.clip((Clump_Thickness - 0.987992) / 11.967921, 0.0, 1.0) + np.clip((Cell_Size_Uniformity - 0.887031) / 10.046064, 0.0, 1.0) + np.clip((Cell_Shape_Uniformity - 1.0) / 11.302727, 0.0, 1.0) + np.clip((Marginal_Adhesion - 1.0) / 10.096069, 0.0, 1.0) + np.clip((Single_Epi_Cell_Size - 1.0) / 12.823781, 0.0, 1.0) + np.clip((Bare_Nuclei + 0.003785) / 13.164574, 0.0, 1.0) + np.clip((Bland_Chromatin - 1.0) / 10.264166, 0.0, 1.0) + np.clip((Normal_Nucleoli - 1.0) / 9.055024, 0.0, 1.0) + np.clip((Mitoses - 1.0) / 10.689359, 0.0, 1.0)) / 9.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "uniformity_average_severity",
+      "type": "formula",
+      "description": "Average of normalized cell size and cell shape uniformity readings, emphasizing coordinated uniformity deviation.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_composite",
+      "expected_model_benefit": "Reduces two correlated columns into one smooth axis, helping the linear SVM handle collinearity.",
+      "leakage_risk": "low",
+      "formula": "(np.clip((Cell_Size_Uniformity - 0.887031) / 10.046064, 0.0, 1.0) + np.clip((Cell_Shape_Uniformity - 1.0) / 11.302727, 0.0, 1.0)) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "uniformity_size_shape_gap",
+      "type": "formula",
+      "description": "Absolute normalized disagreement between cell size and cell shape uniformity readings.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "discordance",
+      "expected_model_benefit": "Adds an imbalance direction that can receive an independent linear weight apart from average uniformity.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.abs(Cell_Size_Uniformity - Cell_Shape_Uniformity) / 11.415696, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nuclear_prominence_score",
+      "type": "formula",
+      "description": "Composite normalized nuclear morphology score from bare nuclei, chromatin, and nucleoli readings.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_composite",
+      "expected_model_benefit": "Condenses nuclear morphology into a stable continuous component for margin placement.",
+      "leakage_risk": "low",
+      "formula": "(np.clip((Bare_Nuclei + 0.003785) / 13.164574, 0.0, 1.0) + np.clip((Bland_Chromatin - 1.0) / 10.264166, 0.0, 1.0) + np.clip((Normal_Nucleoli - 1.0) / 9.055024, 0.0, 1.0)) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "epithelial_adhesion_size_score",
+      "type": "formula",
+      "description": "Average normalized marginal adhesion and single epithelial cell size, capturing cohesion and epithelial size pattern.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_composite",
+      "expected_model_benefit": "Provides a low-noise epithelial structure axis complementary to nuclear and uniformity scores.",
+      "leakage_risk": "low",
+      "formula": "(np.clip((Marginal_Adhesion - 1.0) / 10.096069, 0.0, 1.0) + np.clip((Single_Epi_Cell_Size - 1.0) / 12.823781, 0.0, 1.0)) / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mitotic_activity_log_score",
+      "type": "formula",
+      "description": "Log-scaled mitoses reading, clipped between observed training-fold minimum and maximum.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "log_normalized",
+      "expected_model_benefit": "Compresses right-skewed mitotic readings into a smoother scale that is easier for linear margins to use.",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(Mitoses) - np.log1p(1.0)) / (np.log1p(11.689359) - np.log1p(1.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "uniformity_joint_elevation",
+      "type": "formula",
+      "description": "Product of normalized cell size and cell shape uniformity readings; high values require both readings to be elevated.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Gives the linear SVM an explicit co-elevation term without requiring the model to infer multiplication.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Cell_Size_Uniformity - 0.887031) / 10.046064, 0.0, 1.0) * np.clip((Cell_Shape_Uniformity - 1.0) / 11.302727, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "multifocal_highness_soft_count",
+      "type": "formula",
+      "description": "Smooth fraction of measurements in a mid-to-high cytology range using a ramp from 4 to 8 on the original measurement scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "soft_count",
+      "expected_model_benefit": "Approximates a count of high readings while remaining continuous, producing a useful burden-like linear feature.",
+      "leakage_risk": "low",
+      "formula": "((np.clip((Clump_Thickness - 4.0) / 4.0, 0.0, 1.0) + np.clip((Cell_Size_Uniformity - 4.0) / 4.0, 0.0, 1.0) + np.clip((Cell_Shape_Uniformity - 4.0) / 4.0, 0.0, 1.0) + np.clip((Marginal_Adhesion - 4.0) / 4.0, 0.0, 1.0) + np.clip((Single_Epi_Cell_Size - 4.0) / 4.0, 0.0, 1.0) + np.clip((Bare_Nuclei - 4.0) / 4.0, 0.0, 1.0) + np.clip((Bland_Chromatin - 4.0) / 4.0, 0.0, 1.0) + np.clip((Normal_Nucleoli - 4.0) / 4.0, 0.0, 1.0) + np.clip((Mitoses - 4.0) / 4.0, 0.0, 1.0)) / 9.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "zscore_atypia_projection",
+      "type": "formula",
+      "description": "Weighted average of clipped z-scores using training-fold means and standard deviations, preserving signed direction.",
+      "value_range": [
+        -2.5,
+        2.5
+      ],
+      "feature_family": "linear_projection",
+      "expected_model_benefit": "Adds a centered signed projection that is already scaled for margin optimization.",
+      "leakage_risk": "low",
+      "formula": "(0.12 * np.clip((Clump_Thickness - 4.364265146667796) / 2.8195165660817776, -2.5, 2.5) + 0.14 * np.clip((Cell_Size_Uniformity - 3.1202946305360317) / 3.0367543070817313, -2.5, 2.5) + 0.14 * np.clip((Cell_Shape_Uniformity - 3.19325598916081) / 2.973172794168851, -2.5, 2.5) + 0.10 * np.clip((Marginal_Adhesion - 2.841471826826996) / 2.8838836806323087, -2.5, 2.5) + 0.10 * np.clip((Single_Epi_Cell_Size - 3.1973483991870606) / 2.2036862189529725, -2.5, 2.5) + 0.14 * np.clip((Bare_Nuclei - 3.4831155430603773) / 3.6191493319078796, -2.5, 2.5) + 0.10 * np.clip((Bland_Chromatin - 3.398506820814633) / 2.413122324956464, -2.5, 2.5) + 0.12 * np.clip((Normal_Nucleoli - 2.8805530287069177) / 3.065024874856451, -2.5, 2.5) + 0.04 * np.clip((Mitoses - 1.5760697691591161) / 1.689163224289366, -2.5, 2.5))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bare_nuclei_uniformity_ratio",
+      "type": "formula",
+      "description": "Clipped ratio of bare nuclei reading to the average cell uniformity reading with a small stabilizing offset.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Highlights disproportionate nuclear elevation relative to uniformity, adding a ratio direction for a linear boundary.",
+      "leakage_risk": "low",
+      "formula": "np.clip(Bare_Nuclei / (0.5 * (Cell_Size_Uniformity + Cell_Shape_Uniformity) + 0.5), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expert_pattern_coherence_score",
+      "type": "judgment",
+      "description": "Numeric assessment from 0 to 10 of how coherently the nine measurements form a diffuse atypia pattern: 0 for uniformly low values near baseline, 10 for multiple high cellular and nuclear readings that rise together; use only the row values and fixed training-fold context.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Captures holistic morphology that may not be fully represented by pairwise arithmetic features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "expert_measurement_plausibility_score",
+      "type": "judgment",
+      "description": "Numeric assessment from 0 to 1 of internal measurement plausibility: 1 for mutually consistent, in-range cytology values; 0 for isolated spikes, contradictions, or boundary artifacts.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Gives the margin a separate reliability axis so inconsistent rows can be weighted differently.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f4995186986f025a",
+  "metadata": {}
+}

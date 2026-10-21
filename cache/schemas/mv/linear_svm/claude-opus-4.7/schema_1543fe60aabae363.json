@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mv",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "x1_standardized",
+      "type": "formula",
+      "description": "z-score normalization of x1 using training mean and std for stable linear margin scaling.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides smooth standardized input enabling stable linear SVM weight estimation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x1 - 0.02097702305805397) / 2.8822072460810944, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x6_standardized",
+      "type": "formula",
+      "description": "z-score normalization of x6 (high-variance feature) clipped to a safe band.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Reduces scale dominance of x6 in linear margin computation.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x6 - (-11.04631738683565)) / 10.89341235790778, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_standardized",
+      "type": "formula",
+      "description": "z-score normalization of x9 for linear projection compatibility.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Makes x9 magnitude comparable to other features for SVM hyperplane.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x9 - 300.766341210139) / 115.20450122435115, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_over_x2_abs_ratio",
+      "type": "formula",
+      "description": "Ratio of x9 to absolute value of x2 capturing relative magnitude composite.",
+      "value_range": [
+        0.0,
+        60.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Continuous ratio feature useful as a smooth linear discriminant input.",
+      "leakage_risk": "low",
+      "formula": "np.clip(x9 / (np.abs(x2) + 1e-6), 0.0, 60.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_x6_interaction",
+      "type": "formula",
+      "description": "Standardized product interaction between x4 and x6 capturing co-movement.",
+      "value_range": [
+        -9.0,
+        9.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Adds an explicit pairwise term to enrich the linear margin without kernelization.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((x4 - (-4.384295376778414)) / 3.036436170416292) * ((x6 - (-11.04631738683565)) / 10.89341235790778), -9.0, 9.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x5_severity",
+      "type": "formula",
+      "description": "Absolute value of x5 reflecting distance from zero in the bounded [-1,1] range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Smooth continuous severity measure for linear discrimination.",
+      "leakage_risk": "low",
+      "formula": "np.abs(x5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x10_minus_floor_norm",
+      "type": "formula",
+      "description": "Normalized position of x10 in its bounded [1000,1200] range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Maps x10 to unit interval for stable linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip((x10 - 1000.0) / 200.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x7_yes_indicator",
+      "type": "formula",
+      "description": "Binary indicator for x7 == 'yes'.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Provides categorical signal directly usable in linear SVM weighting.",
+      "leakage_risk": "low",
+      "formula": "np.where(x7 == 'yes', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x8_large_indicator",
+      "type": "formula",
+      "description": "Binary indicator for x8 == 'large'.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Encodes the minority size category for linear margin contribution.",
+      "leakage_risk": "low",
+      "formula": "np.where(x8 == 'large', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_red_indicator",
+      "type": "formula",
+      "description": "Binary indicator for x3 == 'red'.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Captures one of three category levels for linear separation.",
+      "leakage_risk": "low",
+      "formula": "np.where(x3 == 'red', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_linear_composite",
+      "type": "formula",
+      "description": "Weighted composite of standardized continuous predictors used as a smoothed linear margin proxy.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Pre-aggregated linear projection that gives SVM a strong directional signal.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.3 * ((x1 - 0.02097702305805397) / 2.8822072460810944) + 0.3 * ((x4 - (-4.384295376778414)) / 3.036436170416292) + 0.2 * ((x6 - (-11.04631738683565)) / 10.89341235790778) + 0.2 * ((x9 - 300.766341210139) / 115.20450122435115), -6.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "interaction_semantic_coherence",
+      "type": "judgment",
+      "description": "Semantic judgment score (0 to 1) assessing whether the combination of categorical attributes (x3 color, x7 yes/no, x8 size) forms a typical co-occurrence pattern based on training-fold marginal frequencies; higher values indicate more common joint categorical configurations.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "judgment",
+      "expected_model_benefit": "Captures categorical typicality as a smooth scalar useful for SVM margins beyond one-hot encodings.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "1543fe60aabae363",
+  "metadata": {}
+}

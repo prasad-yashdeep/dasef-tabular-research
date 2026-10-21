@@ -1,0 +1,190 @@
+{
+  "dataset_name": "car_evaluation",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "cost_burden_score",
+      "type": "formula",
+      "description": "Combined normalized cost burden from buying price and maintenance, scaled to [0,1]. Higher values indicate greater financial burden.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Linear projection of cost factors directly separates affordable from expensive cars along a single dimension useful for SVM margins.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_normalized",
+      "type": "formula",
+      "description": "Safety rating normalized to [0,1] range. Higher values indicate better safety.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "safety",
+      "expected_model_benefit": "Smooth continuous safety score enables linear SVM to find clean decision boundaries based on safety level.",
+      "leakage_risk": "low",
+      "formula": "safety / 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capacity_score",
+      "type": "formula",
+      "description": "Combined passenger and luggage capacity score normalized to [0,1]. Higher values indicate greater carrying capacity.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "capacity",
+      "expected_model_benefit": "Composite capacity measure provides a single linear feature capturing both passenger and cargo utility.",
+      "leakage_risk": "low",
+      "formula": "(persons + lug_boot) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_utility_score",
+      "type": "formula",
+      "description": "Weighted composite of safety, capacity, and inverse cost. Approximates overall car utility on a continuous scale.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Single composite utility score provides a strong linear projection that approximates the evaluation ordering, directly useful for SVM margin optimization.",
+      "leakage_risk": "low",
+      "formula": "np.clip((safety / 2.0) * 0.35 + ((persons + lug_boot) / 4.0) * 0.35 + (1.0 - (buying + maint) / 6.0) * 0.30, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_safety_ratio",
+      "type": "formula",
+      "description": "Ratio of combined cost to safety level plus one. Higher values indicate high cost relative to safety.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio feature captures interaction between cost and safety in a single continuous value, useful for linear separation of value-for-money segments.",
+      "leakage_risk": "low",
+      "formula": "(buying + maint) / (safety + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "doors_normalized",
+      "type": "formula",
+      "description": "Number of doors normalized to [0,1]. More doors generally indicates better practicality.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "practicality",
+      "expected_model_benefit": "Normalized doors feature contributes a smooth continuous dimension for practicality assessment in linear models.",
+      "leakage_risk": "low",
+      "formula": "doors / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_cost_low_safety_flag",
+      "type": "formula",
+      "description": "Binary indicator for cars with high buying cost (>=2) and low safety (<=0). Captures the worst value proposition.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "risk_flag",
+      "expected_model_benefit": "Binary flag creates a separating hyperplane feature for the most undesirable car configuration, aiding SVM margin definition.",
+      "leakage_risk": "low",
+      "formula": "np.where((buying >= 2) & (safety <= 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_cost_high_safety_flag",
+      "type": "formula",
+      "description": "Binary indicator for cars with low buying cost (<=1) and high safety (>=2). Captures the best value proposition.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "value_flag",
+      "expected_model_benefit": "Binary flag for optimal configurations helps SVM identify high-value cars with a clear separating feature.",
+      "leakage_risk": "low",
+      "formula": "np.where((buying <= 1) & (safety >= 2), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cost_deviation_from_mean",
+      "type": "formula",
+      "description": "Deviation of combined cost from training mean (2.87), normalized by max possible range. Captures how far cost is from average.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "cost",
+      "expected_model_benefit": "Centered cost deviation provides a zero-mean continuous feature that improves SVM convergence and margin quality.",
+      "leakage_risk": "low",
+      "formula": "((buying + maint) - 2.87) / 6.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "practicality_composite",
+      "type": "formula",
+      "description": "Composite of doors, persons, and luggage boot normalized to [0,1]. Captures overall practical usability of the car.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "practicality",
+      "expected_model_benefit": "Multi-dimensional practicality score in a single continuous feature reduces dimensionality while preserving information for linear models.",
+      "leakage_risk": "low",
+      "formula": "(doors / 3.0 + persons / 2.0 + lug_boot / 2.0) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "value_for_money_index",
+      "type": "judgment",
+      "description": "Semantic assessment of value-for-money considering the balance between cost (buying + maint), safety, and capacity. Score from 0 (poor value) to 10 (excellent value). Assessed by considering low cost with high safety and capacity as best value.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Holistic value assessment captures non-linear interactions between cost and benefit dimensions in a single continuous score useful for SVM.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safety_capacity_interaction",
+      "type": "formula",
+      "description": "Product of normalized safety and normalized capacity scores. Captures the joint effect of being both safe and spacious.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Multiplicative interaction term approximates a non-linear relationship in a form usable by linear SVM, capturing synergy between safety and capacity.",
+      "leakage_risk": "low",
+      "formula": "(safety / 2.0) * ((persons + lug_boot) / 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "32582ce1ca93460d",
+  "metadata": {}
+}

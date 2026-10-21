@@ -1,0 +1,190 @@
+{
+  "dataset_name": "house_16h",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_population_scaled",
+      "type": "formula",
+      "description": "Log-transformed population P1 normalized by training mean and std to create a smooth continuous score suitable for linear margins",
+      "value_range": [
+        -0.2,
+        12.0
+      ],
+      "feature_family": "population_scale",
+      "expected_model_benefit": "Compresses heavy-tailed population distribution into approximately normal range, improving linear SVM margin separation",
+      "leakage_risk": "low",
+      "formula": "(np.log1p(P1) - np.log1p(7302.873445501097)) / np.log1p(36688.91078621428)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_occupancy_composite",
+      "type": "formula",
+      "description": "Weighted composite of housing occupancy indicators H10p1 and H13p1 reflecting overall housing utilization pattern",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "housing_composite",
+      "expected_model_benefit": "Combines complementary housing metrics into a single smooth score for linear projection",
+      "leakage_risk": "low",
+      "formula": "0.6 * H10p1 + 0.4 * H13p1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "person_ratio_balance",
+      "type": "formula",
+      "description": "Ratio of P5p1 to P16p2 capturing relative balance between two person-proportion features, centered around expected equilibrium",
+      "value_range": [
+        0.2,
+        3.5
+      ],
+      "feature_family": "ratio_features",
+      "expected_model_benefit": "Ratio captures relative proportional relationships that may be linearly separable in SVM feature space",
+      "leakage_risk": "low",
+      "formula": "P5p1 / (P16p2 + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_vacancy_score",
+      "type": "formula",
+      "description": "Combined vacancy and alternative housing indicator from H2p2 and H8p2, representing degree of non-standard housing",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "housing_composite",
+      "expected_model_benefit": "Aggregates sparse housing indicators into a denser signal for linear decision boundary",
+      "leakage_risk": "low",
+      "formula": "np.clip(H2p2 + H8p2, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_spread_index",
+      "type": "formula",
+      "description": "Measures spread across demographic proportion features P11p4, P14p9, and P27p4 as a sum of deviations from their training means",
+      "value_range": [
+        -0.5,
+        1.2
+      ],
+      "feature_family": "demographic_deviation",
+      "expected_model_benefit": "Captures joint demographic deviation pattern useful for linear margin in SVM",
+      "leakage_risk": "low",
+      "formula": "(P11p4 - 0.16290877498171177) + (P14p9 - 0.12077767168983175) + (P27p4 - 0.033415515142648136)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_age_mobility_ratio",
+      "type": "formula",
+      "description": "Ratio of H18pA to H40p4 capturing relationship between housing age indicator and housing turnover, with smoothing",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ratio_features",
+      "expected_model_benefit": "Ratio of housing characteristics provides a continuous severity measure for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.clip(H18pA / (H40p4 + 0.05), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "person_housing_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between person proportion P15p1 and housing occupancy H10p1 capturing joint high-occupancy signal",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_features",
+      "expected_model_benefit": "Multiplicative interaction approximates a nonlinear relationship in a single linear feature for SVM",
+      "leakage_risk": "low",
+      "formula": "P15p1 * H10p1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "minority_proportion_composite",
+      "type": "formula",
+      "description": "Weighted sum of smaller proportion features P6p2, P15p3, and P18p2 representing combined minority-proportion signal",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "demographic_composite",
+      "expected_model_benefit": "Aggregates sparse low-frequency proportion features into a denser composite for linear separability",
+      "leakage_risk": "low",
+      "formula": "np.clip(P6p2 + P15p3 + P18p2 * 10.0, 0.0, 1.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_stability_score",
+      "type": "formula",
+      "description": "Composite stability score combining H10p1 dominance with inverse of vacancy indicators H2p2 and H8p2",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "housing_composite",
+      "expected_model_benefit": "Smooth signed score of housing stability useful as a linear projection for SVM margin",
+      "leakage_risk": "low",
+      "formula": "np.clip(H10p1 - H2p2 - H8p2, -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "population_density_deviation",
+      "type": "formula",
+      "description": "Signed deviation of log-population from training median expressed in robust units, capturing extreme population areas",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "population_scale",
+      "expected_model_benefit": "Normalized deviation score provides a smooth continuous feature aligned with linear SVM requirements",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(P1) - 8.897) / 2.5, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_turnover_severity",
+      "type": "judgment",
+      "description": "Semantic assessment of housing turnover severity based on H40p4 level: low turnover areas score near 0, high turnover areas score near 1, reflecting market dynamism",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "housing_composite",
+      "expected_model_benefit": "Provides a calibrated continuous severity measure of housing market activity for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_concentration_index",
+      "type": "formula",
+      "description": "Herfindahl-style concentration index approximation using squared proportions of P5p1 and P15p1 to measure demographic concentration",
+      "value_range": [
+        0.1,
+        1.5
+      ],
+      "feature_family": "demographic_deviation",
+      "expected_model_benefit": "Concentration index captures nonlinear demographic patterns in a single smooth feature for linear SVM",
+      "leakage_risk": "low",
+      "formula": "P5p1 ** 2 + P15p1 ** 2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d02dfd74a96d2040",
+  "metadata": {}
+}

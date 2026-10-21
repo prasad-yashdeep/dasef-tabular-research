@@ -1,0 +1,190 @@
+{
+  "dataset_name": "law_school_admission_bianry",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "lsat_normalized",
+      "type": "formula",
+      "description": "LSAT score normalized to [0,1] range using training set min/max bounds (15 to 48)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_performance",
+      "expected_model_benefit": "Smooth normalized score directly usable as linear SVM feature without scale distortion",
+      "leakage_risk": "low",
+      "formula": "(lsat - 15.0) / (48.0 - 15.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "ugpa_normalized",
+      "type": "formula",
+      "description": "Undergraduate GPA normalized to [0,1] range using training set min/max bounds (1.6 to 4.0)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_performance",
+      "expected_model_benefit": "Smooth normalized GPA score for linear margin computation",
+      "leakage_risk": "low",
+      "formula": "(ugpa - 1.6) / (4.0 - 1.6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "academic_composite",
+      "type": "formula",
+      "description": "Weighted composite of normalized LSAT and UGPA scores, with LSAT weighted 0.6 and UGPA weighted 0.4",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_performance",
+      "expected_model_benefit": "Single composite academic strength score useful for linear SVM decision boundary",
+      "leakage_risk": "low",
+      "formula": "0.6 * ((lsat - 15.0) / 33.0) + 0.4 * ((ugpa - 1.6) / 2.4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_average",
+      "type": "formula",
+      "description": "Average of decile1 and decile3 scores, normalized to [0,1] range",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_ranking",
+      "expected_model_benefit": "Smooth continuous ranking measure combining two decile assessments for linear projection",
+      "leakage_risk": "low",
+      "formula": "((decile1 + decile3) / 2.0 - 1.0) / 9.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "decile_consistency",
+      "type": "formula",
+      "description": "Inverse of absolute difference between decile1 and decile3, measuring consistency of academic ranking across two periods",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_ranking",
+      "expected_model_benefit": "Captures consistency of academic performance; consistent high performers may differ from inconsistent ones",
+      "leakage_risk": "low",
+      "formula": "1.0 - (np.abs(decile1 - decile3) / 9.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lsat_ugpa_interaction",
+      "type": "formula",
+      "description": "Product of normalized LSAT and normalized UGPA, capturing joint academic strength",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_performance",
+      "expected_model_benefit": "Interaction term approximating nonlinear joint effect within linear SVM framework",
+      "leakage_risk": "low",
+      "formula": "((lsat - 15.0) / 33.0) * ((ugpa - 1.6) / 2.4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bar_fulltime_score",
+      "type": "formula",
+      "description": "Combined score of bar passage and full-time enrollment status; fulltime=1 maps to 1.0, fulltime=2 maps to 0.0",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "enrollment_status",
+      "expected_model_benefit": "Captures combined commitment and achievement signal useful for linear margin",
+      "leakage_risk": "low",
+      "formula": "bar.astype(float) + np.where(fulltime == '1', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fam_inc_normalized",
+      "type": "formula",
+      "description": "Family income level normalized to [0,1] range (1 to 5 scale)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic",
+      "expected_model_benefit": "Smooth socioeconomic indicator for linear SVM without ordinal scale distortion",
+      "leakage_risk": "low",
+      "formula": "(fam_inc - 1.0) / 4.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "academic_socioeconomic_ratio",
+      "type": "formula",
+      "description": "Ratio of academic composite to family income level, capturing academic achievement relative to socioeconomic background",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures relative academic overperformance given socioeconomic context, useful for linear decision boundary",
+      "leakage_risk": "low",
+      "formula": "np.clip((0.6 * ((lsat - 15.0) / 33.0) + 0.4 * ((ugpa - 1.6) / 2.4)) / (fam_inc / 5.0 + 0.1), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "cluster_academic_alignment",
+      "type": "formula",
+      "description": "Numeric cluster value normalized to [0,1] combined with academic composite, measuring alignment between cluster assignment and academic performance",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Combines cluster grouping with academic performance for richer linear feature",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.5 * ((cluster.astype(float) - 1.0) / 5.0) + 0.5 * (0.6 * ((lsat - 15.0) / 33.0) + 0.4 * ((ugpa - 1.6) / 2.4)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_academic_strength",
+      "type": "judgment",
+      "description": "Holistic assessment of academic strength combining LSAT percentile standing, GPA quality, decile rankings, and bar passage into a single severity score from 0 (weakest) to 1 (strongest)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "academic_performance",
+      "expected_model_benefit": "Semantic composite capturing nuanced academic quality beyond individual metrics, providing smooth score for SVM margin",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "admission_risk_score",
+      "type": "judgment",
+      "description": "Semantic risk assessment score from 0 (low risk profile) to 1 (high risk profile) based on combination of below-average LSAT, low GPA, low decile rankings, part-time status, and low family income relative to academic demands",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Captures holistic risk profile as continuous score enabling linear SVM to use single interpretable risk dimension",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a965fb746e4d4c72",
+  "metadata": {}
+}

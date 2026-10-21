@@ -1,0 +1,190 @@
+{
+  "dataset_name": "house_16h",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "log_p1",
+      "type": "formula",
+      "description": "Logarithmic transformation of the absolute count feature P1 to compress extreme values.",
+      "value_range": [
+        1.0,
+        15.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Compresses large values, reducing the influence of extreme outliers on the SVM margin and improving gradient stability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(P1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p15_ratio",
+      "type": "formula",
+      "description": "Ratio between P15p1 and P15p3, with a small constant added to the denominator to prevent division by zero.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a relative proportion that might linearly separate instances better than absolute values, providing a new projection axis.",
+      "leakage_risk": "low",
+      "formula": "P15p1 / (P15p3 + 0.01)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h_composite_score",
+      "type": "formula",
+      "description": "Average of three housing-related proportion features (H2p2, H8p2, H13p1).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Averages multiple indicators to create a smoother, more robust continuous feature that reduces noise for the linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "(H2p2 + H8p2 + H13p1) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p16_threshold_indicator",
+      "type": "formula",
+      "description": "Binary indicator for whether P16p2 exceeds 0.7.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Provides a hard margin split for the SVM to utilize as a categorical intercept shift, capturing non-linear threshold effects.",
+      "leakage_risk": "low",
+      "formula": "np.where(P16p2 > 0.7, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p5_p11_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between P5p1 and P11p4.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly provides a multiplicative interaction term to the linear model, which cannot learn feature crosses natively.",
+      "leakage_risk": "low",
+      "formula": "P5p1 * P11p4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h10_deficit",
+      "type": "formula",
+      "description": "The inverse or deficit of the H10p1 proportion.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Inverts the feature space to potentially align the gradient more naturally with the decision boundary.",
+      "leakage_risk": "low",
+      "formula": "1.0 - H10p1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p6_h8_ratio",
+      "type": "formula",
+      "description": "Ratio of P6p2 to H8p2, smoothed with a 0.01 constant.",
+      "value_range": [
+        0.0,
+        105.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures the relative balance between two proportions, offering a new linear projection axis that may correlate strongly with the outcome.",
+      "leakage_risk": "low",
+      "formula": "(P6p2 + 0.01) / (H8p2 + 0.01)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p14_p27_sum",
+      "type": "formula",
+      "description": "Sum of P14p9 and P27p4 proportions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Aggregates two potentially correlated proportions into a single continuous severity measure, reducing dimensionality and collinearity.",
+      "leakage_risk": "low",
+      "formula": "P14p9 + P27p4",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "h40_extremity",
+      "type": "formula",
+      "description": "Measures the absolute deviation of H40p4 from its midpoint (0.5), scaled to a 0-1 range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Transforms a mid-point centered feature into a monotonic extremity score, making it linearly separable if extreme values share similar outcomes.",
+      "leakage_risk": "low",
+      "formula": "np.abs(H40p4 - 0.5) * 2.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "p18_scaled",
+      "type": "formula",
+      "description": "Scales the P18p2 proportion by a factor of 100.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Scales up a very small proportion to ensure its gradient updates and margin contributions are comparable to other features in the SVM.",
+      "leakage_risk": "low",
+      "formula": "P18p2 * 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "housing_quality_assessment",
+      "type": "judgment",
+      "description": "A semantic evaluation of overall housing quality based on the combination of H-prefix features, assessing structural and occupancy conditions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_evaluation",
+      "expected_model_benefit": "Provides a holistic, expert-like summary score that linear models can use as a strong primary axis for separation.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "population_density_risk",
+      "type": "judgment",
+      "description": "A semantic assessment of risk factors associated with population density and demographic distributions derived from P-prefix features.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_evaluation",
+      "expected_model_benefit": "Encapsulates complex demographic interactions into a single continuous severity measure, ideal for linear margin optimization.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "657152b9e23fc502",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "ailerons",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "1.0.0",
+  "features": [
+    {
+      "name": "climb_rate_z_clipped",
+      "type": "formula",
+      "description": "Climb-rate deviation in training-fold standard-deviation units, clipped to reduce leverage from extreme vertical-speed values.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "vertical_dynamics",
+      "expected_model_benefit": "Gives the linear SVM a smooth, centered vertical-motion coordinate with stable scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((climbRate + 10.953212121212122) / 257.11420123665096, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_accel_z_clipped",
+      "type": "formula",
+      "description": "Vertical acceleration deviation in training-fold standard-deviation units, clipped for robust scaling.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "vertical_dynamics",
+      "expected_model_benefit": "Provides a signed acceleration coordinate that can align with vertical-state margins.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Sgz + 12.92) / 25.146087592548493, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "angular_rate_norm",
+      "type": "formula",
+      "description": "Euclidean magnitude of standardized roll-rate and pitch-rate signals.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "attitude_rates",
+      "expected_model_benefit": "Converts two angular-rate coordinates into a continuous activity severity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((p - 0.004947878787878788) / 0.3002257388250984) ** 2 + ((q - 0.05940848484848485) / 0.11865688421002629) ** 2), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aerodynamic_attitude_norm",
+      "type": "formula",
+      "description": "Combined standardized deviation of pitch, roll, absolute roll reference, and alpha.",
+      "value_range": [
+        0.0,
+        7.0
+      ],
+      "feature_family": "attitude_state",
+      "expected_model_benefit": "Summarizes multi-axis attitude departure as one smooth severity axis.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((curPitch - 0.6310860606060607) / 0.3139421813003673) ** 2 + ((curRoll - 0.05267878787878787) / 0.9699463152146777) ** 2 + ((absRoll + 11.02909090909091) / 4.124619625170495) ** 2 + ((alpha - 0.6245818181818182) / 0.1969509421374151) ** 2), 0.0, 7.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lateral_rate_attitude_coupling",
+      "type": "formula",
+      "description": "Signed product of standardized current roll and roll-rate, indicating whether lateral attitude and rotation reinforce or oppose each other.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "attitude_interaction",
+      "expected_model_benefit": "Adds a simple nonlinear coupling as a single continuous coordinate usable by a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(((curRoll - 0.05267878787878787) / 0.9699463152146777) * ((p - 0.004947878787878788) / 0.3002257388250984), -6.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_change_activity_norm",
+      "type": "formula",
+      "description": "Magnitude of standardized first and second climb-rate change signals.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "vertical_dynamics",
+      "expected_model_benefit": "Captures abrupt vertical-state transitions that raw level measures may miss.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((diffClb + 0.7216969696969697) / 10.37440332708446) ** 2 + ((diffDiffClb + 0.0417939393939394) / 1.0849465536171325) ** 2), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vertical_control_projection",
+      "type": "formula",
+      "description": "Predefined weighted projection of current control command, climb rate, vertical acceleration, and pitch rate using training-fold scales.",
+      "value_range": [
+        -6.0,
+        6.0
+      ],
+      "feature_family": "control_vertical_composite",
+      "expected_model_benefit": "Supplies a single smooth coordinate for coupled vertical-control behavior that can strengthen a linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.40 * ((Se - 0.022063030303030303) / 0.0069863522735395195) + 0.25 * ((climbRate + 10.953212121212122) / 257.11420123665096) - 0.20 * ((Sgz + 12.92) / 25.146087592548493) + 0.15 * ((q - 0.05940848484848485) / 0.11865688421002629), -6.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "control_command_history_gap",
+      "type": "formula",
+      "description": "Current control command minus the mean of the fourteen recent control-time readings, scaled by the training-fold control-command spread.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "control_surface_history",
+      "expected_model_benefit": "Measures how far the current control setting deviates from its recent context on a normalized scale.",
+      "leakage_risk": "low",
+      "formula": "np.clip((Se - ((SeTime1 + SeTime2 + SeTime3 + SeTime4 + SeTime5 + SeTime6 + SeTime7 + SeTime8 + SeTime9 + SeTime10 + SeTime11 + SeTime12 + SeTime13 + SeTime14) / 14.0)) / 0.0069863522735395195, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "control_timing_trend_z",
+      "type": "formula",
+      "description": "Difference between late and early recent control-time blocks, normalized by the training-fold control-command spread.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "control_surface_history",
+      "expected_model_benefit": "Provides a signed trend feature that can reveal gradual drift in recent control timing.",
+      "leakage_risk": "low",
+      "formula": "np.clip((((SeTime11 + SeTime12 + SeTime13 + SeTime14) / 4.0) - ((SeTime1 + SeTime2 + SeTime3 + SeTime4) / 4.0)) / 0.0069863522735395195, -4.0, 4.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "control_timing_change_energy",
+      "type": "formula",
+      "description": "Combined standardized magnitude of nonconstant recent control-time differences and roll-rate change.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "control_surface_history",
+      "expected_model_benefit": "Compresses multiple small timing-change signals into one smooth activity measure.",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.sqrt(((diffRollRate + 0.0008797575757575757) / 0.013097955979858895) ** 2 + ((diffSeTime1 + 0.0001393939393939394) / 0.0007064805618031491) ** 2 + ((diffSeTime3 + 0.000056727272727272726) / 0.0004525284704070294) ** 2 + ((diffSeTime5 + 0.00006787878787878789) / 0.00046839349926755655) ** 2 + ((diffSeTime7 + 0.00008703030303030302) / 0.0005539404018292005) ** 2 + ((diffSeTime9 + 0.00010400000000000001) / 0.0006252047422220738) ** 2 + ((diffSeTime11 + 0.00010254545454545455) / 0.0006486579661306824) ** 2 + ((diffSeTime13 + 0.0000964848484848485) / 0.0006203809250731957) ** 2), 0.0, 8.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "aerodynamic_stability_semantic_score",
+      "type": "judgment",
+      "description": "Expert semantic score for overall aerodynamic steadiness using the row's climbRate, Sgz, p, q, curPitch, curRoll, absRoll, alpha, diffClb, diffRollRate, and diffDiffClb; 0.0 means calm and mutually consistent, 1.0 means strongly disturbed or contradictory.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_flight_state",
+      "expected_model_benefit": "Adds a compact domain-synthesis axis that may capture interactions not present in individual formula features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "control_urgency_semantic_score",
+      "type": "judgment",
+      "description": "Expert semantic score for control urgency using the row's Se, SeTime1 through SeTime14, diffSeTime1 through diffSeTime14, and motion cues; 0.0 means routine low-effort adjustment, 1.0 means unusually abrupt or high-effort adjustment.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_control_context",
+      "expected_model_benefit": "Gives the linear SVM a human-interpretable control-context axis with bounded scale.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "d73ec22e6ac6fccc",
+  "metadata": {}
+}

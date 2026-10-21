@@ -1,0 +1,73 @@
+{
+  "dataset_name": "mushroom",
+  "model_family": "linear_svm",
+  "schema_generator": "gpt-5.5-pro",
+  "schema_version": "v1",
+  "features": [
+    {
+      "name": "odor_non_neutral_intensity",
+      "type": "formula",
+      "description": "Maps odor code to non-neutral scent intensity: none is 0.0, almond or anise is 0.2, foul, fishy, or spicy is 0.75, and pungent, creosote, musty, or unseen odor codes are 1.0.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "odor_semantics",
+      "expected_model_benefit": "Creates a dense ordinal odor axis that lets the linear margin separate neutral, pleasant, and strong-scent profiles without many sparse indicators.",
+      "leakage_risk": "low",
+      "formula": "np.where(odor == 'n', 0.0, np.where((odor == 'a') | (odor == 'l'), 0.2, np.where((odor == 'f') | (odor == 'y') | (odor == 's'), 0.75, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spore_print_salience_score",
+      "type": "formula",
+      "description": "Maps spore print color to visual salience: black or brown is low, buff, orange, purple, or yellow is moderate, white is high, and chocolate, green, or unseen codes are maximal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "spore_color",
+      "expected_model_benefit": "Compresses spore print codes into an interpretable color-salience axis, reducing reliance on individual one-hot terms.",
+      "leakage_risk": "low",
+      "formula": "np.where((spore_print_color == 'k') | (spore_print_color == 'n'), 0.0, np.where((spore_print_color == 'b') | (spore_print_color == 'o') | (spore_print_color == 'u') | (spore_print_color == 'y'), 0.35, np.where(spore_print_color == 'w', 0.75, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "gill_compaction_score",
+      "type": "formula",
+      "description": "Weighted narrow-and-crowded gill geometry score using gill size and gill spacing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "gill_geometry",
+      "expected_model_benefit": "Summarizes two gill geometry fields into a continuous compaction measure that can receive one SVM weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * np.where(gill_size == 'n', 1.0, 0.0) + 0.45 * np.where(gill_spacing == 'c', 1.0, 0.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "gill_color_salience_score",
+      "type": "formula",
+      "description": "Ordinal salience of gill hue, with white, red, or yellow low, pink or purple moderate, brown or gray high, and buff, black, chocolate, green, orange, or other codes maximal.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "gill_color",
+      "expected_model_benefit": "Provides an ordered hue-intensity projection for gill color, useful as a smooth linear cue.",
+      "leakage_risk": "low",
+      "formula": "np.where((gill_color == 'w') | (gill_color == 'e') | (gill_color == 'y'), 0.0, np.where((gill_color == 'p') | (gill_color == 'u'), 0.35, np.where((gill_color == 'n') | (gill_color == 'g'), 0.7, 1.0)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ad11a012e5b38a9e",
+  "metadata": {
+    "salvaged_from_partial_raw": "cache/schemas/mushroom/linear_svm/gpt-5.5-pro/schema_ad11a012e5b38a9e.raw.json",
+    "n_salvaged_features": 4
+  }
+}

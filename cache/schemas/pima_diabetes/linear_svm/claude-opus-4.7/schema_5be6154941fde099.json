@@ -1,0 +1,190 @@
+{
+  "dataset_name": "pima_diabetes",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "plas_zscore",
+      "type": "formula",
+      "description": "Standardized plasma glucose concentration using training mean and std.",
+      "value_range": [
+        -4.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides a smooth standardized projection useful for linear margin separation.",
+      "leakage_risk": "low",
+      "formula": "(plas - 120.026) / 31.199",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mass_zscore",
+      "type": "formula",
+      "description": "Standardized BMI using training mean and std.",
+      "value_range": [
+        -4.5,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Smooth normalized BMI severity for linear separator.",
+      "leakage_risk": "low",
+      "formula": "(mass - 31.173) / 7.366",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_zscore",
+      "type": "formula",
+      "description": "Standardized age using training mean and std.",
+      "value_range": [
+        -2.0,
+        4.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Continuous age effect normalized for linear SVM weighting.",
+      "leakage_risk": "low",
+      "formula": "(age - 32.693) / 11.320",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "glucose_hyperglycemia_severity",
+      "type": "formula",
+      "description": "Continuous severity above clinical hyperglycemia threshold (140 mg/dL), zero below.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Provides a clinically grounded one-sided severity score for linear margin.",
+      "leakage_risk": "low",
+      "formula": "np.clip((plas - 140.0) / 60.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bmi_obesity_severity",
+      "type": "formula",
+      "description": "Smooth severity score above BMI obesity threshold (30), zero below.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity",
+      "expected_model_benefit": "Captures non-linear obesity risk as a smooth continuous score.",
+      "leakage_risk": "low",
+      "formula": "np.clip((mass - 30.0) / 20.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "insulin_glucose_ratio",
+      "type": "formula",
+      "description": "Insulin to plasma glucose ratio with log dampening; proxy for insulin response.",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Ratio reflecting metabolic response, useful as a near-linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(insu) / np.log1p(plas + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "skin_to_bmi_ratio",
+      "type": "formula",
+      "description": "Skin thickness normalized by BMI; body fat distribution proxy.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Provides a body-composition ratio independent of overall mass.",
+      "leakage_risk": "low",
+      "formula": "skin / (mass + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "missing_measurement_count",
+      "type": "formula",
+      "description": "Count of biologically implausible zero values across measurement columns.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "data_quality",
+      "expected_model_benefit": "Captures data quality signal that often correlates with measurement context.",
+      "leakage_risk": "low",
+      "formula": "np.where(plas <= 0, 1, 0) + np.where(pres <= 0, 1, 0) + np.where(skin <= 0, 1, 0) + np.where(insu <= 0, 1, 0) + np.where(mass <= 0, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "weighted_risk_composite",
+      "type": "formula",
+      "description": "Linear weighted composite of standardized glucose, BMI, age, and pedigree.",
+      "value_range": [
+        -5.0,
+        8.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Pre-built linear projection aligned with clinical risk factors; aids linear SVM.",
+      "leakage_risk": "low",
+      "formula": "0.4 * ((plas - 120.026) / 31.199) + 0.25 * ((mass - 31.173) / 7.366) + 0.2 * ((age - 32.693) / 11.320) + 0.15 * ((pedi - 0.439) / 0.274)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "preg_age_interaction",
+      "type": "formula",
+      "description": "Pregnancies per decade of life beyond reproductive baseline.",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures reproductive history density as smooth interaction term.",
+      "leakage_risk": "low",
+      "formula": "preg / np.maximum(age - 15.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "metabolic_stress_judgment",
+      "type": "judgment",
+      "description": "Holistic semantic assessment of combined metabolic stress integrating glucose elevation, BMI excess, and insulin pattern into a smooth 0-1 risk gauge.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Provides a non-formulaic semantic severity reading complementing the linear features.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "physiological_plausibility_judgment",
+      "type": "judgment",
+      "description": "Semantic assessment of how physiologically coherent the row's measurements are together (e.g., consistency between BMI, skin thickness, blood pressure, and age).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic_judgment",
+      "expected_model_benefit": "Captures data coherence signal that adjusts confidence margins for the linear model.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "5be6154941fde099",
+  "metadata": {}
+}

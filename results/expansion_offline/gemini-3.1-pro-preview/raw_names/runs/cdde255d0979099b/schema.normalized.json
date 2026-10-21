@@ -1,0 +1,190 @@
+{
+  "dataset_name": "online_shoppers",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "page_value_log",
+      "type": "formula",
+      "description": "Smooths the highly skewed PageValues distribution using a log transformation.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Provides a smooth, continuous feature that prevents large outliers from dominating the linear SVM margin.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(PageValues)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "bounce_exit_ratio",
+      "type": "formula",
+      "description": "Calculates the ratio of BounceRates to ExitRates to measure the proportion of exits that are immediate bounces.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a normalized ratio feature that isolates immediate abandonment from general exit behavior, useful for linear weighting.",
+      "leakage_risk": "low",
+      "formula": "np.where(ExitRates > 0, BounceRates / ExitRates, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "engagement_penalty",
+      "type": "formula",
+      "description": "Sums BounceRates and ExitRates to create a composite penalty score for poor engagement.",
+      "value_range": [
+        0.0,
+        0.4
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a continuous severity measure of negative engagement, allowing the SVM to learn a single linear penalty weight.",
+      "leakage_risk": "low",
+      "formula": "np.clip(BounceRates + ExitRates, 0.0, 0.4)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_value_weekend",
+      "type": "formula",
+      "description": "Interaction feature applying the log of PageValues only during weekends.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows the linear model to fit a specific margin adjustment for high-value browsing that occurs on weekends.",
+      "leakage_risk": "low",
+      "formula": "np.where(Weekend, np.log1p(PageValues), 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "special_day_urgency",
+      "type": "formula",
+      "description": "Multiplies SpecialDay proximity by the log of PageValues.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Creates a weighted composite feature capturing the interaction between temporal urgency and page value for the linear decision boundary.",
+      "leakage_risk": "low",
+      "formula": "np.clip(SpecialDay * np.log1p(PageValues), 0.0, 6.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "safe_exit_rate",
+      "type": "formula",
+      "description": "Subtracts BounceRates from ExitRates to measure non-bounce exits.",
+      "value_range": [
+        0.0,
+        0.2
+      ],
+      "feature_family": "difference",
+      "expected_model_benefit": "Provides an approximate linear projection of safe exits, separating them from the more severe bounce exits.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(ExitRates - BounceRates, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "visitor_intent_score",
+      "type": "judgment",
+      "description": "A semantic score evaluating the user's underlying intent based on VisitorType, TrafficType, and Region.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_projection",
+      "expected_model_benefit": "Projects high-cardinality categorical metadata into a single continuous intent dimension, ideal for linear SVM margins.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "seasonal_activity_index",
+      "type": "judgment",
+      "description": "An index representing the typical shopping activity level for the given Month and SpecialDay.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_composite",
+      "expected_model_benefit": "Converts categorical temporal data into a smooth, continuous seasonal activity measure.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "tech_stack_modernity",
+      "type": "judgment",
+      "description": "A continuous score assessing the modernity and typical performance of the user's Browser and OperatingSystems combination.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "semantic_projection",
+      "expected_model_benefit": "Allows the SVM to linearly weight the technological capability of the user's device without dealing with sparse one-hot encoded categories.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "administrative_engagement_level",
+      "type": "judgment",
+      "description": "A continuous assessment of the user's administrative engagement, combining Administrative and Administrative_Duration categories into a smooth score.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Transforms categorical duration and count representations into a linear-friendly continuous severity measure.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "product_exploration_depth",
+      "type": "judgment",
+      "description": "A semantic measure of how deeply the user explored products, based on ProductRelated and ProductRelated_Duration categories.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Provides a continuous severity measure of product interest, allowing the linear model to assign a proportional weight to exploration depth.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "informational_seeking_intensity",
+      "type": "judgment",
+      "description": "A continuous score reflecting the intensity of the user's search for information, derived from Informational and Informational_Duration categories.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "severity_measure",
+      "expected_model_benefit": "Projects categorical informational browsing behavior into a smooth numerical scale, optimizing the linear SVM's feature space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "db95d80f630193df",
+  "metadata": {}
+}

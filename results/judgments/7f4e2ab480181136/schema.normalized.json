@@ -1,0 +1,190 @@
+{
+  "dataset_name": "electricity",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "price_differential",
+      "type": "formula",
+      "description": "Normalized difference between NSW and VIC electricity prices, capturing inter-regional price spread",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "price_ratio",
+      "expected_model_benefit": "Linear separator for price divergence patterns that correlate with electricity flow direction",
+      "leakage_risk": "low",
+      "formula": "(nswprice - vicprice) / (nswprice + vicprice + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demand_imbalance",
+      "type": "formula",
+      "description": "Normalized difference between NSW and VIC demand levels, indicating regional consumption asymmetry",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "demand_ratio",
+      "expected_model_benefit": "Smooth continuous measure of demand imbalance useful for linear margin separation",
+      "leakage_risk": "low",
+      "formula": "(nswdemand - vicdemand) / (nswdemand + vicdemand + 1e-6)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "nsw_price_to_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of NSW price to NSW demand, approximating price elasticity signal",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "price_demand_interaction",
+      "expected_model_benefit": "Captures price-demand relationship as a single continuous feature for linear models",
+      "leakage_risk": "low",
+      "formula": "np.clip(nswprice / (nswdemand + 1e-6), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "vic_price_to_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of VIC price to VIC demand, approximating VIC price elasticity signal",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "price_demand_interaction",
+      "expected_model_benefit": "Captures VIC price-demand relationship as a continuous feature complementing NSW ratio",
+      "leakage_risk": "low",
+      "formula": "np.clip(vicprice / (vicdemand + 1e-6), 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_demand_ratio",
+      "type": "formula",
+      "description": "Ratio of inter-regional transfer to total demand, indicating transfer intensity relative to consumption",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "transfer_interaction",
+      "expected_model_benefit": "Normalized transfer feature that scales with demand context, useful for linear decision boundaries",
+      "leakage_risk": "low",
+      "formula": "np.clip(transfer / (nswdemand + vicdemand + 1e-6), 0.0, 2.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_nsw_price",
+      "type": "formula",
+      "description": "Log-transformed NSW price to reduce skewness and improve linear separability",
+      "value_range": [
+        0.0,
+        0.7
+      ],
+      "feature_family": "price_transform",
+      "expected_model_benefit": "Log transformation compresses price distribution for better linear SVM margin utilization",
+      "leakage_risk": "low",
+      "formula": "np.log1p(nswprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_vic_price",
+      "type": "formula",
+      "description": "Log-transformed VIC price to reduce skewness and improve linear separability",
+      "value_range": [
+        0.0,
+        0.2
+      ],
+      "feature_family": "price_transform",
+      "expected_model_benefit": "Log transformation of VIC price reduces extreme value influence on SVM margins",
+      "leakage_risk": "low",
+      "formula": "np.log1p(vicprice)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_of_day_score",
+      "type": "formula",
+      "description": "Composite time score combining date progression and intra-day period as a weighted linear combination",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Smooth temporal feature capturing both seasonal and intra-day patterns for linear models",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.4 * date + 0.6 * period, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_demand_score",
+      "type": "formula",
+      "description": "Weighted sum of NSW and VIC demand as a composite demand pressure indicator",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demand_composite",
+      "expected_model_benefit": "Single continuous demand feature capturing overall grid load for linear separation",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.55 * nswdemand + 0.45 * vicdemand, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "price_demand_composite",
+      "type": "formula",
+      "description": "Weighted composite of price and demand signals across both regions as a market stress indicator",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "market_composite",
+      "expected_model_benefit": "Aggregated market signal combining price and demand into a single linear projection feature",
+      "leakage_risk": "low",
+      "formula": "np.clip(0.3 * nswprice + 0.1 * vicprice + 0.3 * nswdemand + 0.3 * vicdemand, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "transfer_deviation_from_mean",
+      "type": "formula",
+      "description": "Deviation of transfer from its training mean (0.499), normalized by training std (0.152), clipped to z-score range",
+      "value_range": [
+        -3.5,
+        3.5
+      ],
+      "feature_family": "transfer_interaction",
+      "expected_model_benefit": "Standardized transfer deviation provides a zero-centered continuous feature ideal for SVM margins",
+      "leakage_risk": "low",
+      "formula": "np.clip((transfer - 0.499) / 0.152, -3.5, 3.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "market_stress_severity",
+      "type": "judgment",
+      "description": "Semantic assessment of overall market stress level based on combined price spikes, demand peaks, and transfer extremes. High values indicate stressed market conditions with elevated prices and demand simultaneously.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "market_composite",
+      "expected_model_benefit": "Holistic market stress score that captures non-linear interactions between price, demand, and transfer as a smooth severity measure for linear SVM",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "45bcf36c7ac37962",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mozilla4",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-opus-4.7",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "duration",
+      "type": "formula",
+      "description": "Difference between end and start positions, representing the span of the record.",
+      "value_range": [
+        0.0,
+        2000000.0
+      ],
+      "feature_family": "interval",
+      "expected_model_benefit": "Provides a continuous linear-margin signal of record span magnitude.",
+      "leakage_risk": "low",
+      "formula": "end - start",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_duration",
+      "type": "formula",
+      "description": "Log-scaled duration to compress heavy-tailed span distribution into a smooth feature.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "interval_scaled",
+      "expected_model_benefit": "Smooth normalized scale improves linear SVM margin separation across order-of-magnitude differences.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(np.maximum(end - start, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_size",
+      "type": "formula",
+      "description": "Log-transformed size to reduce skew of the long-tailed size column.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scaled_magnitude",
+      "expected_model_benefit": "Linearizes multiplicative size effects useful for SVM hyperplane fitting.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(size)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_start",
+      "type": "formula",
+      "description": "Log-transformed start position to compress its dynamic range.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "scaled_magnitude",
+      "expected_model_benefit": "Smooth scaled position aids linear separability.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(start)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_end",
+      "type": "formula",
+      "description": "Log-transformed end position to compress its dynamic range.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "scaled_magnitude",
+      "expected_model_benefit": "Smoother scale supports linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(end)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_per_duration",
+      "type": "formula",
+      "description": "Ratio of size to duration giving density-like measure.",
+      "value_range": [
+        0.0,
+        10000.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures intensity per unit span, useful as linear feature.",
+      "leakage_risk": "low",
+      "formula": "size / (end - start + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_size_per_duration",
+      "type": "formula",
+      "description": "Log-compressed size-to-duration density.",
+      "value_range": [
+        0.0,
+        12.0
+      ],
+      "feature_family": "ratio_scaled",
+      "expected_model_benefit": "Smooth log-density gives near-linear separating signal.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(size / (end - start + 1.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "start_end_ratio",
+      "type": "formula",
+      "description": "Ratio of start to end positions, normalized to [0,1] when start <= end.",
+      "value_range": [
+        0.0,
+        1.5
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalized positional ratio gives bounded linear feature.",
+      "leakage_risk": "low",
+      "formula": "start / (end + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "event_flag",
+      "type": "formula",
+      "description": "Pass-through of the binary event indicator as a numeric feature.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "indicator",
+      "expected_model_benefit": "Direct binary covariate for the linear margin.",
+      "leakage_risk": "low",
+      "formula": "event * 1.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "event_times_log_duration",
+      "type": "formula",
+      "description": "Interaction between event indicator and log duration.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Allows linear SVM to weight duration differently when event occurs.",
+      "leakage_risk": "low",
+      "formula": "event * np.log1p(np.maximum(end - start, 0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "id_normalized",
+      "type": "formula",
+      "description": "Row id normalized to approximately [0,1] using training-set max id constant.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalized_position",
+      "expected_model_benefit": "Provides smooth ordered position feature for linear projection.",
+      "leakage_risk": "low",
+      "formula": "np.clip(id / 4088.0, 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "size_severity_score",
+      "type": "judgment",
+      "description": "Semantic severity judgment of the size value mapped to a smooth 0-1 score using log-scaled thresholds: trivial (<10), small (10-100), moderate (100-500), large (500-2000), extreme (>2000), expressed as clipped log ratio.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "severity_judgment",
+      "expected_model_benefit": "Provides a bounded smooth severity proxy aligned with linear SVM weighting of magnitude regimes.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "dcda8bede5a0ca72",
+  "metadata": {}
+}

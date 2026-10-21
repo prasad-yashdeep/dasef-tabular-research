@@ -1,0 +1,190 @@
+{
+  "dataset_name": "spambase",
+  "model_family": "tree",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "capital_run_length_ratio",
+      "type": "formula",
+      "description": "Ratio of the longest capital run length to the average capital run length, capturing bursts of capitalization relative to the typical run.",
+      "value_range": [
+        0.0,
+        10000.0
+      ],
+      "feature_family": "text_statistics",
+      "expected_model_benefit": "Tree models can split on this ratio to isolate documents with unusually long, concentrated blocks of capital letters compared to their baseline.",
+      "leakage_risk": "low",
+      "formula": "capital_run_length_longest / np.maximum(capital_run_length_average, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_special_char_freq",
+      "type": "formula",
+      "description": "Sum of all character frequency features, representing the overall density of special characters in the text.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "character_frequencies",
+      "expected_model_benefit": "Provides a single aggregate measure of special character usage, allowing trees to easily separate text with high overall symbol density.",
+      "leakage_risk": "low",
+      "formula": "char_freq_0 + char_freq_1 + char_freq_2 + char_freq_3 + char_freq_4 + char_freq_5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_capital_run_indicator",
+      "type": "formula",
+      "description": "Boolean indicator for whether the longest capital run length exceeds 50 characters.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "text_statistics",
+      "expected_model_benefit": "Explicitly flags extreme capitalization, saving the tree model from having to find this specific threshold during early splits.",
+      "leakage_risk": "low",
+      "formula": "np.where(capital_run_length_longest > 50, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequent_words_sum",
+      "type": "formula",
+      "description": "Sum of the frequencies of several commonly occurring words (indices 18, 20, 24, 26) to capture a broader thematic presence.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "word_frequencies",
+      "expected_model_benefit": "Aggregates related high-frequency word features, reducing dimensionality and providing a stronger, more stable signal for tree splits.",
+      "leakage_risk": "low",
+      "formula": "word_freq_18 + word_freq_20 + word_freq_24 + word_freq_26",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_run_length_total_log",
+      "type": "formula",
+      "description": "Log-transformed total number of capital letters, compressing the long tail of the distribution.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "text_statistics",
+      "expected_model_benefit": "While trees are invariant to monotonic transformations, log-scaling can help stabilize variance and improve the resolution of splits in the lower range of values.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_total)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "char_freq_3_exceeds_threshold",
+      "type": "formula",
+      "description": "Indicator for whether char_freq_3 is greater than 0.5, capturing a significant presence of this specific character.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "character_frequencies",
+      "expected_model_benefit": "Creates a hard categorical split for a feature with a highly skewed distribution, isolating extreme values directly.",
+      "leakage_risk": "low",
+      "formula": "np.where(char_freq_3 > 0.5, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "word_freq_18_20_interaction",
+      "type": "formula",
+      "description": "Multiplicative interaction between word_freq_18 and word_freq_20, highlighting documents where both words appear frequently together.",
+      "value_range": [
+        0.0,
+        200.0
+      ],
+      "feature_family": "word_frequencies",
+      "expected_model_benefit": "Exposes a non-linear relationship between two high-frequency words that a tree model would otherwise need multiple splits to approximate.",
+      "leakage_risk": "low",
+      "formula": "word_freq_18 * word_freq_20",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_run_length_longest_log",
+      "type": "formula",
+      "description": "Log-transformed longest capital run length.",
+      "value_range": [
+        0.0,
+        15.0
+      ],
+      "feature_family": "text_statistics",
+      "expected_model_benefit": "Compresses extreme outliers in the longest run length, potentially leading to more balanced and robust tree splits.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(capital_run_length_longest)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "char_freq_4_5_sum",
+      "type": "formula",
+      "description": "Sum of char_freq_4 and char_freq_5, combining two potentially related character frequency signals.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "character_frequencies",
+      "expected_model_benefit": "Groups similar character features, allowing the model to split on their combined presence rather than relying on individual, weaker signals.",
+      "leakage_risk": "low",
+      "formula": "char_freq_4 + char_freq_5",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "word_freq_24_26_max",
+      "type": "formula",
+      "description": "The maximum value between word_freq_24 and word_freq_26, capturing the dominant frequency among these two words.",
+      "value_range": [
+        0.0,
+        30.0
+      ],
+      "feature_family": "word_frequencies",
+      "expected_model_benefit": "Provides a single feature representing the strongest signal from a pair of related words, simplifying the decision boundary for the tree.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(word_freq_24, word_freq_26)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_density_proxy",
+      "type": "formula",
+      "description": "Ratio of total capital letters to the longest run, indicating whether capitals are spread out or concentrated in a single block.",
+      "value_range": [
+        0.0,
+        15000.0
+      ],
+      "feature_family": "text_statistics",
+      "expected_model_benefit": "Captures the structural distribution of capital letters, offering a novel interaction that trees can use to differentiate text formatting styles.",
+      "leakage_risk": "low",
+      "formula": "capital_run_length_total / np.maximum(capital_run_length_longest, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_urgency_score",
+      "type": "judgment",
+      "description": "A semantic assessment of the text's urgency or aggressive tone, derived from the combination of high special character frequencies and long sequences of capital letters.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic_analysis",
+      "expected_model_benefit": "Provides a high-level, interpretable score that synthesizes multiple low-level syntactic features into a single, powerful splitting criterion for tree models.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "a92499eba519c79e",
+  "metadata": {}
+}

@@ -1,0 +1,190 @@
+{
+  "dataset_name": "mv",
+  "model_family": "linear_svm",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "x1_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of x1 using training mean and std, clipped to [-3, 3] for robustness",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides smooth normalized continuous feature suitable for linear SVM margins",
+      "leakage_risk": "low",
+      "formula": "np.clip((x1 - 0.021) / 2.882, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x2_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of x2 using training mean and std, clipped to [-3, 3]",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides smooth normalized continuous feature suitable for linear SVM margins",
+      "leakage_risk": "low",
+      "formula": "np.clip((x2 - (-12.504)) / 1.444, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x4_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of x4 using training mean and std, clipped to [-3, 3]",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides smooth normalized continuous feature suitable for linear SVM margins",
+      "leakage_risk": "low",
+      "formula": "np.clip((x4 - (-4.384)) / 3.036, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x6_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of x6 using training mean and std, clipped to [-3, 3]",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Provides smooth normalized continuous feature for wide-range variable x6",
+      "leakage_risk": "low",
+      "formula": "np.clip((x6 - (-11.046)) / 10.893, -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x9_normalized",
+      "type": "formula",
+      "description": "Min-max normalization of x9 to [0, 1] range using training min/max",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Normalized continuous feature for x9 useful for linear SVM decision boundaries",
+      "leakage_risk": "low",
+      "formula": "(x9 - 100.019) / (499.984 - 100.019)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x10_deviation",
+      "type": "formula",
+      "description": "Deviation of x10 from its midpoint (1100), normalized by half-range",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "deviation",
+      "expected_model_benefit": "Captures relative position of x10 within its range, useful for linear separation",
+      "leakage_risk": "low",
+      "formula": "(x10 - 1100.0) / 100.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x1_x4_interaction",
+      "type": "formula",
+      "description": "Normalized product of x1 and x4 as a linear interaction term",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures linear interaction between x1 and x4 for SVM margin improvement",
+      "leakage_risk": "low",
+      "formula": "np.clip((x1 * x4) / (2.882 * 3.036 * 9.0), -1.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x2_x6_ratio",
+      "type": "formula",
+      "description": "Ratio of x2 to x6 after shifting both to positive domain, log-transformed for stability",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Captures relative magnitude relationship between x2 and x6 for linear separation",
+      "leakage_risk": "low",
+      "formula": "np.clip(np.log1p(np.abs(x2)) - np.log1p(np.abs(x6 + 0.001)), -3.0, 3.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x3_ordinal",
+      "type": "formula",
+      "description": "Ordinal encoding of categorical x3: brown=0, red=1, green=2, ordered by frequency",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Converts categorical x3 to numeric for linear SVM compatibility",
+      "leakage_risk": "low",
+      "formula": "np.where(x3 == 'brown', 0.0, np.where(x3 == 'red', 1.0, 2.0))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x7_binary",
+      "type": "formula",
+      "description": "Binary encoding of x7: no=0, yes=1",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Converts binary categorical x7 to numeric for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.where(x7 == 'yes', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "x8_binary",
+      "type": "formula",
+      "description": "Binary encoding of x8: normal=0, large=1",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "encoding",
+      "expected_model_benefit": "Converts binary categorical x8 to numeric for linear SVM",
+      "leakage_risk": "low",
+      "formula": "np.where(x8 == 'large', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "composite_severity_score",
+      "type": "judgment",
+      "description": "Semantic composite score combining normalized magnitudes of x1, x4, x5, and x9 deviation from midpoint, weighted to reflect overall feature intensity. Higher values indicate more extreme combined feature values across multiple dimensions.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Provides a single weighted composite severity measure that approximates a linear projection useful for SVM margin separation",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "e0b044634ea0c992",
+  "metadata": {}
+}

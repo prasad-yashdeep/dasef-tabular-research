@@ -1,0 +1,190 @@
+{
+  "dataset_name": "blood_transfusion",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "recency_scaled",
+      "type": "formula",
+      "description": "Min-max scaled recency of the last donation, normalized to a [0, 1] range to provide a smooth feature for linear margins.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Improves convergence and margin stability in linear SVMs by bounding the recency feature.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 1.0) / 22.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "frequency_scaled",
+      "type": "formula",
+      "description": "Min-max scaled total number of donations, normalized to a [0, 1] range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Ensures the frequency feature is on the same scale as other inputs, preventing it from dominating the SVM objective function.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 1.0) / 43.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "time_scaled",
+      "type": "formula",
+      "description": "Min-max scaled time since the first donation, normalized to a [0, 1] range.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scaling",
+      "expected_model_benefit": "Provides a bounded representation of donor tenure, suitable for linear model weights.",
+      "leakage_risk": "low",
+      "formula": "(V4 - 2.0) / 96.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donation_rate",
+      "type": "formula",
+      "description": "Average number of donations per month since the first donation, capturing the overall frequency rate.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Creates a continuous density measure of donation behavior, which is often more predictive than raw counts.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_time_ratio",
+      "type": "formula",
+      "description": "Ratio of months since last donation to months since first donation, indicating how recently the donor was active relative to their entire tenure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "ratio",
+      "expected_model_benefit": "Normalizes recency against the donor's history, helping the model distinguish between new donors and long-term inactive donors.",
+      "leakage_risk": "low",
+      "formula": "V1 / np.maximum(V4, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "active_lifespan",
+      "type": "formula",
+      "description": "The number of months between the first and last donation, representing the donor's active lifespan.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "temporal",
+      "expected_model_benefit": "Isolates the period of active engagement, providing a clearer signal of donor commitment than total time alone.",
+      "leakage_risk": "low",
+      "formula": "V4 - V1",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "donations_per_active_year",
+      "type": "formula",
+      "description": "Annualized donation rate during the donor's active lifespan, with a minimum denominator to prevent division by zero.",
+      "value_range": [
+        0.0,
+        450.0
+      ],
+      "feature_family": "rate",
+      "expected_model_benefit": "Measures the intensity of donation behavior during the period the donor was actually active.",
+      "leakage_risk": "low",
+      "formula": "V2 / np.maximum((V4 - V1) / 12.0, 0.1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "log_monetary_value",
+      "type": "formula",
+      "description": "Log-transformed total blood donated in c.c., reducing the skewness of the monetary value distribution.",
+      "value_range": [
+        5.0,
+        10.0
+      ],
+      "feature_family": "transformation",
+      "expected_model_benefit": "Linearizes the exponential decay often found in volume metrics, improving linear SVM fit.",
+      "leakage_risk": "low",
+      "formula": "np.log1p(V3)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_frequency_interaction",
+      "type": "formula",
+      "description": "Interaction term between scaled recency and scaled frequency, allowing the linear model to capture non-linear relationships between these two key metrics.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Explicitly provides a multiplicative interaction to the linear model, expanding its hypothesis space without requiring a non-linear kernel.",
+      "leakage_risk": "low",
+      "formula": "((V1 - 1.0) / 22.0) * ((V2 - 1.0) / 43.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_activity_score",
+      "type": "formula",
+      "description": "A continuous score from 0 to 1 indicating recent activity, where 1 means donation within the current month and 0 means no donation in the past year.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "composite",
+      "expected_model_benefit": "Creates a smooth, bounded activation feature that directly correlates with immediate past behavior.",
+      "leakage_risk": "low",
+      "formula": "np.clip(1.0 - (V1 / 12.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_donor_engagement_level",
+      "type": "judgment",
+      "description": "Evaluates the overall engagement level of the donor by considering their donation frequency, total volume donated, and the span of their active donation period, outputting a continuous score.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Captures complex, human-like assessments of donor loyalty that simple arithmetic combinations might miss.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "semantic_lapsed_donor_probability",
+      "type": "judgment",
+      "description": "Estimates the probability that the donor has permanently lapsed, based on a semantic evaluation of their recency relative to their historical donation frequency and total time as a donor.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Provides a direct, continuous risk assessment of donor churn, highly useful for linear decision boundaries.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "cc20ad9e23d16d65",
+  "metadata": {}
+}

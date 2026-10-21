@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Z-score normalized age to ensure equal weighting in distance calculations.",
+      "value_range": [
+        -3.0,
+        6.0
+      ],
+      "feature_family": "demographic_scaling",
+      "expected_model_benefit": "Prevents the age feature from dominating Euclidean distance computations due to its larger raw scale.",
+      "leakage_risk": "low",
+      "formula": "(age - 40.03) / 10.38",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "duration_log_norm",
+      "type": "formula",
+      "description": "Log-normalized call duration scaled to approximately [0, 1] to prevent large outliers from skewing neighborhood geometry.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "interaction_scaling",
+      "expected_model_benefit": "Compresses the long tail of call durations, allowing KNN to find more meaningful local neighborhoods.",
+      "leakage_risk": "medium",
+      "formula": "np.log1p(duration) / 8.35",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_penalty",
+      "type": "formula",
+      "description": "Clipped and scaled number of contacts during this campaign to represent persistence without distorting distance metrics.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "interaction_scaling",
+      "expected_model_benefit": "Limits the spatial impact of extreme campaign contact counts, improving the robustness of distance measurements.",
+      "leakage_risk": "low",
+      "formula": "np.clip((campaign - 1.0) / 10.0, 0.0, 5.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "pdays_contacted_indicator",
+      "type": "formula",
+      "description": "Binary indicator of previous contact, creating a distinct spatial separation between new and returning individuals.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_indicator",
+      "expected_model_benefit": "Forces a structural split in the feature space, ensuring KNN groups previously contacted individuals together.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays < 999, 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "economic_stress_index",
+      "type": "formula",
+      "description": "Composite standardized metric of employment variation and consumer confidence, aligning economic factors into a single dimension.",
+      "value_range": [
+        -6.0,
+        4.0
+      ],
+      "feature_family": "macroeconomic_composite",
+      "expected_model_benefit": "Reduces dimensionality of correlated economic indicators, providing a cleaner signal for distance calculations.",
+      "leakage_risk": "low",
+      "formula": "(emp.var.rate - 0.089) / 1.57 - (cons.conf.idx - (-40.45)) / 4.61",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "euribor_employment_dist",
+      "type": "formula",
+      "description": "Euclidean distance to the dataset mean for euribor rate and number of employees, capturing macroeconomic deviation.",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Creates a radial feature representing how far the current economic climate is from the historical average.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((euribor3m - 3.62) / 1.73)**2 + ((nr.employed - 5167.11) / 72.33)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_vulnerability_score",
+      "type": "judgment",
+      "description": "Semantic assessment of financial risk based on job type, marital status, education, default history, housing, and personal loans.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "risk_assessment",
+      "expected_model_benefit": "Provides a dense, meaningful scalar that groups individuals with similar financial profiles closer together in the feature space.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "contact_seasonality_similarity",
+      "type": "judgment",
+      "description": "Semantic similarity score comparing the month and day of the week to typical high-activity periods.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "temporal_similarity",
+      "expected_model_benefit": "Transforms cyclical categorical time variables into a continuous similarity metric suitable for Euclidean distance.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "previous_engagement_strength",
+      "type": "formula",
+      "description": "Weighted sum of previous contacts based on the outcome of the previous campaign, enhancing the proximity of highly engaged individuals.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "historical_interaction",
+      "expected_model_benefit": "Differentiates the quality of past interactions, allowing KNN to distinguish between successful and unsuccessful historical engagements.",
+      "leakage_risk": "low",
+      "formula": "previous * np.where(poutcome == 2, 1.0, 0.5)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_economic_prototype_dist",
+      "type": "formula",
+      "description": "Distance to a specific unsupervised prototype (young age, low employment variation rate) to create a radial basis feature.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Introduces non-linear spatial relationships by measuring proximity to a specific demographic-economic anchor point.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((age - 25.0) / 10.38)**2 + ((emp.var.rate - (-3.0)) / 1.57)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "socioeconomic_stability_index",
+      "type": "judgment",
+      "description": "Semantic evaluation of overall stability derived from demographic and economic indicators.",
+      "value_range": [
+        0.0,
+        100.0
+      ],
+      "feature_family": "demographic_composite",
+      "expected_model_benefit": "Aggregates multiple weak signals into a strong, continuous dimension that improves neighborhood homogeneity.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recent_activity_density",
+      "type": "formula",
+      "description": "Non-linear combination of recency (pdays) and frequency (previous) of contacts, mapping highly active individuals closer together.",
+      "value_range": [
+        0.0,
+        25.0
+      ],
+      "feature_family": "interaction_density",
+      "expected_model_benefit": "Creates a dense cluster of recently and frequently contacted individuals, improving local density estimation for KNN.",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays < 999, 10.0 / np.log1p(pdays + 1), 0.0) + previous",
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "f6d5eb0ff8d46e75",
+  "metadata": {}
+}

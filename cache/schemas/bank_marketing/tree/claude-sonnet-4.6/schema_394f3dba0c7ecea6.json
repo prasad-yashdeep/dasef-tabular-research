@@ -1,0 +1,190 @@
+{
+  "dataset_name": "bank_marketing",
+  "model_family": "tree",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "duration_log",
+      "type": "formula",
+      "description": "Log-transformed call duration to compress right skew and create better split points for tree models",
+      "value_range": [
+        0.0,
+        8.35
+      ],
+      "feature_family": "call_engagement",
+      "expected_model_benefit": "Nonlinear transformation allows tree to find meaningful thresholds in compressed duration space",
+      "leakage_risk": "low",
+      "formula": "np.log1p(duration)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "previously_contacted",
+      "type": "formula",
+      "description": "Binary indicator whether client was contacted in a previous campaign (pdays < 999 means they were contacted)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "campaign_history",
+      "expected_model_benefit": "Direct boolean split on prior contact history which strongly differentiates subscription likelihood",
+      "leakage_risk": "low",
+      "formula": "np.where(pdays < 999, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "campaign_contact_burden",
+      "type": "formula",
+      "description": "Ordinal bucket of campaign contacts: 1=single, 2=low(2-3), 3=medium(4-6), 4=high(7+) indicating contact fatigue",
+      "value_range": [
+        1.0,
+        4.0
+      ],
+      "feature_family": "campaign_history",
+      "expected_model_benefit": "Ordinal encoding of contact frequency allows tree to split on fatigue thresholds directly",
+      "leakage_risk": "low",
+      "formula": "np.where(campaign == 1, 1, np.where(campaign <= 3, 2, np.where(campaign <= 6, 3, 4)))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "economic_stress_index",
+      "type": "formula",
+      "description": "Combined economic stress signal: high euribor3m and high employment rate suggest unfavorable economic conditions",
+      "value_range": [
+        -5.0,
+        6.5
+      ],
+      "feature_family": "macroeconomic",
+      "expected_model_benefit": "Interaction between interest rates and employment captures economic regime that affects subscription decisions",
+      "leakage_risk": "low",
+      "formula": "euribor3m + emp.var.rate",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_bucket",
+      "type": "formula",
+      "description": "Age grouped into life-stage buckets: 0=young(17-25), 1=early_career(26-35), 2=mid_career(36-50), 3=senior(51-65), 4=retired(65+)",
+      "value_range": [
+        0.0,
+        4.0
+      ],
+      "feature_family": "demographics",
+      "expected_model_benefit": "Life-stage grouping captures nonlinear age effects on financial product subscription behavior",
+      "leakage_risk": "low",
+      "formula": "np.where(age <= 25, 0, np.where(age <= 35, 1, np.where(age <= 50, 2, np.where(age <= 65, 3, 4))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "prior_success_indicator",
+      "type": "formula",
+      "description": "Binary flag for successful previous campaign outcome (poutcome == 1 typically encodes success)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "campaign_history",
+      "expected_model_benefit": "Prior campaign success is a strong predictor; direct boolean split maximizes information gain",
+      "leakage_risk": "low",
+      "formula": "np.where(poutcome == 1, 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "financial_risk_score",
+      "type": "formula",
+      "description": "Composite financial risk: penalizes credit default and active loans, rewards no debt obligations",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "financial_profile",
+      "expected_model_benefit": "Aggregated debt burden score provides a single split point capturing multiple financial risk dimensions",
+      "leakage_risk": "low",
+      "formula": "default * 2 + loan + housing",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "consumer_confidence_bucket",
+      "type": "formula",
+      "description": "Consumer confidence index bucketed into 3 levels: 0=very_low(<-45), 1=moderate(-45 to -35), 2=high(>-35)",
+      "value_range": [
+        0.0,
+        2.0
+      ],
+      "feature_family": "macroeconomic",
+      "expected_model_benefit": "Ordinal bucketing of consumer sentiment allows tree to split on sentiment regimes affecting financial decisions",
+      "leakage_risk": "low",
+      "formula": "np.where(cons.conf.idx < -45, 0, np.where(cons.conf.idx <= -35, 1, 2))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "call_duration_campaign_ratio",
+      "type": "formula",
+      "description": "Average call duration per campaign contact, indicating engagement quality per contact attempt",
+      "value_range": [
+        0.0,
+        4199.0
+      ],
+      "feature_family": "call_engagement",
+      "expected_model_benefit": "Normalizes duration by contact frequency to capture per-contact engagement quality for tree splits",
+      "leakage_risk": "low",
+      "formula": "duration / np.maximum(campaign, 1)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "high_education_professional",
+      "type": "formula",
+      "description": "Binary indicator for high-education professionals: education >= 5 (university or higher) combined with professional job categories (job in 1,2,3,4)",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "socioeconomic_profile",
+      "expected_model_benefit": "Interaction between education and job type captures high-value customer segment likely to subscribe",
+      "leakage_risk": "low",
+      "formula": "np.where((education >= 5) & (job <= 4), 1, 0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "recency_engagement_score",
+      "type": "judgment",
+      "description": "Semantic score (0-3) assessing recency and depth of prior engagement: 0=never contacted, 1=contacted long ago with no follow-up, 2=recently contacted with some previous contacts, 3=recently contacted with multiple previous contacts indicating warm lead",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "campaign_history",
+      "expected_model_benefit": "Captures the combined recency and depth of prior relationship which tree can split on to identify warm leads",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "macroeconomic_favorability",
+      "type": "judgment",
+      "description": "Semantic score (0-3) assessing overall macroeconomic environment favorability for term deposit subscription: considers employment variation rate, consumer price index deviation from mean (93.58), and euribor3m level; 0=very unfavorable (high rates, poor employment), 3=very favorable (low rates, stable employment)",
+      "value_range": [
+        0.0,
+        3.0
+      ],
+      "feature_family": "macroeconomic",
+      "expected_model_benefit": "Holistic economic regime indicator that tree can use as a high-level split to separate favorable vs unfavorable subscription environments",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "394f3dba0c7ecea6",
+  "metadata": {}
+}

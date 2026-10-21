@@ -1,0 +1,190 @@
+{
+  "dataset_name": "postcutoff_salmonella_serovar_20260401",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "normalized_peak_intensity",
+      "type": "formula",
+      "description": "Ratio of the primary spectral peak around 553nm to the blue region around 477nm.",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "scale_normalized_ratio",
+      "expected_model_benefit": "Provides a scale-invariant measure of the primary spectral peak relative to the blue region, improving distance calculations by reducing the impact of absolute brightness.",
+      "leakage_risk": "low",
+      "formula": "Band_78_W_553.20 / (Band_40_W_477.00 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_slope_550_600",
+      "type": "formula",
+      "description": "The linear slope between 550nm and 601nm.",
+      "value_range": [
+        -100.0,
+        50.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Captures the local derivative of the spectrum, allowing the KNN model to group samples with similar spectral shapes regardless of baseline shifts.",
+      "leakage_risk": "low",
+      "formula": "(Band_102_W_601.00 - Band_77_W_550.90) / 50.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "low_freq_high_freq_ratio",
+      "type": "formula",
+      "description": "Ratio of visible light intensity to the near-infrared tail intensity.",
+      "value_range": [
+        0.0,
+        1500.0
+      ],
+      "feature_family": "scale_normalized_ratio",
+      "expected_model_benefit": "Normalizes the visible light intensity against the near-infrared tail, creating a robust similarity score for neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "(Band_40_W_477.00 + Band_41_W_479.30) / (Band_200_W_796.40 + Band_201_W_798.60 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "mid_spectrum_curvature",
+      "type": "formula",
+      "description": "Measures the convexity of the spectrum around the 553nm peak relative to its surrounding bands.",
+      "value_range": [
+        -2000.0,
+        5000.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Measures the convexity of the spectrum around the 550nm peak, providing a shape-based feature that enhances cluster separation in distance-based models.",
+      "leakage_risk": "low",
+      "formula": "Band_78_W_553.20 - 0.5 * (Band_50_W_496.80 + Band_102_W_601.00)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "overall_brightness_proxy",
+      "type": "formula",
+      "description": "Average intensity across three representative bands spanning the visible spectrum.",
+      "value_range": [
+        0.0,
+        4000.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Aggregates intensity across multiple bands to serve as a stable prototype-distance feature, helping to stratify the neighborhood space.",
+      "leakage_risk": "low",
+      "formula": "(Band_50_W_496.80 + Band_100_W_596.90 + Band_150_W_696.60) / 3.0",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "normalized_band_difference_index",
+      "type": "formula",
+      "description": "Normalized difference between the 553nm peak and the 696nm region.",
+      "value_range": [
+        -1.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Creates a bounded [-1, 1] similarity score that is highly robust to multiplicative scaling effects, ideal for KNN distance metrics.",
+      "leakage_risk": "low",
+      "formula": "(Band_78_W_553.20 - Band_150_W_696.60) / (Band_78_W_553.20 + Band_150_W_696.60 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "blue_green_ratio",
+      "type": "formula",
+      "description": "Ratio of the 457nm band to the 517nm band.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized_ratio",
+      "expected_model_benefit": "Highlights relative absorption differences in the shorter wavelengths, improving the local geometry of the feature space.",
+      "leakage_risk": "low",
+      "formula": "Band_30_W_457.10 / (Band_60_W_517.00 + 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "red_edge_proxy",
+      "type": "formula",
+      "description": "Difference between the 676nm and 696nm bands, capturing the steepness of the spectral drop-off.",
+      "value_range": [
+        -1000.0,
+        2000.0
+      ],
+      "feature_family": "spectral_shape",
+      "expected_model_benefit": "Quantifies the steepness of the spectral drop-off in the red region, acting as a strong discriminator for distance-based clustering.",
+      "leakage_risk": "low",
+      "formula": "Band_140_W_676.40 - Band_150_W_696.60",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_high_intensity_spectrum",
+      "type": "judgment",
+      "description": "Boolean indicator (0 or 1) if the overall spectrum intensity is unusually high compared to the dataset average.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Acts as a cluster indicator for unusually bright samples, preventing them from disproportionately skewing the distances of typical samples.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_shape_cluster",
+      "type": "judgment",
+      "description": "Categorical integer (0 to 5) assigning the spectrum to one of several unsupervised prototype shapes (e.g., flat, peaked, skewed).",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Assigns samples to unsupervised prototype shapes, allowing the KNN to compute distances within more homogeneous sub-manifolds.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "noise_level_estimate",
+      "type": "judgment",
+      "description": "Estimated high-frequency variance in the near-infrared region (bands > 800nm).",
+      "value_range": [
+        0.0,
+        500.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Estimates high-frequency variance, which can be used to down-weight noisy neighbors or group samples with similar signal-to-noise ratios.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "baseline_shift_indicator",
+      "type": "judgment",
+      "description": "Continuous score indicating the presence and magnitude of a baseline shift in typically dark regions.",
+      "value_range": [
+        0.0,
+        1000.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Identifies non-zero baselines in the near-infrared region, helping the model distinguish between true spectral features and sensor artifacts.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "b292ba1ae5d4a942",
+  "metadata": {}
+}

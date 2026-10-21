@@ -1,0 +1,190 @@
+{
+  "dataset_name": "adult_income",
+  "model_family": "distance_knn",
+  "schema_generator": "claude-sonnet-4.6",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "z_score_euclidean_distance",
+      "type": "formula",
+      "description": "Euclidean distance of z-score normalized numeric features from the global training mean vector, capturing overall deviation from the population center",
+      "value_range": [
+        0.0,
+        20.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a single scalar summarizing how far a point is from the dataset centroid in normalized space, improving KNN neighborhood geometry",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(((age - 38.70953118089341) / 13.289449124353169) ** 2 + ((education_num - 10.143520566121186) / 2.570580638539954) ** 2 + ((hours_per_week - 40.93951791242813) / 11.930572398287723) ** 2 + ((capital_gain - 1181.423374613003) / 7898.24313683718) ** 2 + ((capital_loss - 89.26846528084918) / 407.7976960165605) ** 2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "age_edu_interaction_normalized",
+      "type": "formula",
+      "description": "Normalized product of z-scored age and education_num, capturing joint human capital signal relevant to income-related clustering",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Encodes interaction between age and education in a scale-free way, helping KNN find neighbors with similar life-stage and education combinations",
+      "leakage_risk": "low",
+      "formula": "((age - 38.70953118089341) / 13.289449124353169) * ((education_num - 10.143520566121186) / 2.570580638539954)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_net_log_signed",
+      "type": "formula",
+      "description": "Signed log1p transformation of net capital (gain minus loss), preserving direction while compressing extreme values for distance computation",
+      "value_range": [
+        -9.0,
+        12.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Reduces the outsized influence of extreme capital values in distance metrics, enabling more balanced KNN neighborhood formation",
+      "leakage_risk": "low",
+      "formula": "np.where(capital_gain >= capital_loss, np.log1p(capital_gain - capital_loss), -np.log1p(capital_loss - capital_gain))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "hours_deviation_from_fulltime",
+      "type": "formula",
+      "description": "Absolute deviation of hours_per_week from the standard 40-hour full-time work week, normalized by training std",
+      "value_range": [
+        0.0,
+        5.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Captures distance from the modal work pattern, helping KNN identify clusters of part-time, full-time, and overtime workers",
+      "leakage_risk": "low",
+      "formula": "np.abs(hours_per_week - 40.0) / 11.930572398287723",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "workclass_occupation_cosine_sim",
+      "type": "formula",
+      "description": "Cosine-like similarity between normalized workclass and occupation values, measuring alignment between employment sector and job type",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Provides a bounded similarity score between two categorical employment dimensions, improving KNN distance in occupational space",
+      "leakage_risk": "low",
+      "formula": "(workclass / 6.0) * (occupation / 13.0) / np.maximum(np.sqrt(((workclass / 6.0) ** 2 + (occupation / 13.0) ** 2)), 1e-8)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_age_ratio_normalized",
+      "type": "formula",
+      "description": "Ratio of education_num to age, normalized to capture relative educational attainment given life stage",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Encodes educational efficiency relative to age, helping KNN group individuals with similar educational trajectories",
+      "leakage_risk": "low",
+      "formula": "np.clip(education_num / np.maximum(age, 1.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "capital_activity_indicator",
+      "type": "formula",
+      "description": "Binary indicator of whether any capital activity (gain or loss) is present, identifying financially active individuals",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Creates a discrete cluster split between those with and without capital market activity, improving KNN boundary definition",
+      "leakage_risk": "low",
+      "formula": "np.where((capital_gain > 0) | (capital_loss > 0), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "demographic_composite_score",
+      "type": "formula",
+      "description": "Composite score combining normalized age, education, and hours_per_week into a single socioeconomic positioning metric",
+      "value_range": [
+        -5.0,
+        5.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Aggregates key demographic signals into a single dimension for efficient KNN distance computation in socioeconomic space",
+      "leakage_risk": "low",
+      "formula": "((age - 38.70953118089341) / 13.289449124353169) * 0.4 + ((education_num - 10.143520566121186) / 2.570580638539954) * 0.4 + ((hours_per_week - 40.93951791242813) / 11.930572398287723) * 0.2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "marital_relationship_alignment",
+      "type": "formula",
+      "description": "Normalized absolute difference between marital_status and relationship codes, measuring consistency between these related categorical features",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures internal consistency of household status features, helping KNN identify coherent demographic clusters",
+      "leakage_risk": "low",
+      "formula": "1.0 - np.clip(np.abs(marital_status / 6.0 - relationship / 5.0), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fnlwgt_log_normalized",
+      "type": "formula",
+      "description": "Log-normalized sampling weight, reducing the extreme skew of fnlwgt for use in distance computations",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "scale_normalized_distance",
+      "expected_model_benefit": "Transforms the highly skewed fnlwgt into a bounded normalized feature suitable for KNN distance metrics",
+      "leakage_risk": "low",
+      "formula": "np.clip((np.log1p(fnlwgt) - np.log1p(13769.0)) / (np.log1p(1490400.0) - np.log1p(13769.0)), 0.0, 1.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "occupational_prestige_score",
+      "type": "judgment",
+      "description": "Semantic assessment of occupational prestige and income potential based on occupation code, education level, and workclass combination. Higher scores indicate higher-prestige professional roles typically associated with specialized skills.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "cluster_indicator",
+      "expected_model_benefit": "Provides a semantically meaningful prestige dimension that groups individuals into natural socioeconomic clusters for KNN",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "work_life_balance_index",
+      "type": "judgment",
+      "description": "Semantic assessment of work intensity relative to demographic context, considering hours_per_week, age, and marital_status. Scores reflect deviation from typical work patterns for similar demographic profiles, with extreme values indicating unusual work arrangements.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "similarity_score",
+      "expected_model_benefit": "Captures contextually unusual work patterns that may define distinct demographic clusters in KNN neighborhood space",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "0cb1d04fa808518d",
+  "metadata": {}
+}

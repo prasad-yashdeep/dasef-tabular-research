@@ -1,0 +1,190 @@
+{
+  "dataset_name": "phoneme",
+  "model_family": "distance_knn",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "v1_v2_euclidean_distance_to_origin",
+      "type": "formula",
+      "description": "Calculates the Euclidean distance to the origin in the V1-V2 feature space, providing a magnitude measure for the first two components.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "distance",
+      "expected_model_benefit": "Improves KNN performance by providing a composite magnitude feature that captures the joint scale of V1 and V2.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(V1**2 + V2**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v3_v4_v5_magnitude",
+      "type": "formula",
+      "description": "Computes the vector magnitude of the higher-order features V3, V4, and V5.",
+      "value_range": [
+        0.0,
+        6.0
+      ],
+      "feature_family": "distance",
+      "expected_model_benefit": "Helps distance-based models group similar instances by summarizing the energy in the higher-order feature dimensions.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt(V3**2 + V4**2 + V5**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_normalized",
+      "type": "formula",
+      "description": "Standardizes V1 using its training set mean and standard deviation.",
+      "value_range": [
+        -3.0,
+        3.5
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Ensures V1 contributes proportionally to distance calculations without dominating due to scale differences.",
+      "leakage_risk": "low",
+      "formula": "(V1 - 0.826949) / 0.875162",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v2_normalized",
+      "type": "formula",
+      "description": "Standardizes V2 using its training set mean and standard deviation.",
+      "value_range": [
+        -3.0,
+        3.0
+      ],
+      "feature_family": "normalization",
+      "expected_model_benefit": "Ensures V2 contributes proportionally to distance calculations without dominating due to scale differences.",
+      "leakage_risk": "low",
+      "formula": "(V2 - 1.249104) / 0.863725",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_ratio",
+      "type": "formula",
+      "description": "Calculates the ratio of V1 to V2, clipped to a reasonable range to handle near-zero denominators.",
+      "value_range": [
+        -10.0,
+        10.0
+      ],
+      "feature_family": "interaction",
+      "expected_model_benefit": "Captures the relative proportion between the first two features, which can define distinct clusters in the feature space.",
+      "leakage_risk": "low",
+      "formula": "np.clip(V1 / (np.abs(V2) + 0.001), -10.0, 10.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "total_energy",
+      "type": "formula",
+      "description": "Calculates the sum of squared values across all five features.",
+      "value_range": [
+        0.0,
+        50.0
+      ],
+      "feature_family": "magnitude",
+      "expected_model_benefit": "Provides a single scalar summary of the overall signal strength, useful for separating high-energy from low-energy instances.",
+      "leakage_risk": "low",
+      "formula": "V1**2 + V2**2 + V3**2 + V4**2 + V5**2",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "distance_to_global_mean",
+      "type": "formula",
+      "description": "Calculates the Euclidean distance from the instance to the global mean of the training dataset across all five features.",
+      "value_range": [
+        0.0,
+        10.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Acts as an unsupervised prototype distance, helping KNN identify outliers or central instances.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((V1 - 0.8269)**2 + (V2 - 1.2491)**2 + (V3 - 0.7393)**2 + (V4 - 0.4107)**2 + (V5 - 0.0823)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "max_feature_value",
+      "type": "formula",
+      "description": "Extracts the maximum value across all five features for a given instance.",
+      "value_range": [
+        -1.7,
+        4.0
+      ],
+      "feature_family": "statistic",
+      "expected_model_benefit": "Captures the peak intensity of the feature set, which can be a strong distinguishing characteristic for neighborhood formation.",
+      "leakage_risk": "low",
+      "formula": "np.maximum(V1, np.maximum(V2, np.maximum(V3, np.maximum(V4, V5))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "min_feature_value",
+      "type": "formula",
+      "description": "Extracts the minimum value across all five features for a given instance.",
+      "value_range": [
+        -1.7,
+        4.0
+      ],
+      "feature_family": "statistic",
+      "expected_model_benefit": "Captures the lowest intensity of the feature set, providing a boundary characteristic for distance metrics.",
+      "leakage_risk": "low",
+      "formula": "np.minimum(V1, np.minimum(V2, np.minimum(V3, np.minimum(V4, V5))))",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "v1_v2_v3_centroid_distance",
+      "type": "formula",
+      "description": "Calculates the Euclidean distance to the centroid of the first three features based on training set means.",
+      "value_range": [
+        0.0,
+        8.0
+      ],
+      "feature_family": "prototype_distance",
+      "expected_model_benefit": "Provides a localized prototype distance focusing on the primary features, improving sub-space neighborhood geometry.",
+      "leakage_risk": "low",
+      "formula": "np.sqrt((V1 - 0.8269)**2 + (V2 - 1.2491)**2 + (V3 - 0.7393)**2)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "spectral_shape_judgment",
+      "type": "judgment",
+      "description": "A semantic assessment of the overall shape of the feature sequence V1 through V5, scoring how closely it resembles a typical harmonic structure.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "semantic",
+      "expected_model_benefit": "Injects domain-like structural understanding into the feature space, allowing KNN to group instances with similar underlying patterns.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "outlier_score_judgment",
+      "type": "judgment",
+      "description": "Evaluates the likelihood that the row represents an anomalous or noisy measurement based on the combination of V1 to V5.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "anomaly",
+      "expected_model_benefit": "Helps distance-based models isolate noisy points, preventing them from corrupting the neighborhoods of typical instances.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "ff72afbd88f5f2d5",
+  "metadata": {}
+}

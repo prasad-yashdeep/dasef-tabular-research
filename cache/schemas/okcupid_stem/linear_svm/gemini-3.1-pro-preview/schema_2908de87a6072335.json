@@ -1,0 +1,190 @@
+{
+  "dataset_name": "okcupid_stem",
+  "model_family": "linear_svm",
+  "schema_generator": "gemini-3.1-pro-preview",
+  "schema_version": "1.0",
+  "features": [
+    {
+      "name": "age_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of age using training set mean and standard deviation.",
+      "value_range": [
+        -1.51,
+        3.63
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Provides a scaled continuous feature for the linear SVM, preventing the age variable from dominating the margin due to its larger scale.",
+      "leakage_risk": "low",
+      "formula": "(age - 32.96) / 9.95",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "height_normalized",
+      "type": "formula",
+      "description": "Z-score normalization of height using training set mean and standard deviation.",
+      "value_range": [
+        -8.25,
+        3.82
+      ],
+      "feature_family": "physical",
+      "expected_model_benefit": "Scales the height variable to have zero mean and unit variance, improving convergence and margin calculation in linear models.",
+      "leakage_risk": "low",
+      "formula": "(height - 68.14) / 3.90",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_bay_area_core",
+      "type": "formula",
+      "description": "Binary indicator for whether the user lives in the core Bay Area cities (San Francisco, Oakland, Berkeley).",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "location",
+      "expected_model_benefit": "Creates a linear decision boundary separating core urban residents from others, which may correlate with specific professions or lifestyles.",
+      "leakage_risk": "low",
+      "formula": "np.where((location == 'san francisco, california') | (location == 'oakland, california') | (location == 'berkeley, california'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "is_male",
+      "type": "formula",
+      "description": "Binary indicator for male sex.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "demographic",
+      "expected_model_benefit": "Provides a direct linear shift for gender, allowing the SVM to learn gender-specific baseline offsets.",
+      "leakage_risk": "low",
+      "formula": "np.where(sex == 'm', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "graduated_college_plus",
+      "type": "formula",
+      "description": "Binary indicator for having graduated from a 4-year college or higher degree program.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Aggregates sparse high-education categories into a single robust binary feature for the linear model.",
+      "leakage_risk": "low",
+      "formula": "np.where((education == 'graduated from college/university') | (education == 'graduated from masters program') | (education == 'graduated from ph.d program') | (education == 'graduated from law school') | (education == 'graduated from med school'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "drinks_frequently",
+      "type": "formula",
+      "description": "Binary indicator for frequent alcohol consumption.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Isolates the high-frequency drinking behavior into a linear feature, separating it from social or non-drinkers.",
+      "leakage_risk": "low",
+      "formula": "np.where((drinks == 'often') | (drinks == 'very often') | (drinks == 'desperately'), 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "drugs_never",
+      "type": "formula",
+      "description": "Binary indicator for never using drugs.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Provides a clear linear separation between strict non-users and those who use drugs sometimes or often.",
+      "leakage_risk": "low",
+      "formula": "np.where(drugs == 'never', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "smokes_no",
+      "type": "formula",
+      "description": "Binary indicator for non-smokers.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Creates a distinct linear feature for the absence of smoking behavior.",
+      "leakage_risk": "low",
+      "formula": "np.where(smokes == 'no', 1.0, 0.0)",
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "education_level_score",
+      "type": "judgment",
+      "description": "A continuous score from 0.0 to 1.0 representing the level of formal education attained or in progress, where 0.0 is high school dropout and 1.0 is a completed Ph.D. or Med School.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "education",
+      "expected_model_benefit": "Maps a complex categorical variable with many levels into a single monotonic continuous feature, ideal for linear SVM weights.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "fitness_orientation_score",
+      "type": "judgment",
+      "description": "A continuous score from 0.0 to 1.0 representing the degree of physical fitness or athletic lifestyle implied by body_type, where 1.0 is highly athletic/fit and 0.0 is not.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "physical",
+      "expected_model_benefit": "Provides a continuous semantic projection of body type, allowing the linear model to capture fitness as a magnitude rather than sparse categories.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "astrology_seriousness_score",
+      "type": "judgment",
+      "description": "A continuous score from 0.0 to 1.0 representing how seriously the person takes astrology based on the 'sign' column, where 1.0 means it matters a lot and 0.0 means it doesn't matter or is missing.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "personality",
+      "expected_model_benefit": "Extracts the sentiment modifier from the complex 'sign' strings into a continuous linear feature, ignoring the specific zodiac sign.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    },
+    {
+      "name": "lifestyle_conventionality_score",
+      "type": "judgment",
+      "description": "A continuous score from 0.0 to 1.0 representing how conventional the user's lifestyle is based on orientation, status, and substance use, where 1.0 is highly conventional.",
+      "value_range": [
+        0.0,
+        1.0
+      ],
+      "feature_family": "lifestyle",
+      "expected_model_benefit": "Creates a weighted composite of several lifestyle choices, providing a dense, continuous feature that a linear SVM can easily utilize.",
+      "leakage_risk": "low",
+      "formula": null,
+      "computation_method": null,
+      "uses_only_row_values": true
+    }
+  ],
+  "prompt_hash": "2908de87a6072335",
+  "metadata": {}
+}
